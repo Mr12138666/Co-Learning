@@ -14,6 +14,18 @@ const menuOptions: MenuOption[] = [
     label: () => h(RouterLink, { to: '/dashboard' }, { default: () => '首页' }),
     key: 'dashboard',
   },
+  {
+    label: () => h(RouterLink, { to: '/tasks' }, { default: () => '任务' }),
+    key: 'tasks',
+  },
+  {
+    label: () => h(RouterLink, { to: '/stats' }, { default: () => '统计' }),
+    key: 'stats',
+  },
+  {
+    label: () => h(RouterLink, { to: '/journals' }, { default: () => '日志' }),
+    key: 'journals',
+  },
 ]
 
 function handleUserAction(key: string) {

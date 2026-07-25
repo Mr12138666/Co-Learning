@@ -1,0 +1,106 @@
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import { focusApi, type ActiveFocusSession, type StartFocusRequest } from '@/api/focus'
+
+export const useFocusStore = defineStore('focus', () => {
+  // State
+  const activeSession = ref<ActiveFocusSession | null>(null)
+  const loading = ref(false)
+
+  // Getters
+  const isActive = computed(() => activeSession.value?.status === 'ACTIVE')
+  const isPaused = computed(() => activeSession.value?.status === 'PAUSED')
+  const hasSession = computed(() => !!activeSession.value)
+  const sessionId = computed(() => activeSession.value?.sessionId ?? null)
+
+  // Actions
+  async function fetchActive() {
+    try {
+      const res = await focusApi.getActive()
+      activeSession.value = res.data.data
+    } catch {
+      activeSession.value = null
+    }
+  }
+
+  async function start(data: StartFocusRequest) {
+    loading.value = true
+    try {
+      const res = await focusApi.start(data)
+      const session = res.data.data
+      activeSession.value = {
+        sessionId: session.id,
+        status: session.status,
+        startedAt: session.startedAt,
+        pausedAt: session.pausedAt,
+        resumedAt: session.resumedAt,
+        pausedSeconds: session.pausedSeconds,
+        elapsedSeconds: session.elapsedSeconds,
+        subjectId: session.subjectId,
+        taskId: session.taskId,
+      }
+      return session
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function pause() {
+    if (!activeSession.value) return
+    const res = await focusApi.pause(activeSession.value.sessionId)
+    const session = res.data.data
+    activeSession.value = {
+      ...activeSession.value,
+      status: session.status,
+      pausedAt: session.pausedAt,
+      pausedSeconds: session.pausedSeconds,
+      elapsedSeconds: session.elapsedSeconds,
+    }
+  }
+
+  async function resume() {
+    if (!activeSession.value) return
+    const res = await focusApi.resume(activeSession.value.sessionId)
+    const session = res.data.data
+    activeSession.value = {
+      ...activeSession.value,
+      status: session.status,
+      resumedAt: session.resumedAt,
+      pausedSeconds: session.pausedSeconds,
+      elapsedSeconds: session.elapsedSeconds,
+    }
+  }
+
+  async function finish() {
+    if (!activeSession.value) return null
+    const res = await focusApi.finish(activeSession.value.sessionId)
+    activeSession.value = null
+    return res.data.data
+  }
+
+  async function abort() {
+    if (!activeSession.value) return
+    await focusApi.abort(activeSession.value.sessionId)
+    activeSession.value = null
+  }
+
+  function clear() {
+    activeSession.value = null
+  }
+
+  return {
+    activeSession,
+    loading,
+    isActive,
+    isPaused,
+    hasSession,
+    sessionId,
+    fetchActive,
+    start,
+    pause,
+    resume,
+    finish,
+    abort,
+    clear,
+  }
+})

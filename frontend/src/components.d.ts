@@ -8,7 +8,10 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    FocusTimer: typeof import('./components/focus/FocusTimer.vue')['default']
+    JournalEditor: typeof import('./components/journal/JournalEditor.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    TaskList: typeof import('./components/study/TaskList.vue')['default']
   }
 }
