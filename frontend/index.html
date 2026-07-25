@@ -8,6 +8,10 @@
   </head>
   <body>
     <div id="app"></div>
+    <!-- Polyfill Node.js `global` for CommonJS deps (sockjs-client) in browser -->
+    <script>
+      if (typeof global === 'undefined') { window.global = window; }
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

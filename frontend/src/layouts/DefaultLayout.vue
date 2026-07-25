@@ -27,6 +27,18 @@ const menuOptions: MenuOption[] = [
     key: 'rooms',
   },
   {
+    label: () => h(RouterLink, { to: '/leaderboard' }, { default: () => '排行' }),
+    key: 'leaderboard',
+  },
+  {
+    label: () => h(RouterLink, { to: '/pet' }, { default: () => '宠物' }),
+    key: 'pet',
+  },
+  {
+    label: () => h(RouterLink, { to: '/achievements' }, { default: () => '成就' }),
+    key: 'achievements',
+  },
+  {
     label: () => h(RouterLink, { to: '/journals' }, { default: () => '日志' }),
     key: 'journals',
   },

@@ -7,6 +7,10 @@ import { fileURLToPath, URL } from 'node:url'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Polyfill Node.js `global` for CommonJS deps (e.g. sockjs-client) in browser
+  define: {
+    global: 'globalThis',
+  },
   plugins: [
     vue(),
     AutoImport({

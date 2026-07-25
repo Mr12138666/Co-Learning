@@ -75,6 +75,24 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/rooms/RoomDetailView.vue'),
         meta: { title: '房间', requiresAuth: true },
       },
+      {
+        path: 'leaderboard',
+        name: 'leaderboard',
+        component: () => import('@/views/gamification/LeaderboardView.vue'),
+        meta: { title: '排行榜', requiresAuth: true },
+      },
+      {
+        path: 'pet',
+        name: 'pet',
+        component: () => import('@/views/gamification/PetView.vue'),
+        meta: { title: '宠物', requiresAuth: true },
+      },
+      {
+        path: 'achievements',
+        name: 'achievements',
+        component: () => import('@/views/gamification/AchievementsView.vue'),
+        meta: { title: '成就', requiresAuth: true },
+      },
     ],
   },
   {
