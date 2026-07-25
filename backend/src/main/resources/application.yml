@@ -1,0 +1,104 @@
+# ===== Application =====
+spring:
+  application:
+    name: co-learning-backend
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  # ===== Jackson =====
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+    time-zone: UTC
+
+  # ===== JPA / Hibernate =====
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          time_zone: UTC
+
+  # ===== Flyway =====
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  # ===== Mail =====
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+        transport:
+          protocol: smtp
+
+# ===== Server =====
+server:
+  port: ${BACKEND_PORT:8080}
+  forward-headers-strategy: framework
+
+# ===== App Configuration =====
+app:
+  base-url: ${APP_BASE_URL:http://localhost:5173}
+  api-prefix: /api
+  cors:
+    allowed-origins:
+      - http://localhost:5173
+      - http://localhost:3000
+    allowed-methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
+    allowed-headers: "*"
+    allow-credentials: true
+    max-age: 3600
+
+  # ===== JWT =====
+  jwt:
+    secret: ${JWT_SECRET:dGhpcy1pcy1hLWRldmVsb3BtZW50LWp3dC1zZWNyZXQta2V5LWRvLW5vdC11c2UtaW4tcHJvZHVjdGlvbi1tdXN0LWJlLWF0LWxlYXN0LTI1Ni1iaXRz}
+    access-token-ttl: ${JWT_ACCESS_TTL:900}       # 15 minutes
+    refresh-token-ttl: ${JWT_REFRESH_TTL:604800}   # 7 days
+    refresh-token-prefix: "auth:refresh:"
+
+  # ===== Storage (MinIO) =====
+  storage:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    access-key: ${MINIO_ACCESS_KEY:minio}
+    secret-key: ${MINIO_SECRET_KEY:minio123}
+    bucket-avatars: ${MINIO_BUCKET_AVATARS:avatars}
+    bucket-pets: ${MINIO_BUCKET_PETS:pets}
+
+  # ===== Rate Limiting =====
+  rate-limit:
+    login:
+      max-attempts: 5
+      window-seconds: 60
+    email:
+      max-attempts: 5
+      window-seconds: 3600
+
+# ===== Springdoc OpenAPI =====
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: method
+
+# ===== Logging =====
+logging:
+  level:
+    com.colearning: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
