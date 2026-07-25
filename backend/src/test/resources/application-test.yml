@@ -1,0 +1,60 @@
+spring:
+  # JPA - validate schema in tests too
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  # Flyway runs migrations on the testcontainers DB
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  # Mail disabled in tests
+  mail:
+    host: localhost
+    port: 1025
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
+  # Data source will be overridden by Testcontainers @DynamicPropertySource
+  datasource:
+    url: jdbc:postgresql://localhost:5432/test
+    username: test
+    password: test
+
+  # Redis will be overridden by Testcontainers @DynamicPropertySource
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+# App config for tests
+app:
+  base-url: http://localhost:8080
+  cors:
+    allowed-origins: http://localhost:5173
+  jwt:
+    secret: test-secret-key-for-jwt-signing-must-be-at-least-256-bits-long-for-hs256
+    access-token-ttl: 15m
+    refresh-token-ttl: 7d
+  storage:
+    minio:
+      endpoint: http://localhost:9000
+      access-key: test
+      secret-key: test
+      bucket: colearning-test
+  rate-limit:
+    enabled: true
+
+logging:
+  level:
+    com.colearning: DEBUG
+    org.springframework.security: DEBUG

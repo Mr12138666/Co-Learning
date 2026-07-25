@@ -1,0 +1,37 @@
+{
+  "name": "co-learning-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "lint": "eslint src --ext .vue,.ts,.tsx"
+  },
+  "dependencies": {
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0",
+    "pinia": "^3.0.0",
+    "pinia-plugin-persistedstate": "^4.2.0",
+    "naive-ui": "^2.40.3",
+    "axios": "^1.7.9",
+    "dayjs": "^1.11.13",
+    "@vueuse/core": "^12.5.0",
+    "@vicons/ionicons5": "^0.13.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "typescript": "~5.7.2",
+    "vite": "^6.0.7",
+    "vue-tsc": "^2.2.0",
+    "unplugin-auto-import": "^19.0.0",
+    "unplugin-vue-components": "^28.0.0",
+    "@types/node": "^22.10.5",
+    "vitest": "^2.1.8",
+    "@vue/test-utils": "^2.4.6",
+    "jsdom": "^26.0.0"
+  }
+}
