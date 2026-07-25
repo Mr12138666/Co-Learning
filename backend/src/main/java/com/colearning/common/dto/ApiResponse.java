@@ -32,6 +32,10 @@ public record ApiResponse<T>(
         return new ApiResponse<>(0, "success", null, null, Instant.now());
     }
 
+    public static ApiResponse<Void> message(String message) {
+        return new ApiResponse<>(0, message, null, null, Instant.now());
+    }
+
     public static <T> ApiResponse<T> error(int code, String message) {
         return new ApiResponse<>(code, message, null, null, Instant.now());
     }
