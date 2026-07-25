@@ -1,0 +1,56 @@
+# ===== Backend =====
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+backend/*.log
+backend/.classpath
+backend/.project
+backend/.settings/
+backend/.factorypath
+
+# ===== Frontend =====
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+frontend/.nuxt
+frontend/.output
+frontend/.vite/deps
+
+# ===== E2E =====
+e2e/node_modules/
+e2e/test-results/
+e2e/playwright-report/
+e2e/playwright/.cache/
+
+# ===== IDE =====
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ===== Env =====
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env
+
+# ===== Docker =====
+deploy/data/
+
+# ===== Logs =====
+*.log
+logs/
+
+# ===== OS =====
+.DS_Store
+.AppleDouble
+.LSOverride
+ehthumbs.db
+Desktop.ini
