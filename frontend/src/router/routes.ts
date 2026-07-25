@@ -63,6 +63,18 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/JournalEditView.vue'),
         meta: { title: '编辑日志', requiresAuth: true },
       },
+      {
+        path: 'rooms',
+        name: 'rooms',
+        component: () => import('@/views/rooms/RoomListView.vue'),
+        meta: { title: '陪伴房', requiresAuth: true },
+      },
+      {
+        path: 'rooms/:roomId',
+        name: 'room-detail',
+        component: () => import('@/views/rooms/RoomDetailView.vue'),
+        meta: { title: '房间', requiresAuth: true },
+      },
     ],
   },
   {

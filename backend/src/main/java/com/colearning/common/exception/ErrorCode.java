@@ -62,6 +62,9 @@ public enum ErrorCode {
     ROOM_NOT_OWNER("ROOM-005", "Only room owner can perform this action", HttpStatus.FORBIDDEN),
     ROOM_CLOSED("ROOM-006", "Room is closed", HttpStatus.CONFLICT),
     ROOM_MUTED("ROOM-007", "You are muted in this room", HttpStatus.FORBIDDEN),
+    ROOM_PASSWORD_REQUIRED("ROOM-008", "Room password is required", HttpStatus.BAD_REQUEST),
+    ROOM_PASSWORD_INCORRECT("ROOM-009", "Room password is incorrect", HttpStatus.FORBIDDEN),
+    ROOM_NOT_ADMIN("ROOM-010", "Only room owner or admin can perform this action", HttpStatus.FORBIDDEN),
 
     // ===== Leaderboard (6xx) =====
     LEADERBOARD_NOT_AVAILABLE("LB-001", "Leaderboard not available", HttpStatus.NOT_FOUND),

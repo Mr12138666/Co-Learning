@@ -23,6 +23,10 @@ const menuOptions: MenuOption[] = [
     key: 'stats',
   },
   {
+    label: () => h(RouterLink, { to: '/rooms' }, { default: () => '陪伴房' }),
+    key: 'rooms',
+  },
+  {
     label: () => h(RouterLink, { to: '/journals' }, { default: () => '日志' }),
     key: 'journals',
   },

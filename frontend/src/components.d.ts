@@ -10,6 +10,10 @@ declare module 'vue' {
   export interface GlobalComponents {
     FocusTimer: typeof import('./components/focus/FocusTimer.vue')['default']
     JournalEditor: typeof import('./components/journal/JournalEditor.vue')['default']
+    RoomCard: typeof import('./components/room/RoomCard.vue')['default']
+    RoomChatBox: typeof import('./components/room/RoomChatBox.vue')['default']
+    RoomMemberList: typeof import('./components/room/RoomMemberList.vue')['default']
+    RoomMessageItem: typeof import('./components/room/RoomMessageItem.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     TaskList: typeof import('./components/study/TaskList.vue')['default']
