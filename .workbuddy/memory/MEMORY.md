@@ -35,7 +35,7 @@
 - Phase 1: ✅ 完成 (auth, user, Docker, 前端认证)
 - Phase 2: ✅ 完成 (study, focus, checkin, stats, journal - 后端+前端)
 - Phase 3: ✅ 完成 (room: WebSocket/STOMP, 实时陪伴房, Presence)
-- Phase 4: 进行中 (leaderboard, gamification)
+- Phase 4: ✅ 完成 (leaderboard, gamification, pets, achievements)
 - Phase 5: 待开始 (AI fallback, moderation)
 
 ## Git 提交历史

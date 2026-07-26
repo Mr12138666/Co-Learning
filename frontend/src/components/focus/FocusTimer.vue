@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { NButton, NSpace, NSelect, NTag, NText } from 'naive-ui'
+import { NButton, NSpace, NSelect, NTag, NText, NAlert, useMessage } from 'naive-ui'
 import { useFocusTimer } from '@/composables/useFocusTimer'
 import { useStudyStore } from '@/stores/studyStore'
+import { useGamificationStore } from '@/stores/gamificationStore'
 
 const props = withDefaults(defineProps<{
   compact?: boolean
@@ -15,12 +16,20 @@ const emit = defineEmits<{
 }>()
 
 const studyStore = useStudyStore()
+const gamificationStore = useGamificationStore()
+const message = useMessage()
+
 const {
   elapsedSeconds,
   formattedTime,
   progressPercent,
   currentSubject,
   currentTask,
+  MAX_SESSION_HOURS,
+  isInGracePeriod,
+  isLearningLimit,
+  formattedGraceTime,
+  graceRemainingSeconds,
   hasSession,
   isActive,
   isPaused,
@@ -50,6 +59,16 @@ async function handleStart() {
 async function handleFinish() {
   const result = await finishFocus()
   emit('finished', result)
+
+  // Show reward notification
+  if (result && (result as any).effectiveSeconds) {
+    const effectiveSeconds = (result as any).effectiveSeconds
+    // EXP and Tokens: every 10 minutes = 1 (600 seconds)
+    const exp = Math.max(1, Math.floor(effectiveSeconds / 600))
+    const tokens = Math.max(1, Math.floor(effectiveSeconds / 600))
+
+    message.success(`专注完成！获得 ${exp} 经验 + ${tokens} 代币 🪙`)
+  }
 }
 
 // Ring size
@@ -72,7 +91,7 @@ const ringDashOffset = computed(() =>
           :cy="ringSize / 2"
           :r="ringRadius"
           fill="none"
-          stroke="var(--n-border-color, #e0e0e6)"
+          stroke="var(--border-color, #e0e0e6)"
           :stroke-width="ringStroke"
         />
         <circle
@@ -80,7 +99,7 @@ const ringDashOffset = computed(() =>
           :cy="ringSize / 2"
           :r="ringRadius"
           fill="none"
-          stroke="#2080F0"
+          stroke="var(--accent-primary, #2080F0)"
           :stroke-width="ringStroke"
           stroke-linecap="round"
           :stroke-dasharray="ringCircumference"
@@ -94,7 +113,10 @@ const ringDashOffset = computed(() =>
       <div class="timer-display">
         <div class="time-text">{{ formattedTime }}</div>
         <div v-if="hasSession" class="session-status">
-          <NTag :type="isActive ? 'success' : 'warning'" size="small" round>
+          <NTag v-if="isInGracePeriod" type="error" size="small" round>
+            宽限期 {{ formattedGraceTime }}
+          </NTag>
+          <NTag v-else :type="isActive ? 'success' : 'warning'" size="small" round>
             {{ isActive ? '专注中' : '已暂停' }}
           </NTag>
         </div>
@@ -103,6 +125,24 @@ const ringDashOffset = computed(() =>
         </div>
       </div>
     </div>
+
+    <!-- Grace period warning -->
+    <NAlert
+      v-if="isInGracePeriod"
+      :type="isLearningLimit ? 'warning' : 'info'"
+      :title="isLearningLimit ? '已达到学习时长上限' : '暂停时间过长'"
+      style="max-width: 360px; text-align: left;"
+      :show-icon="true"
+    >
+      <template v-if="isLearningLimit">
+        连续学习已达 {{ MAX_SESSION_HOURS }} 小时上限，请在 {{ formattedGraceTime }} 内结束会话，
+        否则本次专注时长将不计入统计。
+      </template>
+      <template v-else>
+        暂停已超过 1 小时，请在 {{ formattedGraceTime }} 内继续或结束会话，
+        否则本次专注时长将不计入统计。
+      </template>
+    </NAlert>
 
     <!-- Current session info -->
     <div v-if="hasSession" class="session-info">
@@ -118,6 +158,13 @@ const ringDashOffset = computed(() =>
           {{ currentTask.title }}
         </NText>
       </NSpace>
+    </div>
+
+    <!-- Max session hint (only when no session) -->
+    <div v-if="!hasSession && !compact" class="max-session-hint">
+      <NText depth="3" style="font-size: 12px;">
+        单次专注最多 {{ MAX_SESSION_HOURS }} 小时，超过将自动暂停
+      </NText>
     </div>
 
     <!-- Controls -->
@@ -142,6 +189,7 @@ const ringDashOffset = computed(() =>
       </template>
       <template v-else>
         <NSpace justify="center" :size="12">
+          <!-- ACTIVE 状态：可暂停 -->
           <NButton
             v-if="isActive"
             size="large"
@@ -149,14 +197,16 @@ const ringDashOffset = computed(() =>
           >
             暂停
           </NButton>
+          <!-- PAUSED 且非8h超限：可继续 -->
           <NButton
-            v-if="isPaused"
+            v-if="isPaused && !isLearningLimit"
             type="primary"
             size="large"
             @click="resumeFocus"
           >
             继续
           </NButton>
+          <!-- 始终可结束 -->
           <NButton
             type="success"
             size="large"
@@ -164,6 +214,7 @@ const ringDashOffset = computed(() =>
           >
             结束
           </NButton>
+          <!-- 始终可放弃 -->
           <NButton
             size="large"
             quaternary
@@ -251,5 +302,10 @@ const ringDashOffset = computed(() =>
   gap: 12px;
   justify-content: center;
   flex-wrap: wrap;
+}
+
+.max-session-hint {
+  text-align: center;
+  opacity: 0.7;
 }
 </style>

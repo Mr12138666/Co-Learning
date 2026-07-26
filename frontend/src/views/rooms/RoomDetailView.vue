@@ -33,8 +33,11 @@ onMounted(async () => {
       await roomStore.joinRoom(roomId.value)
     }
 
-    // Fetch full room state (members, messages, online users)
-    await roomStore.fetchRoomState(roomId.value)
+    // Load members
+    await roomStore.loadMembers(roomId.value)
+
+    // Load initial messages (last 50)
+    await roomStore.loadMessages(roomId.value, 0, 50)
 
     // Connect WebSocket and join real-time channel
     roomStore.connectRoom(roomId.value)
@@ -110,6 +113,25 @@ function handleLeave() {
   })
 }
 
+function handleDelete() {
+  dialog.warning({
+    title: '删除房间',
+    content: '确定要永久删除这个房间吗？此操作不可恢复，所有聊天记录将被删除。',
+    positiveText: '删除',
+    negativeText: '取消',
+    positiveButtonProps: { type: 'error' },
+    onPositiveClick: async () => {
+      try {
+        await roomStore.deleteRoom(roomId.value)
+        message.success('房间已删除')
+        router.push('/rooms')
+      } catch {
+        message.error('操作失败')
+      }
+    },
+  })
+}
+
 function handleKick(userId: number) {
   dialog.warning({
     title: '踢出成员',
@@ -142,6 +164,10 @@ function handleMute(userId: number) {
       }
     },
   })
+}
+
+function handleSendImage(imageUrl: string) {
+  roomStore.sendMessage(roomId.value, `![图片](${imageUrl})`)
 }
 
 function goBack() {
@@ -183,6 +209,9 @@ function goBack() {
           <n-button quaternary @click="showMembers = !showMembers">
             {{ showMembers ? '隐藏成员' : '显示成员' }}
           </n-button>
+          <n-button quaternary type="error" @click="handleDelete" v-if="isOwner">
+            删除房间
+          </n-button>
           <n-button quaternary type="error" @click="handleLeave" v-if="!isOwner">
             离开房间
           </n-button>
@@ -197,6 +226,7 @@ function goBack() {
         <RoomChatBox
           :messages="roomStore.messages"
           @send="handleSend"
+          @send-image="handleSendImage"
         />
       </div>
 
@@ -221,8 +251,8 @@ function goBack() {
 .room-detail-view {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: 0;
+  height: calc(100vh - 56px - 48px);
+  min-height: 400px;
 }
 
 .room-header {
@@ -252,9 +282,11 @@ function goBack() {
 .chat-area {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--divider-color);
+  overflow: hidden;
 }
 
 .member-sidebar {

@@ -2,12 +2,14 @@ package com.colearning.gamification.internal;
 
 import com.colearning.common.exception.BusinessException;
 import com.colearning.common.exception.ErrorCode;
+import com.colearning.gamification.DailyTaskService;
 import com.colearning.gamification.GamificationService;
 import com.colearning.gamification.dto.request.RenamePetRequest;
 import com.colearning.gamification.dto.response.AchievementResponse;
 import com.colearning.gamification.dto.response.GamificationProfileResponse;
 import com.colearning.gamification.dto.response.PetItemResponse;
 import com.colearning.gamification.dto.response.PetResponse;
+import com.colearning.gamification.dto.response.UserItemResponse;
 import com.colearning.gamification.internal.entity.Achievement;
 import com.colearning.gamification.internal.entity.Pet;
 import com.colearning.gamification.internal.entity.PetItem;
@@ -50,6 +52,7 @@ public class GamificationServiceImpl implements GamificationService {
     private final UserAchievementRepository userAchievementRepository;
     private final StatsService statsService;
     private final DailyCheckinRepository dailyCheckinRepository;
+    private final DailyTaskService dailyTaskService;
 
     // ===== Experience & Tokens =====
 
@@ -91,7 +94,13 @@ public class GamificationServiceImpl implements GamificationService {
         Pet pet = getOrCreatePet(userId);
         // Decay mood/hunger based on time since last interaction
         decayPetStats(pet);
-        return PetResponse.from(petRepository.save(pet));
+        pet = petRepository.save(pet);
+        
+        // Calculate time until next decay for frontend countdown
+        int nextHungerDecay = calculateNextHungerDecayMinutes(pet);
+        int nextMoodDecay = calculateNextMoodDecayMinutes(pet);
+        
+        return PetResponse.from(pet, nextHungerDecay, nextMoodDecay);
     }
 
     @Override
@@ -118,13 +127,26 @@ public class GamificationServiceImpl implements GamificationService {
             pet.setMood(Math.min(100, pet.getMood() + item.getEffectValue()));
         } else if ("EXP_BOOST".equals(item.getEffectType())) {
             pet.setExp(pet.getExp() + item.getEffectValue());
+            // Check for level up: each level requires level * 100 exp
+            while (pet.getExp() >= pet.getLevel() * 100) {
+                pet.setExp(pet.getExp() - pet.getLevel() * 100);
+                pet.setLevel(pet.getLevel() + 1);
+                log.info("Pet leveled up: userId={}, petName={}, newLevel={}", userId, pet.getName(), pet.getLevel());
+                // Check pet level achievements
+                checkAndUnlockAchievements(userId);
+            }
         }
         pet.setLastFedAt(Instant.now());
 
         // Consume item
         consumeItem(userItem);
 
-        return PetResponse.from(petRepository.save(pet));
+        pet = petRepository.save(pet);
+        
+        // Update daily task progress
+        dailyTaskService.onFeedPet(userId);
+        
+        return PetResponse.from(pet, calculateNextHungerDecayMinutes(pet), calculateNextMoodDecayMinutes(pet));
     }
 
     @Override
@@ -136,15 +158,26 @@ public class GamificationServiceImpl implements GamificationService {
         PetItem item = petItemRepository.findById(itemId)
                 .orElseThrow(() -> BusinessException.of(ErrorCode.ITEM_NOT_FOUND));
 
-        // Toys boost mood
+        // Apply effect based on type (same logic as feedPet for consistency)
         if ("MOOD_BOOST".equals(item.getEffectType())) {
             pet.setMood(Math.min(100, pet.getMood() + item.getEffectValue()));
+        } else if ("HUNGER_RESTORE".equals(item.getEffectType())) {
+            pet.setHunger(Math.min(100, pet.getHunger() + item.getEffectValue()));
+        } else if ("EXP_BOOST".equals(item.getEffectType())) {
+            pet.setExp(pet.getExp() + item.getEffectValue());
+            while (pet.getExp() >= pet.getLevel() * 100) {
+                pet.setExp(pet.getExp() - pet.getLevel() * 100);
+                pet.setLevel(pet.getLevel() + 1);
+                log.info("Pet leveled up: userId={}, petName={}, newLevel={}", userId, pet.getName(), pet.getLevel());
+                checkAndUnlockAchievements(userId);
+            }
         }
         pet.setLastInteractedAt(Instant.now());
 
         consumeItem(userItem);
 
-        return PetResponse.from(petRepository.save(pet));
+        pet = petRepository.save(pet);
+        return PetResponse.from(pet, calculateNextHungerDecayMinutes(pet), calculateNextMoodDecayMinutes(pet));
     }
 
     // ===== Shop & Items =====
@@ -153,6 +186,20 @@ public class GamificationServiceImpl implements GamificationService {
     public List<PetItemResponse> getShopItems() {
         return petItemRepository.findAll().stream()
                 .map(PetItemResponse::from)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public List<UserItemResponse> getInventory(Long userId) {
+        List<UserItem> userItems = userItemRepository.findByUserId(userId);
+        return userItems.stream()
+                .map(ui -> {
+                    PetItem item = petItemRepository.findById(ui.getItemId())
+                            .orElse(null);
+                    return item != null ? UserItemResponse.from(ui, item) : null;
+                })
+                .filter(java.util.Objects::nonNull)
                 .toList();
     }
 
@@ -274,17 +321,65 @@ public class GamificationServiceImpl implements GamificationService {
 
     /**
      * Decay pet mood and hunger based on time since last fed/interacted.
-     * Roughly: -1 per hour since last interaction, minimum 0.
+     * - Hunger: -1 per 10 minutes since last fed (16 hours to reach 0 from 100)
+     * - Mood: -1 per 10 minutes since last interaction (16 hours to reach 0 from 100)
+     * Minimum is 0.
+     * 
+     * After applying decay, updates the reference timestamps to "consume" the elapsed time,
+     * preventing double-decay on repeated calls.
      */
     private void decayPetStats(Pet pet) {
         Instant now = Instant.now();
-        Instant lastAction = pet.getLastFedAt() != null ? pet.getLastFedAt() : pet.getCreatedAt();
+        int decayIntervalMinutes = 10;
 
-        long hoursSince = java.time.Duration.between(lastAction, now).toHours();
-        if (hoursSince > 0) {
-            int decay = (int) Math.min(hoursSince, 100);
-            pet.setHunger(Math.max(0, pet.getHunger() - decay));
-            pet.setMood(Math.max(0, pet.getMood() - decay / 2));
+        // Decay hunger: -1 per 10 minutes
+        Instant hungerReference = pet.getLastFedAt() != null ? pet.getLastFedAt() : pet.getCreatedAt();
+        long minutesSinceHunger = java.time.Duration.between(hungerReference, now).toMinutes();
+        if (minutesSinceHunger >= decayIntervalMinutes) {
+            int hungerDecay = (int) Math.min(minutesSinceHunger / decayIntervalMinutes, 100);
+            pet.setHunger(Math.max(0, pet.getHunger() - hungerDecay));
+            // Advance lastFedAt by the consumed decay intervals (keep remainder)
+            long consumedMinutes = (minutesSinceHunger / decayIntervalMinutes) * decayIntervalMinutes;
+            pet.setLastFedAt(hungerReference.plus(java.time.Duration.ofMinutes(consumedMinutes)));
         }
+
+        // Decay mood: -1 per 10 minutes
+        Instant moodReference = pet.getLastInteractedAt() != null ? pet.getLastInteractedAt() 
+                : (pet.getLastFedAt() != null ? pet.getLastFedAt() : pet.getCreatedAt());
+        long minutesSinceMood = java.time.Duration.between(moodReference, now).toMinutes();
+        if (minutesSinceMood >= decayIntervalMinutes) {
+            int moodDecay = (int) Math.min(minutesSinceMood / decayIntervalMinutes, 100);
+            pet.setMood(Math.max(0, pet.getMood() - moodDecay));
+            // Advance lastInteractedAt by the consumed decay intervals (keep remainder)
+            long consumedMinutes = (minutesSinceMood / decayIntervalMinutes) * decayIntervalMinutes;
+            pet.setLastInteractedAt(moodReference.plus(java.time.Duration.ofMinutes(consumedMinutes)));
+        }
+    }
+
+    /**
+     * Calculate time until next hunger decay in minutes.
+     * Hunger decays every 10 minutes.
+     */
+    private int calculateNextHungerDecayMinutes(Pet pet) {
+        Instant now = Instant.now();
+        Instant lastAction = pet.getLastFedAt() != null ? pet.getLastFedAt() : pet.getCreatedAt();
+        long minutesSince = java.time.Duration.between(lastAction, now).toMinutes();
+        int decayInterval = 10; // 10 minutes
+        int elapsedInInterval = (int) (minutesSince % decayInterval);
+        return decayInterval - elapsedInInterval;
+    }
+
+    /**
+     * Calculate time until next mood decay in minutes.
+     * Mood decays every 10 minutes.
+     */
+    private int calculateNextMoodDecayMinutes(Pet pet) {
+        Instant now = Instant.now();
+        Instant lastInteraction = pet.getLastInteractedAt() != null ? pet.getLastInteractedAt() 
+                : (pet.getLastFedAt() != null ? pet.getLastFedAt() : pet.getCreatedAt());
+        long minutesSince = java.time.Duration.between(lastInteraction, now).toMinutes();
+        int decayInterval = 10; // 10 minutes
+        int elapsedInInterval = (int) (minutesSince % decayInterval);
+        return decayInterval - elapsedInInterval;
     }
 }

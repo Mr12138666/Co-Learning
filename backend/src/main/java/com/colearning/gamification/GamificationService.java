@@ -5,6 +5,7 @@ import com.colearning.gamification.dto.response.AchievementResponse;
 import com.colearning.gamification.dto.response.GamificationProfileResponse;
 import com.colearning.gamification.dto.response.PetItemResponse;
 import com.colearning.gamification.dto.response.PetResponse;
+import com.colearning.gamification.dto.response.UserItemResponse;
 import java.util.List;
 
 /**
@@ -33,6 +34,8 @@ public interface GamificationService {
     // ===== Shop & Items =====
 
     List<PetItemResponse> getShopItems();
+
+    List<UserItemResponse> getInventory(Long userId);
 
     void purchaseItem(Long userId, Long itemId);
 

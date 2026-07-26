@@ -12,6 +12,7 @@ public record UserProfileResponse(
         Boolean notifEmailEnabled,
         Boolean notifPushEnabled,
         String timezone,
+        Integer dailyFocusGoalMinutes,
         String role,
         boolean emailVerified,
         Instant createdAt

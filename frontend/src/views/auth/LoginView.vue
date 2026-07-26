@@ -69,10 +69,26 @@ async function handleLogin() {
       </NFormItem>
     </NForm>
 
-    <div style="margin-top: 16px; padding: 12px; background: #f5f5f5; border-radius: 6px; font-size: 12px; color: #999;">
-      <p style="font-weight: bold; margin-bottom: 4px;">测试账号：</p>
+    <div class="test-accounts">
+      <p class="test-title">测试账号：</p>
       <p>管理员: admin@colearning.local / admin123</p>
       <p>学生: student@test.com / student123</p>
     </div>
   </NCard>
 </template>
+
+<style scoped>
+.test-accounts {
+  margin-top: 16px;
+  padding: 12px;
+  background-color: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.test-title {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+</style>

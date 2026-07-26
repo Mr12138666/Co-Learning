@@ -2,7 +2,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useFocusStore } from '@/stores/focusStore'
 import { useStudyStore } from '@/stores/studyStore'
 import { useDashboardStore } from '@/stores/dashboardStore'
-import dayjs from 'dayjs'
+import { useGamificationStore } from '@/stores/gamificationStore'
 
 /**
  * Server-authoritative focus timer composable.
@@ -16,6 +16,7 @@ export function useFocusTimer() {
   const focusStore = useFocusStore()
   const studyStore = useStudyStore()
   const dashboardStore = useDashboardStore()
+  const gamificationStore = useGamificationStore()
 
   const now = ref(Date.now())
   let timerId: ReturnType<typeof setInterval> | null = null
@@ -25,14 +26,15 @@ export function useFocusTimer() {
     const session = focusStore.activeSession
     if (!session) return 0
 
-    const startedAt = dayjs(session.startedAt)
+    const startedAt = new Date(session.startedAt).getTime()
     if (focusStore.isActive) {
       // Active: now - started - pausedSeconds
-      return Math.max(0, Math.floor((now.value - startedAt.valueOf()) / 1000) - session.pausedSeconds)
+      return Math.max(0, Math.floor((now.value - startedAt) / 1000) - session.pausedSeconds)
     } else if (focusStore.isPaused) {
       // Paused: pausedAt - started - pausedSeconds
       if (session.pausedAt) {
-        return Math.max(0, Math.floor((dayjs(session.pausedAt).valueOf() - startedAt.valueOf()) / 1000) - session.pausedSeconds)
+        const pausedAt = new Date(session.pausedAt).getTime()
+        return Math.max(0, Math.floor((pausedAt - startedAt) / 1000) - session.pausedSeconds)
       }
       return 0
     }
@@ -58,6 +60,27 @@ export function useFocusTimer() {
     return Math.round(pct * 100)
   })
 
+  // 宽限期相关
+  const MAX_SESSION_HOURS = 8
+
+  const graceDeadline = computed(() => focusStore.activeSession?.graceDeadline ?? null)
+  const graceReason = computed(() => focusStore.activeSession?.graceReason ?? null)
+  const isInGracePeriod = computed(() => graceDeadline.value !== null)
+  const isLearningLimit = computed(() => graceReason.value === 'LEARNING_LIMIT')
+
+  const graceRemainingSeconds = computed(() => {
+    if (!graceDeadline.value) return 0
+    const deadline = new Date(graceDeadline.value).getTime()
+    return Math.max(0, Math.floor((deadline - now.value) / 1000))
+  })
+
+  const formattedGraceTime = computed(() => {
+    const total = graceRemainingSeconds.value
+    const minutes = Math.floor(total / 60)
+    const seconds = total % 60
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+  })
+
   // Current subject info
   const currentSubject = computed(() => {
     const subjectId = focusStore.activeSession?.subjectId
@@ -71,11 +94,15 @@ export function useFocusTimer() {
     return studyStore.tasks.find((t) => t.id === taskId) ?? null
   })
 
-  // Timer tick - update `now` every second when active
+  // Timer tick - update `now` every second when active or in grace period
   function startTick() {
     stopTick()
     timerId = setInterval(() => {
       now.value = Date.now()
+      // 宽限期过期后，后端会 abort 会话，刷新前端状态
+      if (isInGracePeriod.value && graceRemainingSeconds.value <= 0) {
+        focusStore.fetchActive()
+      }
     }, 1000)
   }
 
@@ -88,9 +115,9 @@ export function useFocusTimer() {
 
   // Watch session status to start/stop ticking
   watch(
-    () => focusStore.isActive,
-    (active) => {
-      if (active) {
+    () => [focusStore.isActive, isInGracePeriod.value],
+    ([active, inGrace]) => {
+      if (active || inGrace) {
         startTick()
       } else {
         stopTick()
@@ -102,14 +129,36 @@ export function useFocusTimer() {
   // Actions
   async function startFocus(subjectId?: number, taskId?: number) {
     const clientRequestId = `focus-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-    await focusStore.start({ subjectId, taskId, clientRequestId })
+    
+    try {
+      await focusStore.start({ subjectId, taskId, clientRequestId })
+    } catch (error: any) {
+      // If conflict (session already exists), abort it and retry
+      if (error.response?.status === 409) {
+        try {
+          await focusStore.fetchActive()
+          if (focusStore.hasSession) {
+            await focusStore.abort()
+          }
+        } catch {
+          // Ignore abort errors
+        }
+        await focusStore.start({ subjectId, taskId, clientRequestId })
+      } else {
+        throw error
+      }
+    }
+    
     now.value = Date.now()
     startTick()
   }
 
   async function pauseFocus() {
-    await focusStore.pause()
-    stopTick()
+    try {
+      await focusStore.pause()
+    } finally {
+      stopTick()
+    }
   }
 
   async function resumeFocus() {
@@ -119,24 +168,33 @@ export function useFocusTimer() {
   }
 
   async function finishFocus() {
-    const result = await focusStore.finish()
-    stopTick()
-    // Refresh stats after finishing
-    await dashboardStore.fetchStats()
-    await dashboardStore.fetchTodayCheckin()
-    return result
+    try {
+      const result = await focusStore.finish()
+      return result
+    } finally {
+      stopTick()
+      // Refresh stats after finishing (best effort)
+      dashboardStore.fetchStats().catch(() => {})
+      dashboardStore.fetchTodayCheckin().catch(() => {})
+      gamificationStore.loadProfile().catch(() => {})
+      gamificationStore.loadPet().catch(() => {})
+    }
   }
 
   async function abortFocus() {
-    await focusStore.abort()
-    stopTick()
+    try {
+      await focusStore.abort()
+    } finally {
+      stopTick()
+    }
   }
 
-  // Tab visibility handling - just update `now` when returning
+  // Tab visibility handling - re-fetch session state when returning
   function handleVisibilityChange() {
     if (document.visibilityState === 'visible') {
+      // Re-fetch active session to sync with server (may have been auto-paused)
+      focusStore.fetchActive()
       now.value = Date.now()
-      // If session is active, restart ticking
       if (focusStore.isActive) {
         startTick()
       }
@@ -169,11 +227,17 @@ export function useFocusTimer() {
     progressPercent,
     currentSubject,
     currentTask,
-    // Store passthrough
-    hasSession: focusStore.hasSession,
-    isActive: focusStore.isActive,
-    isPaused: focusStore.isPaused,
-    loading: focusStore.loading,
+    // 宽限期
+    MAX_SESSION_HOURS,
+    isInGracePeriod,
+    isLearningLimit,
+    graceRemainingSeconds,
+    formattedGraceTime,
+    // Store passthrough - use computed to maintain reactivity
+    hasSession: computed(() => focusStore.hasSession),
+    isActive: computed(() => focusStore.isActive),
+    isPaused: computed(() => focusStore.isPaused),
+    loading: computed(() => focusStore.loading),
     // Actions
     startFocus,
     pauseFocus,

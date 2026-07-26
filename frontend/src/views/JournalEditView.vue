@@ -46,14 +46,15 @@ async function handleSave(data: { title: string; contentMarkdown: string; visibi
 async function handlePublish(data: { title: string; contentMarkdown: string; visibility: string }) {
   try {
     if (isEdit.value && journalId.value) {
+      // 编辑模式：直接更新内容并设置为已发布，不需要再调用publish
       await journalStore.update(journalId.value, {
         title: data.title,
         contentMarkdown: data.contentMarkdown,
         visibility: data.visibility as 'PRIVATE' | 'FRIENDS' | 'ROOM' | 'PUBLIC',
         status: 'PUBLISHED',
       })
-      await journalStore.publish(journalId.value)
     } else {
+      // 新建模式：先创建再发布
       const journal = await journalStore.create({
         title: data.title,
         contentMarkdown: data.contentMarkdown,
@@ -63,8 +64,8 @@ async function handlePublish(data: { title: string; contentMarkdown: string; vis
     }
     message.success('已发布')
     router.push('/journals')
-  } catch {
-    message.error('发布失败')
+  } catch (e: any) {
+    message.error(e?.response?.data?.message || '发布失败')
   }
 }
 

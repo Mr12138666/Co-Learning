@@ -39,4 +39,10 @@ public interface LeaderboardService {
      * Get the current user's rank and score for the specified leaderboard type.
      */
     LeaderboardResponse getMyRank(String type, Long userId);
+
+    /**
+     * Synchronize leaderboard data from database.
+     * This is used to rebuild Redis leaderboards when data is lost.
+     */
+    void syncFromDatabase();
 }

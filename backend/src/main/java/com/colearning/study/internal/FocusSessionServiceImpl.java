@@ -3,6 +3,8 @@ package com.colearning.study.internal;
 import com.colearning.common.event.FocusSessionFinishedEvent;
 import com.colearning.common.exception.BusinessException;
 import com.colearning.common.exception.ErrorCode;
+import com.colearning.gamification.DailyTaskService;
+import com.colearning.gamification.GamificationService;
 import com.colearning.study.FocusSessionService;
 import com.colearning.study.dto.request.StartFocusRequest;
 import com.colearning.study.dto.response.ActiveFocusResponse;
@@ -32,10 +34,20 @@ public class FocusSessionServiceImpl implements FocusSessionService {
     private final FocusSessionRepository focusSessionRepository;
     private final Clock clock;
     private final ApplicationEventPublisher eventPublisher;
+    private final GamificationService gamificationService;
+    private final DailyTaskService dailyTaskService;
 
-    @Value("${app.focus.max-session-hours:4}")
+    @Value("${app.focus.max-session-hours:8}")
     private int maxSessionHours;
 
+    @Value("${app.focus.max-pause-hours:1}")
+    private int maxPauseHours;
+
+    @Value("${app.focus.grace-period-minutes:30}")
+    private int gracePeriodMinutes;
+
+    private static final String GRACE_REASON_LEARNING = "LEARNING_LIMIT";
+    private static final String GRACE_REASON_PAUSE = "PAUSE_LIMIT";
     private static final List<String> ONGOING_STATUSES = List.of("ACTIVE", "PAUSED");
 
     // ===== Start =====
@@ -102,6 +114,11 @@ public class FocusSessionServiceImpl implements FocusSessionService {
             throw BusinessException.of(ErrorCode.STUDY_INVALID_STATE_TRANSITION,
                     "当前状态: " + session.getStatus() + ", 仅 PAUSED 可恢复");
         }
+        // 8h学习上限宽限期内不允许恢复，只能结束
+        if (GRACE_REASON_LEARNING.equals(session.getGraceReason())) {
+            throw BusinessException.of(ErrorCode.STUDY_INVALID_STATE_TRANSITION,
+                    "已达到学习时长上限，请结束当前会话");
+        }
         Instant now = Instant.now(clock);
         // Accumulate paused seconds
         int additionalPaused = (int) Duration.between(session.getPausedAt(), now).getSeconds();
@@ -109,6 +126,9 @@ public class FocusSessionServiceImpl implements FocusSessionService {
         session.setStatus("ACTIVE");
         session.setResumedAt(now);
         session.setPausedAt(null);
+        // 清除宽限期（暂停超限后用户选择恢复）
+        session.setGraceDeadline(null);
+        session.setGraceReason(null);
         return toResponse(session);
     }
 
@@ -138,11 +158,34 @@ public class FocusSessionServiceImpl implements FocusSessionService {
         effective = Math.max(0, effective);
         session.setEffectiveSeconds(effective);
         session.setStatus("FINISHED");
+        session.setGraceDeadline(null);
+        session.setGraceReason(null);
 
         log.info("Focus session finished: userId={}, sessionId={}, effectiveSec={}",
                 userId, sessionId, effective);
 
-        // Publish event for stats, leaderboard, experience
+        // Directly award EXP and tokens for reliability
+        // EXP: every 10 min = 1 EXP (600 seconds)
+        // Tokens: every 10 min = 1 token (600 seconds) - increased from 30 min
+        try {
+            int exp = Math.max(1, effective / 600);
+            int tokens = Math.max(1, effective / 600);
+            gamificationService.addExp(userId, exp);
+            gamificationService.addTokens(userId, tokens);
+            gamificationService.checkAndUnlockAchievements(userId);
+            log.info("Awarded EXP={}, tokens={} for focus session: userId={}", exp, tokens, userId);
+        } catch (Exception e) {
+            log.error("Failed to award EXP/tokens for userId={}: {}", userId, e.getMessage(), e);
+        }
+        
+        // Update daily task progress
+        try {
+            dailyTaskService.onFocusSessionFinished(userId, effective);
+        } catch (Exception e) {
+            log.error("Failed to update daily tasks for userId={}: {}", userId, e.getMessage());
+        }
+
+        // Publish event for stats, leaderboard
         LocalDate sessionDate = session.getStartedAt()
                 .atZone(clock.getZone())
                 .toLocalDate();
@@ -178,6 +221,8 @@ public class FocusSessionServiceImpl implements FocusSessionService {
 
         // Aborted sessions don't count effective time
         session.setEffectiveSeconds(0);
+        session.setGraceDeadline(null);
+        session.setGraceReason(null);
 
         log.info("Focus session aborted: userId={}, sessionId={}", userId, sessionId);
         return toResponse(session);
@@ -197,10 +242,13 @@ public class FocusSessionServiceImpl implements FocusSessionService {
                             session.getStatus(),
                             session.getStartedAt(),
                             session.getPausedAt(),
+                            session.getResumedAt(),
                             session.getPausedSeconds(),
                             elapsed,
                             session.getSubjectId(),
-                            session.getTaskId()
+                            session.getTaskId(),
+                            session.getGraceDeadline(),
+                            session.getGraceReason()
                     );
                 });
     }
@@ -219,16 +267,48 @@ public class FocusSessionServiceImpl implements FocusSessionService {
     @Scheduled(fixedRate = 60_000)  // Every 1 minute
     @Transactional
     public void timeoutGuardian() {
-        Instant threshold = Instant.now(clock)
-                .minus(Duration.ofHours(maxSessionHours));
-        List<FocusSession> stale = focusSessionRepository.findActiveSessionsBefore(threshold);
-        for (FocusSession session : stale) {
+        Instant now = Instant.now(clock);
+        int maxEffectiveSeconds = maxSessionHours * 3600;
+        int maxPauseSeconds = maxPauseHours * 3600;
+
+        List<FocusSession> ongoing = focusSessionRepository.findAllOngoing();
+        for (FocusSession session : ongoing) {
             try {
-                log.warn("Auto-finishing stale session: userId={}, sessionId={}, startedAt={}",
-                        session.getUserId(), session.getId(), session.getStartedAt());
-                finish(session.getUserId(), session.getId());
+                // 1. 检查宽限期是否已过期（最高优先级）
+                if (session.getGraceDeadline() != null && now.isAfter(session.getGraceDeadline())) {
+                    log.warn("Grace period expired, aborting session: userId={}, sessionId={}, reason={}",
+                            session.getUserId(), session.getId(), session.getGraceReason());
+                    abort(session.getUserId(), session.getId());
+                    continue;
+                }
+
+                // 2. 检查 ACTIVE 会话是否达到8h有效学习上限
+                if (session.isActive() && session.getGraceDeadline() == null) {
+                    int elapsed = session.computeElapsedSeconds(now);
+                    if (elapsed >= maxEffectiveSeconds) {
+                        session.setStatus("PAUSED");
+                        session.setPausedAt(now);
+                        session.setResumedAt(null);
+                        session.setGraceDeadline(now.plus(Duration.ofMinutes(gracePeriodMinutes)));
+                        session.setGraceReason(GRACE_REASON_LEARNING);
+                        log.warn("Auto-paused session reached {}h learning limit: userId={}, sessionId={}, elapsedSec={}",
+                                maxSessionHours, session.getUserId(), session.getId(), elapsed);
+                    }
+                }
+
+                // 3. 检查 PAUSED 会话是否超过1h暂停上限
+                if (session.isPaused() && session.getGraceDeadline() == null
+                        && session.getPausedAt() != null) {
+                    long pauseDuration = Duration.between(session.getPausedAt(), now).getSeconds();
+                    if (pauseDuration >= maxPauseSeconds) {
+                        session.setGraceDeadline(now.plus(Duration.ofMinutes(gracePeriodMinutes)));
+                        session.setGraceReason(GRACE_REASON_PAUSE);
+                        log.warn("Session paused too long, entering grace period: userId={}, sessionId={}, pauseSec={}",
+                                session.getUserId(), session.getId(), pauseDuration);
+                    }
+                }
             } catch (Exception e) {
-                log.error("Failed to auto-finish session {}: {}", session.getId(), e.getMessage());
+                log.error("Failed to process session {}: {}", session.getId(), e.getMessage());
             }
         }
     }

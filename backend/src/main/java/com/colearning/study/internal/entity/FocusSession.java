@@ -63,6 +63,12 @@ public class FocusSession extends BaseEntity {
     @Column(name = "client_request_id", length = 64)
     private String clientRequestId;
 
+    @Column(name = "grace_deadline")
+    private Instant graceDeadline;
+
+    @Column(name = "grace_reason", length = 20)
+    private String graceReason;
+
     // --- Status helpers ---
 
     public boolean isActive() {

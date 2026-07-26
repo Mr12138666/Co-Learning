@@ -7,9 +7,12 @@ public record ActiveFocusResponse(
         String status,
         Instant startedAt,
         Instant pausedAt,
+        Instant resumedAt,
         int pausedSeconds,
         int elapsedSeconds,
         Long subjectId,
-        Long taskId
+        Long taskId,
+        Instant graceDeadline,
+        String graceReason
 ) {
 }

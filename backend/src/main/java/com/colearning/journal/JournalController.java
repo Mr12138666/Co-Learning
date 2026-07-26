@@ -90,6 +90,14 @@ public class JournalController {
                 journalService.listPublicJournals(page, size)));
     }
 
+    @GetMapping("/public/{journalId}")
+    @Operation(summary = "获取公开日志详情")
+    public ResponseEntity<ApiResponse<JournalResponse>> getPublicJournalById(
+            @PathVariable Long journalId) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                journalService.getPublicJournalById(journalId)));
+    }
+
     @GetMapping("/users/{targetUserId}")
     @Operation(summary = "查看指定用户的公开日志")
     public ResponseEntity<ApiResponse<PageResponse<JournalResponse>>> listUserJournals(

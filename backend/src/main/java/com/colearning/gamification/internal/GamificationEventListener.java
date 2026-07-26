@@ -2,6 +2,7 @@ package com.colearning.gamification.internal;
 
 import com.colearning.common.event.DailyCheckinCompletedEvent;
 import com.colearning.common.event.FocusSessionFinishedEvent;
+import com.colearning.gamification.DailyTaskService;
 import com.colearning.gamification.GamificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,9 +19,11 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class GamificationEventListener {
 
     private final GamificationService gamificationService;
+    private final DailyTaskService dailyTaskService;
 
     /**
-     * When a focus session finishes, award EXP (every 10 min = 1 EXP) and check achievements.
+     * When a focus session finishes, award EXP (every 10 min = 1 EXP) and tokens (every 30 min = 1 token),
+     * then check achievements.
      */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onFocusSessionFinished(FocusSessionFinishedEvent event) {
@@ -28,9 +31,14 @@ public class GamificationEventListener {
             // Every 10 minutes of focus = 1 EXP (minimum 1)
             int exp = Math.max(1, event.effectiveSeconds() / 600);
             gamificationService.addExp(event.userId(), exp);
+            
+            // Every 30 minutes of focus = 1 token (minimum 1)
+            int tokens = Math.max(1, event.effectiveSeconds() / 1800);
+            gamificationService.addTokens(event.userId(), tokens);
+            
             gamificationService.checkAndUnlockAchievements(event.userId());
         } catch (Exception e) {
-            log.error("Failed to award EXP for userId={}: {}", event.userId(), e.getMessage(), e);
+            log.error("Failed to award EXP/tokens for userId={}: {}", event.userId(), e.getMessage(), e);
         }
     }
 
@@ -41,8 +49,12 @@ public class GamificationEventListener {
     public void onDailyCheckinCompleted(DailyCheckinCompletedEvent event) {
         try {
             gamificationService.addExp(event.userId(), 5);
-            gamificationService.addTokens(event.userId(), 3);
+            // Base 5 tokens + streak bonus (1 per day)
+            gamificationService.addTokens(event.userId(), 5 + event.streakDays());
             gamificationService.checkAndUnlockAchievements(event.userId());
+            
+            // Update daily task progress
+            dailyTaskService.onCheckinCompleted(event.userId());
         } catch (Exception e) {
             log.error("Failed to award check-in bonus for userId={}: {}",
                     event.userId(), e.getMessage(), e);

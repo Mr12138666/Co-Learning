@@ -52,7 +52,21 @@ public class MinioStorageService implements StorageService {
 
     @Override
     public String getUrl(String bucket, String objectKey) {
-        return appProperties.getStorage().getEndpoint() + "/" + bucket + "/" + objectKey;
+        // Use backend proxy path: /api/storage/proxy/bucket/key
+        // Backend will proxy to MinIO using authenticated client
+        return "/api/storage/proxy/" + bucket + "/" + objectKey;
+    }
+
+    /**
+     * Get file content from MinIO.
+     */
+    public byte[] getFile(String bucket, String objectKey) throws Exception {
+        return minioClient.getObject(
+                io.minio.GetObjectArgs.builder()
+                        .bucket(bucket)
+                        .object(objectKey)
+                        .build())
+                .readAllBytes();
     }
 
     @Override

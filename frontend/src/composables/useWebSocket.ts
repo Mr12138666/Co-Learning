@@ -1,4 +1,4 @@
-import { ref, type Ref } from 'vue'
+import { ref, onScopeDispose, type Ref } from 'vue'
 import { Client, type IMessage, type StompSubscription } from '@stomp/stompjs'
 import SockJS from 'sockjs-client'
 import { useAuthStore } from '@/stores/authStore'
@@ -269,6 +269,11 @@ export function useWebSocket() {
   function sendChatMessage(roomId: number, content: string, messageType = 'TEXT') {
     send(`/rooms/${roomId}/chat`, { content, messageType })
   }
+
+  // Auto-cleanup when the using component/scope is disposed
+  onScopeDispose(() => {
+    disconnect()
+  })
 
   return {
     connectionState,

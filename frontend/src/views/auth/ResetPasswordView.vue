@@ -24,15 +24,15 @@ const success = ref(false)
 const formRef = ref<FormInst | null>(null)
 
 const formData = reactive({
-  token: (route.query.token as string) || '',
+  code: (route.query.token as string) || '',
   newPassword: '',
   confirmPassword: '',
 })
 
 const rules: FormRules = {
-  token: {
+  code: {
     required: true,
-    message: '请输入重置令牌',
+    message: '请输入6位验证码',
     trigger: 'blur',
   },
   newPassword: [
@@ -71,13 +71,17 @@ async function handleReset() {
   } catch {
     return
   }
+  if (formData.code.length !== 6) {
+    message.error('请输入6位验证码')
+    return
+  }
   loading.value = true
   try {
-    await authApi.resetPassword(formData.token, formData.newPassword)
+    await authApi.resetPassword(formData.code, formData.newPassword)
     success.value = true
     message.success('密码重置成功')
   } catch (error: any) {
-    message.error(error.response?.data?.message || '重置失败，令牌可能已过期')
+    message.error(error.response?.data?.message || '重置失败，验证码可能已过期')
   } finally {
     loading.value = false
   }
@@ -95,15 +99,15 @@ async function handleReset() {
       </div>
     </template>
     <template v-else>
-      <p style="margin-bottom: 16px; color: #666;">
-        输入邮件中的重置令牌以及您的新密码。
+      <p class="form-description">
+        输入邮件中的6位验证码以及您的新密码。
       </p>
       <NForm ref="formRef" :model="formData" :rules="rules" label-placement="top">
-        <NFormItem label="重置令牌" path="token">
+        <NFormItem label="验证码" path="code">
           <NInput
-            v-model:value="formData.token"
-            placeholder="请输入邮件中的重置令牌"
-            type="text"
+            v-model:value="formData.code"
+            placeholder="请输入邮件中的6位验证码"
+            maxlength="6"
           />
         </NFormItem>
         <NFormItem label="新密码" path="newPassword">
@@ -134,3 +138,10 @@ async function handleReset() {
     </template>
   </NCard>
 </template>
+
+<style scoped>
+.form-description {
+  margin-bottom: 16px;
+  color: var(--text-secondary);
+}
+</style>

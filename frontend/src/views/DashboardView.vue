@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   NCard,
@@ -12,10 +12,16 @@ import {
   NTag,
   NText,
   NProgress,
+  NModal,
+  NForm,
+  NFormItem,
+  NInput,
+  useMessage,
 } from 'naive-ui'
 import { useAuthStore } from '@/stores/authStore'
 import { useStudyStore } from '@/stores/studyStore'
 import { useDashboardStore } from '@/stores/dashboardStore'
+import { userApi, type UserProfileResponse } from '@/api/user'
 import FocusTimer from '@/components/focus/FocusTimer.vue'
 import TaskList from '@/components/study/TaskList.vue'
 
@@ -23,6 +29,14 @@ const router = useRouter()
 const authStore = useAuthStore()
 const studyStore = useStudyStore()
 const dashboardStore = useDashboardStore()
+const profile = ref<UserProfileResponse | null>(null)
+const message = useMessage()
+
+// Daily goal edit modal
+const showEditModal = ref(false)
+const editGoalForm = ref({
+  dailyFocusGoalMinutes: 120,
+})
 
 const greeting = computed(() => {
   const hour = new Date().getHours()
@@ -43,22 +57,62 @@ function formatMinutes(seconds: number): string {
   return `${hours}h${mins % 60}m`
 }
 
+function formatTimeFromMinutes(minutes: number): string {
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  if (hours > 0 && mins > 0) return `${hours}h${mins}min`
+  if (hours > 0) return `${hours}h`
+  return `${mins}min`
+}
+
 const todayFocus = computed(() => dashboardStore.stats?.todayFocusSeconds ?? 0)
 const weekFocus = computed(() => dashboardStore.stats?.weekFocusSeconds ?? 0)
 const streak = computed(() => dashboardStore.stats?.streakDays ?? 0)
 const checkinCompleted = computed(() => dashboardStore.todayCheckin?.completed ?? false)
 
-// Daily goal: 120 minutes
-const dailyGoalMin = 120
+// Daily goal from user settings, default to 120 minutes
+const dailyGoalMin = computed(() => profile.value?.dailyFocusGoalMinutes ?? 120)
 const dailyProgress = computed(() => {
   const mins = Math.floor(todayFocus.value / 60)
-  return Math.min(100, Math.round((mins / dailyGoalMin) * 100))
+  return Math.min(100, Math.round((mins / dailyGoalMin.value) * 100))
 })
+
+async function loadProfile() {
+  try {
+    const res = await userApi.getMyProfile()
+    profile.value = res.data.data
+    editGoalForm.value.dailyFocusGoalMinutes = profile.value.dailyFocusGoalMinutes ?? 120
+  } catch {
+    // Ignore profile load errors
+  }
+}
+
+function openEditModal() {
+  editGoalForm.value.dailyFocusGoalMinutes = profile.value?.dailyFocusGoalMinutes ?? 120
+  showEditModal.value = true
+}
+
+async function saveDailyGoal() {
+  const value = editGoalForm.value.dailyFocusGoalMinutes
+  if (value < 1 || value > 1440) {
+    message.error('请输入1-1440之间的分钟数')
+    return
+  }
+  try {
+    await userApi.updateSettings({ dailyFocusGoalMinutes: value })
+    await loadProfile()
+    message.success('日目标已更新')
+    showEditModal.value = false
+  } catch (error: any) {
+    message.error(error.response?.data?.message || '更新失败')
+  }
+}
 
 onMounted(async () => {
   await Promise.all([
     studyStore.fetchAll(),
     dashboardStore.refreshAll(),
+    loadProfile(),
   ])
 })
 </script>
@@ -72,7 +126,7 @@ onMounted(async () => {
           <h2 style="margin: 0; font-size: 24px;">
             {{ greeting }}，{{ displayName }}
           </h2>
-          <p style="margin: 8px 0 0; color: #666;">
+          <p class="greeting-subtitle">
             每一分钟专注，都是通向目标的步伐。
           </p>
         </div>
@@ -99,7 +153,10 @@ onMounted(async () => {
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <NStatistic label="今日专注" :value="formatMinutes(todayFocus)" />
                 <div style="text-align: right; flex: 1; margin-left: 16px;">
-                  <NText depth="3" style="font-size: 12px;">日目标 {{ dailyGoalMin }} 分钟</NText>
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <NText depth="3" style="font-size: 12px;">日目标 {{ formatTimeFromMinutes(dailyGoalMin) }}</NText>
+                    <NButton text size="small" @click="openEditModal">编辑</NButton>
+                  </div>
                   <NProgress
                     type="line"
                     :percentage="dailyProgress"
@@ -196,4 +253,24 @@ onMounted(async () => {
       </NGridItem>
     </NGrid>
   </div>
+
+  <!-- Daily Goal Edit Modal -->
+  <NModal v-model:show="showEditModal" preset="card" title="设置日目标专注时长">
+    <NForm :model="editGoalForm">
+      <NFormItem label="日目标专注时长（分钟）">
+        <NInput v-model:value="editGoalForm.dailyFocusGoalMinutes" type="number" :min="1" :max="1440" />
+      </NFormItem>
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
+        <NButton @click="showEditModal = false">取消</NButton>
+        <NButton type="primary" @click="saveDailyGoal">保存</NButton>
+      </div>
+    </NForm>
+  </NModal>
 </template>
+
+<style scoped>
+.greeting-subtitle {
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+}
+</style>

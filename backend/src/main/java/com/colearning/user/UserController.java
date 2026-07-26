@@ -38,6 +38,11 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.ok(userService.getProfile(userId)));
     }
 
+    @GetMapping("/users/{userId}/profile")
+    public ResponseEntity<ApiResponse<UserProfileResponse>> getUserProfile(@PathVariable Long userId) {
+        return ResponseEntity.ok(ApiResponse.ok(userService.getProfile(userId)));
+    }
+
     @PutMapping("/profile")
     public ResponseEntity<ApiResponse<UserProfileResponse>> updateProfile(
             @Valid @RequestBody UpdateProfileRequest request) {

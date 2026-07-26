@@ -24,13 +24,28 @@ const focusStatusText = computed(() => {
   if (props.message.focusStatus === 'IDLE') return '休息中'
   return props.message.content
 })
+
+// Check if message is an image
+const imageUrl = computed(() => {
+  const match = props.message.content?.match(/!\[图片\]\((.+?)\)/)
+  if (!match) return null
+  
+  let url = match[1]
+  // Convert old format http://localhost:9000/bucket/key to /api/storage/proxy/bucket/key
+  if (url.startsWith('http://localhost:9000/')) {
+    url = url.replace('http://localhost:9000/', '/api/storage/proxy/')
+  }
+  // Convert old Vite proxy format /storage/bucket/key to /api/storage/proxy/bucket/key
+  if (url.startsWith('/storage/')) {
+    url = url.replace('/storage/', '/api/storage/proxy/')
+  }
+  return url
+})
 </script>
 
 <template>
   <div v-if="isSystem" class="message-system">
-    <n-divider>
-      <span class="system-text">{{ message.displayName }} {{ message.content }}</span>
-    </n-divider>
+    <span class="system-text">{{ message.displayName }} {{ message.content }}</span>
   </div>
 
   <div v-else-if="isFocusStatus" class="message-focus-status">
@@ -40,34 +55,36 @@ const focusStatusText = computed(() => {
   </div>
 
   <div v-else class="message-item" :class="{ own: isOwn }">
-    <n-avatar round size="small" :src="message.avatarUrl || undefined" v-if="!isOwn">
+    <!-- Avatar -->
+    <n-avatar round size="large" :src="message.avatarUrl || undefined" class="message-avatar">
       {{ message.displayName?.charAt(0) }}
     </n-avatar>
 
+    <!-- Content -->
     <div class="message-content-wrapper">
-      <div class="message-meta" v-if="!isOwn">
-        <span class="message-author">{{ message.displayName }}</span>
-      </div>
+      <span class="message-author">{{ message.displayName }}</span>
       <div class="message-bubble" :class="{ own: isOwn }">
-        <span class="message-text">{{ message.content }}</span>
+        <img v-if="imageUrl" :src="imageUrl" class="message-image" />
+        <span v-else class="message-text">{{ message.content }}</span>
       </div>
       <span class="message-time">{{ formattedTime }}</span>
     </div>
-
-    <n-avatar round size="small" :src="message.avatarUrl || undefined" v-if="isOwn">
-      {{ message.displayName?.charAt(0) }}
-    </n-avatar>
   </div>
 </template>
 
 <style scoped>
 .message-system {
-  margin: 4px 0;
+  display: flex;
+  justify-content: center;
+  margin: 8px 0;
 }
 
 .system-text {
   font-size: 12px;
-  color: var(--text-color-3);
+  color: var(--text-tertiary);
+  background-color: var(--bg-tertiary);
+  padding: 4px 12px;
+  border-radius: 12px;
 }
 
 .message-focus-status {
@@ -75,9 +92,9 @@ const focusStatusText = computed(() => {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 4px 0;
+  padding: 8px 0;
   font-size: 12px;
-  color: var(--text-color-3);
+  color: var(--text-tertiary);
 }
 
 .focus-icon {
@@ -87,7 +104,7 @@ const focusStatusText = computed(() => {
 .message-item {
   display: flex;
   gap: 8px;
-  margin: 8px 0;
+  margin: 16px 0;
   align-items: flex-start;
 }
 
@@ -95,45 +112,61 @@ const focusStatusText = computed(() => {
   flex-direction: row-reverse;
 }
 
+.message-avatar {
+  flex-shrink: 0;
+}
+
 .message-content-wrapper {
   display: flex;
   flex-direction: column;
   max-width: 70%;
+  gap: 4px;
 }
 
 .message-item.own .message-content-wrapper {
   align-items: flex-end;
 }
 
-.message-meta {
-  margin-bottom: 2px;
-}
-
 .message-author {
   font-size: 12px;
-  color: var(--text-color-3);
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
 .message-bubble {
   padding: 8px 12px;
-  border-radius: 12px;
-  background-color: var(--tag-color);
   word-break: break-word;
+  border-radius: 0 8px 8px 8px;
+  background-color: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
 }
 
 .message-bubble.own {
-  background-color: var(--primary-color);
-  color: white;
+  border-radius: 8px 0 8px 8px;
+  background-color: var(--accent-primary);
+  border-color: var(--accent-primary);
 }
 
 .message-text {
   font-size: 14px;
   line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.message-image {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.message-bubble.own .message-text {
+  color: #fff;
 }
 
 .message-time {
-  font-size: 11px;
-  color: var(--text-color-3);
-  margin-top: 2px;
+  font-size: 10px;
+  color: var(--text-tertiary);
 }
 </style>

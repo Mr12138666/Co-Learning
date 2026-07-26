@@ -3,6 +3,7 @@ package com.colearning.leaderboard.internal;
 import com.colearning.leaderboard.LeaderboardService;
 import com.colearning.leaderboard.dto.response.LeaderboardEntryResponse;
 import com.colearning.leaderboard.dto.response.LeaderboardResponse;
+import com.colearning.study.internal.repository.FocusSessionRepository;
 import com.colearning.user.internal.entity.UserProfile;
 import com.colearning.user.internal.repository.UserProfileRepository;
 import java.time.LocalDate;
@@ -45,6 +46,7 @@ public class LeaderboardServiceImpl implements LeaderboardService {
 
     private final StringRedisTemplate redisTemplate;
     private final UserProfileRepository userProfileRepository;
+    private final FocusSessionRepository focusSessionRepository;
 
     @Override
     public void addScore(Long userId, double score) {
@@ -173,5 +175,60 @@ public class LeaderboardServiceImpl implements LeaderboardService {
         if (userIds.isEmpty()) return Map.of();
         return userProfileRepository.findAllById(userIds).stream()
                 .collect(Collectors.toMap(UserProfile::getUserId, p -> p));
+    }
+
+    @Override
+    public void syncFromDatabase() {
+        // Fetch all finished focus sessions grouped by user
+        var focusData = focusSessionRepository.sumEffectiveSecondsByUserId();
+
+        // Clear existing leaderboard data
+        redisTemplate.delete(KEY_ALLTIME);
+        redisTemplate.delete(getDailyKey());
+        redisTemplate.delete(getWeeklyKey());
+
+        // Re-populate all-time leaderboard
+        int count = 0;
+        for (Object[] row : focusData) {
+            Long userId = (Long) row[0];
+            Number scoreNum = (Number) row[1];
+            if (scoreNum != null) {
+                double score = scoreNum.doubleValue();
+                String userIdStr = String.valueOf(userId);
+                redisTemplate.opsForZSet().add(KEY_ALLTIME, userIdStr, score);
+                count++;
+            }
+        }
+
+        // Re-populate weekly leaderboard (current ISO week: Monday to Sunday)
+        LocalDate now = LocalDate.now();
+        int dayOfWeek = now.get(WEEK_FIELDS.dayOfWeek());  // 1=Monday, 7=Sunday
+        LocalDate weekStart = now.minusDays(dayOfWeek - 1);
+        LocalDate weekEnd = weekStart.plusWeeks(1);
+        var weeklyData = focusSessionRepository.sumEffectiveSecondsByUserIdInRange(
+                weekStart.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant(),
+                weekEnd.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant());
+        for (Object[] row : weeklyData) {
+            Long userId = (Long) row[0];
+            Number scoreNum = (Number) row[1];
+            if (scoreNum != null) {
+                redisTemplate.opsForZSet().add(getWeeklyKey(), String.valueOf(userId), scoreNum.doubleValue());
+            }
+        }
+
+        // Re-populate daily leaderboard (today)
+        var dailyData = focusSessionRepository.sumEffectiveSecondsByUserIdInRange(
+                now.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant(),
+                now.plusDays(1).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant());
+        for (Object[] row : dailyData) {
+            Long userId = (Long) row[0];
+            Number scoreNum = (Number) row[1];
+            if (scoreNum != null) {
+                redisTemplate.opsForZSet().add(getDailyKey(), String.valueOf(userId), scoreNum.doubleValue());
+            }
+        }
+
+        log.info("Leaderboard synchronized from database: {} users (alltime), {} weekly, {} daily",
+                count, weeklyData.size(), dailyData.size());
     }
 }

@@ -13,5 +13,7 @@ public record TokenResponse(
         Long userId,
         String email,
         String role,
-        boolean emailVerified
+        boolean emailVerified,
+        String displayName,
+        String avatarUrl
 ) {}

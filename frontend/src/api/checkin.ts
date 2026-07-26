@@ -27,5 +27,5 @@ export const checkinApi = {
   getToday: () => http.get('/checkins/today'),
   update: (data: UpdateCheckinRequest) => http.put('/checkins', data),
   complete: () => http.post('/checkins/complete'),
-  getByDate: (date: string) => http.get(`/checkins/${date}`),
+  getByDate: (date: string) => http.get('/checkins', { params: { date } }),
 }

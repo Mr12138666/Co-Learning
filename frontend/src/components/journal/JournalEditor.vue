@@ -12,6 +12,7 @@ import {
   useMessage,
 } from 'naive-ui'
 import type { Journal } from '@/api/journal'
+import { storageApi } from '@/api/storage'
 
 const props = defineProps<{
   modelValue?: Partial<Journal>
@@ -31,6 +32,19 @@ const title = ref(props.modelValue?.title ?? '')
 const content = ref(props.modelValue?.contentMarkdown ?? '')
 const visibility = ref(props.modelValue?.visibility ?? 'PRIVATE')
 const previewMode = ref<'split' | 'preview' | 'edit'>('split')
+
+// Watch for modelValue changes (for async loading in edit mode)
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    if (newVal) {
+      title.value = newVal.title ?? ''
+      content.value = newVal.contentMarkdown ?? ''
+      visibility.value = newVal.visibility ?? 'PRIVATE'
+    }
+  },
+  { deep: true },
+)
 
 // Auto-save to localStorage (debounced)
 const STORAGE_KEY = 'journal-draft'
@@ -72,6 +86,8 @@ function renderMarkdown(md: string): string {
     .replace(/`(.+?)`/g, '<code>$1</code>')
     // Unordered lists
     .replace(/^- (.+)$/gm, '<li>$1</li>')
+    // Images
+    .replace(/!\[(.+?)\]\((.+?)\)/g, '<img src="$2" alt="$1" class="preview-image" />')
     // Line breaks (paragraphs)
     .replace(/\n\n/g, '</p><p>')
     .replace(/\n/g, '<br>')
@@ -179,6 +195,22 @@ function insertBold() { insertText('**', '**') }
 function insertItalic() { insertText('*', '*') }
 function insertCode() { insertText('`', '`') }
 function insertList() { insertText('- ') }
+
+async function insertImage(e: Event) {
+  const target = e.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+  
+  try {
+    const res = await storageApi.upload(file)
+    const url = res.data.data.url
+    insertText(`![图片](${url})`)
+  } catch {
+    message.error('图片上传失败')
+  } finally {
+    target.value = ''
+  }
+}
 </script>
 
 <template>
@@ -220,6 +252,10 @@ function insertList() { insertText('- ') }
           <NButton size="tiny" quaternary @click="insertItalic">斜体</NButton>
           <NButton size="tiny" quaternary @click="insertCode">代码</NButton>
           <NButton size="tiny" quaternary @click="insertList">列表</NButton>
+          <label class="image-upload-btn">
+            <input type="file" accept="image/*" class="file-input" @change="insertImage" />
+            <NButton size="tiny" quaternary>📷 图片</NButton>
+          </label>
         </div>
         <NInput
           v-model:value="content"
@@ -284,6 +320,14 @@ function insertList() { insertText('- ') }
   padding: 4px 0;
 }
 
+.image-upload-btn {
+  cursor: pointer;
+}
+
+.file-input {
+  display: none;
+}
+
 .preview-pane {
   background: var(--n-color, #fff);
   border: 1px solid var(--n-border-color, #e0e0e6);
@@ -320,4 +364,5 @@ function insertList() { insertText('- ') }
   padding: 0;
 }
 .preview-content :deep(strong) { font-weight: 600; }
+.preview-content :deep(.preview-image) { max-width: 100%; border-radius: 4px; }
 </style>

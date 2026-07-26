@@ -28,5 +28,7 @@ public interface JournalService {
 
     PageResponse<JournalResponse> listPublicJournals(int page, int size);
 
+    JournalResponse getPublicJournalById(Long journalId);
+
     PageResponse<JournalResponse> listUserJournals(Long viewerId, Long targetUserId, int page, int size);
 }

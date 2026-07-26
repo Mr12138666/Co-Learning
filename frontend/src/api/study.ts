@@ -81,6 +81,9 @@ export interface UpdateTaskRequest {
 // ===== API =====
 
 export const studyApi = {
+  // Stats
+  getStats: () => http.get('/stats'),
+
   // Goals
   listGoals: () => http.get('/study/goals'),
   createGoal: (data: CreateExamGoalRequest) => http.post('/study/goals', data),

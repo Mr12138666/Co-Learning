@@ -1,219 +1,481 @@
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { NCard, NStatistic, NSpace, NGrid, NGridItem, NSpin, NEmpty, NButton, useMessage } from 'naive-ui'
+import VChart from 'vue-echarts'
+import { use } from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
+import { BarChart, LineChart, PieChart } from 'echarts/charts'
 import {
-  NCard,
-  NGrid,
-  NGridItem,
-  NStatistic,
-  NEmpty,
-  NText,
-  NSpace,
-  NTag,
-} from 'naive-ui'
-import { useDashboardStore } from '@/stores/dashboardStore'
-import dayjs from 'dayjs'
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
+  GridComponent,
+} from 'echarts/components'
+import { studyApi } from '@/api/study'
+import { useThemeStore } from '@/stores/themeStore'
 
-const dashboardStore = useDashboardStore()
+use([
+  CanvasRenderer,
+  BarChart,
+  LineChart,
+  PieChart,
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
+  GridComponent,
+])
 
-function formatDuration(seconds: number): string {
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  if (h > 0) return `${h}h ${m}m`
-  return `${m}m`
+const themeStore = useThemeStore()
+const message = useMessage()
+const loading = ref(true)
+const loadError = ref(false)
+
+interface DailyStat {
+  date: string
+  focusSeconds: number
+  sessionCount: number
+  checkedIn: boolean
 }
 
-// Last 7 days data for bar chart
-const weekData = computed(() => {
-  if (!dashboardStore.stats?.dailyStats) return []
-  return dashboardStore.stats.dailyStats.slice(-7).map((d) => ({
-    date: d.date,
-    dayLabel: dayjs(d.date).format('ddd'),
-    minutes: Math.floor(d.focusSeconds / 60),
-    checkedIn: d.checkedIn,
+interface WeeklyStat {
+  weekOfYear: number
+  weekLabel: string
+  focusSeconds: number
+  sessionCount: number
+  checkinCount: number
+}
+
+interface MonthlyStat {
+  month: string
+  monthLabel: string
+  focusSeconds: number
+  sessionCount: number
+  focusDays: number
+}
+
+interface SubjectStat {
+  subjectId: number
+  subjectName: string
+  subjectColor: string
+  focusSeconds: number
+  sessionCount: number
+}
+
+interface StatsResponse {
+  todayFocusSeconds: number
+  weekFocusSeconds: number
+  monthFocusSeconds: number
+  yearFocusSeconds: number
+  totalFocusSeconds: number
+  streakDays: number
+  focusDays: number
+  totalCheckins: number
+  weekCheckinCount: number
+  weekCompletedCount: number
+  lastCheckinDate: string | null
+  dailyStats: DailyStat[]
+  weeklyStats: WeeklyStat[]
+  monthlyStats: MonthlyStat[]
+  subjectStats: SubjectStat[]
+}
+
+const stats = ref<StatsResponse | null>(null)
+
+function formatSeconds(seconds: number): string {
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`
+  }
+  return `${minutes}m`
+}
+
+// Daily Bar Chart
+const dailyChartOption = computed(() => {
+  if (!stats.value) return {}
+  const dates = stats.value.dailyStats.map(d => {
+    const date = new Date(d.date)
+    return `${date.getMonth() + 1}/${date.getDate()}`
+  })
+  const data = stats.value.dailyStats.map(d => Math.floor(d.focusSeconds / 60))
+  
+  return {
+    tooltip: { trigger: 'axis' },
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    xAxis: { type: 'category', data: dates, axisLabel: { color: themeStore.theme === 'dark' ? '#aaa' : '#666' } },
+    yAxis: { type: 'value', name: '分钟', axisLabel: { color: themeStore.theme === 'dark' ? '#aaa' : '#666' } },
+    series: [{
+      type: 'bar',
+      data,
+      itemStyle: {
+        color: '#4f8cff',
+        borderRadius: [4, 4, 0, 0],
+      },
+    }],
+    backgroundColor: 'transparent',
+  }
+})
+
+// Weekly Line Chart
+const weeklyChartOption = computed(() => {
+  if (!stats.value) return {}
+  const labels = stats.value.weeklyStats.map(w => w.weekLabel)
+  const focusData = stats.value.weeklyStats.map(w => Math.floor(w.focusSeconds / 60))
+  const checkinData = stats.value.weeklyStats.map(w => w.checkinCount)
+  
+  return {
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['专注时长', '打卡次数'], textStyle: { color: themeStore.theme === 'dark' ? '#aaa' : '#666' } },
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    xAxis: { type: 'category', data: labels, axisLabel: { color: themeStore.theme === 'dark' ? '#aaa' : '#666' } },
+    yAxis: [{ type: 'value', name: '分钟', axisLabel: { color: themeStore.theme === 'dark' ? '#aaa' : '#666' } }, 
+            { type: 'value', name: '次数', axisLabel: { color: themeStore.theme === 'dark' ? '#aaa' : '#666' } }],
+    series: [{
+      name: '专注时长',
+      type: 'line',
+      data: focusData,
+      smooth: true,
+      lineStyle: { width: 3, color: '#4f8cff' },
+      itemStyle: { color: '#4f8cff' },
+      areaStyle: {
+        color: {
+          type: 'linear',
+          x: 0, y: 0, x2: 0, y2: 1,
+          colorStops: [
+            { offset: 0, color: 'rgba(79, 140, 255, 0.3)' },
+            { offset: 1, color: 'rgba(79, 140, 255, 0)' },
+          ],
+        },
+      },
+    }, {
+      name: '打卡次数',
+      type: 'line',
+      yAxisIndex: 1,
+      data: checkinData,
+      smooth: true,
+      lineStyle: { width: 2, color: '#52c41a' },
+      itemStyle: { color: '#52c41a' },
+    }],
+    backgroundColor: 'transparent',
+  }
+})
+
+// Monthly Bar Chart
+const monthlyChartOption = computed(() => {
+  if (!stats.value) return {}
+  const labels = stats.value.monthlyStats.map(m => m.monthLabel)
+  const data = stats.value.monthlyStats.map(m => Math.floor(m.focusSeconds / 3600))
+  
+  return {
+    tooltip: { trigger: 'axis' },
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    xAxis: { type: 'category', data: labels, axisLabel: { color: themeStore.theme === 'dark' ? '#aaa' : '#666' } },
+    yAxis: { type: 'value', name: '小时', axisLabel: { color: themeStore.theme === 'dark' ? '#aaa' : '#666' } },
+    series: [{
+      type: 'bar',
+      data,
+      itemStyle: {
+        color: {
+          type: 'linear',
+          x: 0, y: 0, x2: 0, y2: 1,
+          colorStops: [
+            { offset: 0, color: '#722ed1' },
+            { offset: 1, color: '#b37feb' },
+          ],
+        },
+        borderRadius: [4, 4, 0, 0],
+      },
+    }],
+    backgroundColor: 'transparent',
+  }
+})
+
+// Subject Pie Chart
+const subjectChartOption = computed(() => {
+  if (!stats.value) return {}
+  const data = stats.value.subjectStats.map(s => ({
+    name: s.subjectName,
+    value: Math.floor(s.focusSeconds / 60),
+    itemStyle: { color: s.subjectColor },
   }))
+  
+  return {
+    tooltip: { trigger: 'item', formatter: '{b}: {c}分钟 ({d}%)' },
+    legend: { orient: 'vertical', right: '5%', top: 'center', textStyle: { color: themeStore.theme === 'dark' ? '#aaa' : '#666' } },
+    series: [{
+      type: 'pie',
+      radius: ['40%', '70%'],
+      center: ['40%', '50%'],
+      avoidLabelOverlap: false,
+      itemStyle: { borderRadius: 4, borderColor: themeStore.theme === 'dark' ? '#1a1a1a' : '#fff', borderWidth: 2 },
+      label: { show: false },
+      emphasis: { label: { show: true, fontSize: 14 } },
+      data,
+    }],
+    backgroundColor: 'transparent',
+  }
 })
 
-const maxMinutes = computed(() => {
-  return Math.max(60, ...weekData.value.map((d) => d.minutes))
-})
-
-// Subject distribution
-const subjectStats = computed(() => {
-  return dashboardStore.stats?.subjectStats ?? []
-})
-
-const totalSubjectMinutes = computed(() => {
-  return subjectStats.value.reduce((sum, s) => sum + s.focusSeconds, 0)
-})
+async function loadStats() {
+  loading.value = true
+  loadError.value = false
+  try {
+    const res = await studyApi.getStats()
+    stats.value = res.data.data
+  } catch {
+    loadError.value = true
+  } finally {
+    loading.value = false
+  }
+}
 
 onMounted(() => {
-  dashboardStore.fetchStats()
+  loadStats()
 })
 </script>
 
 <template>
-  <div>
-    <!-- Overview stats -->
-    <NGrid :cols="4" :x-gap="16" :y-gap="16" responsive="screen" item-responsive>
-      <NGridItem span="4 s:2 m:1">
-        <NCard :bordered="false" size="small">
-          <NStatistic label="今日专注" :value="formatDuration(dashboardStore.stats?.todayFocusSeconds ?? 0)" />
+  <!-- Loading state -->
+  <div v-if="loading" class="stats-loading">
+    <n-spin size="large" />
+  </div>
+
+  <!-- Error state -->
+  <div v-else-if="loadError" class="stats-error">
+    <n-empty description="加载统计数据失败">
+      <template #extra>
+        <n-button type="primary" @click="loadStats">重试</n-button>
+      </template>
+    </n-empty>
+  </div>
+
+  <!-- Stats content -->
+  <div v-else-if="stats" class="stats-view">
+    <!-- Header -->
+    <NCard :bordered="false" class="stats-header">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span style="font-size: 24px;">📊</span>
+          <span style="font-size: 20px; font-weight: 600; margin-left: 8px;">学习统计</span>
+        </div>
+        <NButton text @click="loadStats">刷新数据</NButton>
+      </div>
+    </NCard>
+
+    <!-- Stats Cards -->
+    <NGrid :cols="4" :x-gap="12" :y-gap="12" style="margin-bottom: 24px;">
+      <NGridItem>
+        <NCard :bordered="false" class="stat-card">
+          <NStatistic
+            label="今日专注"
+            :value="formatSeconds(stats.todayFocusSeconds)"
+            :value-style="{ color: '#4f8cff', fontSize: '24px', fontWeight: '700' }"
+          />
         </NCard>
       </NGridItem>
-      <NGridItem span="4 s:2 m:1">
-        <NCard :bordered="false" size="small">
-          <NStatistic label="本周专注" :value="formatDuration(dashboardStore.stats?.weekFocusSeconds ?? 0)" />
+      <NGridItem>
+        <NCard :bordered="false" class="stat-card">
+          <NStatistic
+            label="本周专注"
+            :value="formatSeconds(stats.weekFocusSeconds)"
+            :value-style="{ color: '#52c41a', fontSize: '24px', fontWeight: '700' }"
+          />
         </NCard>
       </NGridItem>
-      <NGridItem span="4 s:2 m:1">
-        <NCard :bordered="false" size="small">
-          <NStatistic label="累计专注" :value="formatDuration(dashboardStore.stats?.totalFocusSeconds ?? 0)" />
+      <NGridItem>
+        <NCard :bordered="false" class="stat-card">
+          <NStatistic
+            label="本月专注"
+            :value="formatSeconds(stats.monthFocusSeconds)"
+            :value-style="{ color: '#faad14', fontSize: '24px', fontWeight: '700' }"
+          />
         </NCard>
       </NGridItem>
-      <NGridItem span="4 s:2 m:1">
-        <NCard :bordered="false" size="small">
-          <NStatistic label="连续天数" :value="dashboardStore.stats?.streakDays ?? 0" suffix="天" />
+      <NGridItem>
+        <NCard :bordered="false" class="stat-card">
+          <NStatistic
+            label="本年专注"
+            :value="formatSeconds(stats.yearFocusSeconds)"
+            :value-style="{ color: '#722ed1', fontSize: '24px', fontWeight: '700' }"
+          />
+        </NCard>
+      </NGridItem>
+      <NGridItem>
+        <NCard :bordered="false" class="stat-card">
+          <NStatistic
+            label="累计专注"
+            :value="formatSeconds(stats.totalFocusSeconds)"
+            :value-style="{ color: '#1890ff', fontSize: '24px', fontWeight: '700' }"
+          />
+        </NCard>
+      </NGridItem>
+      <NGridItem>
+        <NCard :bordered="false" class="stat-card">
+          <NStatistic
+            label="连续专注"
+            :value="stats.streakDays"
+            suffix="天"
+            :value-style="{ color: '#f5222d', fontSize: '24px', fontWeight: '700' }"
+          />
+        </NCard>
+      </NGridItem>
+      <NGridItem>
+        <NCard :bordered="false" class="stat-card">
+          <NStatistic
+            label="专注天数"
+            :value="stats.focusDays"
+            suffix="天"
+            :value-style="{ color: '#13c2c2', fontSize: '24px', fontWeight: '700' }"
+          />
+        </NCard>
+      </NGridItem>
+      <NGridItem>
+        <NCard :bordered="false" class="stat-card">
+          <NStatistic
+            label="累计打卡"
+            :value="stats.totalCheckins"
+            suffix="次"
+            :value-style="{ color: '#eb2f96', fontSize: '24px', fontWeight: '700' }"
+          />
         </NCard>
       </NGridItem>
     </NGrid>
 
-    <!-- Weekly chart -->
-    <NCard title="本周专注趋势" :bordered="false" style="margin-top: 16px;">
-      <div v-if="weekData.length > 0" class="week-chart">
-        <div v-for="d in weekData" :key="d.date" class="bar-col">
-          <div class="bar-container">
-            <div
-              class="bar"
-              :style="{
-                height: `${(d.minutes / maxMinutes) * 100}%`,
-                background: d.minutes > 0 ? '#2080F0' : '#e0e0e6',
-              }"
-            />
-            <NText v-if="d.minutes > 0" depth="3" style="font-size: 11px;">
-              {{ d.minutes }}m
-            </NText>
+    <!-- Charts -->
+    <NGrid :cols="2" :x-gap="12" :y-gap="12">
+      <!-- Daily Bar Chart -->
+      <NGridItem span="2">
+        <NCard :bordered="false" class="chart-card">
+          <template #header>
+            <span style="font-size: 16px; font-weight: 600;">📅 每日专注时长</span>
+          </template>
+          <div class="chart-container">
+            <v-chart :option="dailyChartOption" style="height: 300px; width: 100%;" autoresize />
           </div>
-          <div class="bar-label">
-            <NText depth="3" style="font-size: 12px;">{{ d.dayLabel }}</NText>
-            <span v-if="d.checkedIn" class="checkin-dot" />
-          </div>
-        </div>
-      </div>
-      <NEmpty v-else description="暂无数据" />
-    </NCard>
+        </NCard>
+      </NGridItem>
 
-    <!-- Subject distribution -->
-    <NCard title="科目分布" :bordered="false" style="margin-top: 16px;">
-      <NEmpty v-if="subjectStats.length === 0" description="完成专注会话后这里会显示科目分布" />
-      <div v-else class="subject-stats">
-        <div v-for="s in subjectStats" :key="s.subjectId" class="subject-row">
-          <div class="subject-info">
-            <span class="color-dot" :style="{ background: s.subjectColor }" />
-            <NText strong>{{ s.subjectName }}</NText>
-            <NText depth="3" style="font-size: 13px;">
-              {{ formatDuration(s.focusSeconds) }} / {{ s.sessionCount }} 次
-            </NText>
+      <!-- Weekly Line Chart -->
+      <NGridItem>
+        <NCard :bordered="false" class="chart-card">
+          <template #header>
+            <span style="font-size: 16px; font-weight: 600;">📈 每周趋势</span>
+          </template>
+          <div class="chart-container">
+            <v-chart :option="weeklyChartOption" style="height: 300px; width: 100%;" autoresize />
           </div>
-          <div class="progress-bar">
-            <div
-              class="progress-fill"
-              :style="{
-                width: `${totalSubjectMinutes > 0 ? (s.focusSeconds / totalSubjectMinutes) * 100 : 0}%`,
-                background: s.subjectColor,
-              }"
-            />
+        </NCard>
+      </NGridItem>
+
+      <!-- Monthly Bar Chart -->
+      <NGridItem>
+        <NCard :bordered="false" class="chart-card">
+          <template #header>
+            <span style="font-size: 16px; font-weight: 600;">📉 每月专注</span>
+          </template>
+          <div class="chart-container">
+            <v-chart :option="monthlyChartOption" style="height: 300px; width: 100%;" autoresize />
           </div>
-        </div>
-      </div>
-    </NCard>
+        </NCard>
+      </NGridItem>
+
+      <!-- Subject Pie Chart -->
+      <NGridItem>
+        <NCard :bordered="false" class="chart-card">
+          <template #header>
+            <span style="font-size: 16px; font-weight: 600;">🥧 科目分布</span>
+          </template>
+          <div class="chart-container">
+            <v-chart v-if="stats.subjectStats.length > 0" :option="subjectChartOption" style="height: 300px; width: 100%;" autoresize />
+            <n-empty v-else description="暂无科目数据" style="padding: 80px 0;" />
+          </div>
+        </NCard>
+      </NGridItem>
+
+      <!-- Weekly Stats -->
+      <NGridItem>
+        <NCard :bordered="false" class="chart-card">
+          <template #header>
+            <span style="font-size: 16px; font-weight: 600;">📋 本周统计</span>
+          </template>
+          <NSpace vertical :size="8">
+            <div class="stat-row">
+              <span class="stat-label">本周专注</span>
+              <span class="stat-value">{{ formatSeconds(stats.weekFocusSeconds) }}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">本周打卡</span>
+              <span class="stat-value">{{ stats.weekCheckinCount }}次</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">完成复盘</span>
+              <span class="stat-value">{{ stats.weekCompletedCount }}次</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">最后打卡</span>
+              <span class="stat-value">{{ stats.lastCheckinDate || '无' }}</span>
+            </div>
+          </NSpace>
+        </NCard>
+      </NGridItem>
+    </NGrid>
   </div>
 </template>
 
 <style scoped>
-.week-chart {
+.stats-loading {
   display: flex;
-  gap: 16px;
-  align-items: flex-end;
-  height: 200px;
-  padding: 16px 0;
-}
-
-.bar-col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  height: 100%;
+  min-height: 400px;
 }
 
-.bar-container {
-  flex: 1;
+.stats-error {
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  justify-content: flex-end;
-  width: 100%;
-  gap: 4px;
+  min-height: 400px;
 }
 
-.bar {
-  width: 60%;
-  max-width: 40px;
-  min-height: 2px;
-  border-radius: 4px 4px 0 0;
-  transition: height 0.3s ease;
+.stats-view {
+  padding-bottom: 24px;
 }
 
-.bar-label {
+.stats-header {
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background-color: var(--bg-card);
+}
+
+.chart-card {
+  background-color: var(--bg-card);
+}
+
+.chart-container {
+  padding: 8px 0;
+}
+
+.stat-row {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  gap: 2px;
-  margin-top: 4px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--divider-color);
 }
 
-.checkin-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #18a058;
+.stat-row:last-child {
+  border-bottom: none;
 }
 
-.subject-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.stat-label {
+  color: var(--text-secondary);
+  font-size: 14px;
 }
 
-.subject-row {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.subject-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.color-dot {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-}
-
-.progress-bar {
-  height: 8px;
-  background: #f0f0f0;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.3s ease;
+.stat-value {
+  font-weight: 600;
+  font-size: 14px;
 }
 </style>

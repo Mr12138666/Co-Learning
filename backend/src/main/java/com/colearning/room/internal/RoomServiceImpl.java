@@ -296,6 +296,10 @@ public class RoomServiceImpl implements RoomService {
     public RoomStateResponse getRoomState(Long roomId, Long userId) {
         Room room = findRoomById(roomId);
 
+        // Validate membership
+        roomMemberRepository.findActiveMember(roomId, userId)
+                .orElseThrow(() -> BusinessException.of(ErrorCode.ROOM_NOT_MEMBER));
+
         List<RoomMember> members = roomMemberRepository.findActiveMembers(roomId);
         Set<Long> userIds = members.stream().map(RoomMember::getUserId).collect(Collectors.toSet());
         Map<Long, UserProfile> profileMap = loadUserProfiles(userIds);

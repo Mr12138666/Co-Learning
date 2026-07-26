@@ -4,6 +4,7 @@ import http from './http'
 
 export interface Journal {
   id: number
+  userId: number
   title: string
   contentMarkdown: string
   contentHtml: string
@@ -41,11 +42,12 @@ export interface JournalListParams {
 export const journalApi = {
   create: (data: CreateJournalRequest) => http.post('/journals', data),
   getById: (id: number) => http.get(`/journals/${id}`),
+  getPublicById: (id: number) => http.get(`/journals/public/${id}`),
   update: (id: number, data: UpdateJournalRequest) => http.put(`/journals/${id}`, data),
   delete: (id: number) => http.delete(`/journals/${id}`),
   publish: (id: number) => http.post(`/journals/${id}/publish`),
   listMy: (params?: JournalListParams) => http.get('/journals', { params }),
   listPublic: (params?: JournalListParams) => http.get('/journals/public', { params }),
   listByUser: (userId: number, params?: JournalListParams) =>
-    http.get(`/journals/user/${userId}`, { params }),
+    http.get(`/journals/users/${userId}`, { params }),
 }

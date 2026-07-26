@@ -31,22 +31,23 @@ async function handleSend() {
 <template>
   <NCard title="忘记密码" size="large" :bordered="false">
     <template v-if="sent">
-      <NAlert type="info" title="邮件已发送" show-icon>
-        如果该邮箱已注册，您将收到一封密码重置邮件。请检查收件箱。
+      <NAlert type="info" title="验证码已发送" show-icon>
+        如果该邮箱已注册，您将收到一封包含6位验证码的邮件。请检查收件箱。
       </NAlert>
       <div style="margin-top: 16px; text-align: center;">
-        <NButton text @click="router.push({ name: 'login' })">返回登录</NButton>
+        <NButton text @click="router.push({ name: 'reset-password' })">去重置密码</NButton>
+        <NButton text block @click="router.push({ name: 'login' })">返回登录</NButton>
       </div>
     </template>
     <template v-else>
-      <p style="margin-bottom: 16px; color: #666;">输入注册邮箱，我们将发送密码重置链接。</p>
+      <p class="form-description">输入注册邮箱，我们将发送密码重置验证码。</p>
       <NForm>
         <NFormItem label="邮箱">
           <NInput v-model:value="formData.email" placeholder="请输入注册邮箱" />
         </NFormItem>
         <NFormItem>
           <NSpace vertical style="width: 100%;">
-            <NButton type="primary" block :loading="loading" @click="handleSend">发送重置链接</NButton>
+            <NButton type="primary" block :loading="loading" @click="handleSend">发送验证码</NButton>
             <NButton text block @click="router.push({ name: 'login' })">返回登录</NButton>
           </NSpace>
         </NFormItem>
@@ -54,3 +55,10 @@ async function handleSend() {
     </template>
   </NCard>
 </template>
+
+<style scoped>
+.form-description {
+  margin-bottom: 16px;
+  color: var(--text-secondary);
+}
+</style>

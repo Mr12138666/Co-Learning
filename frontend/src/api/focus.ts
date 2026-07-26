@@ -28,6 +28,8 @@ export interface ActiveFocusSession {
   elapsedSeconds: number
   subjectId: number | null
   taskId: number | null
+  graceDeadline: string | null
+  graceReason: 'LEARNING_LIMIT' | 'PAUSE_LIMIT' | null
 }
 
 export interface StartFocusRequest {
@@ -41,6 +43,7 @@ export interface StartFocusRequest {
 export const focusApi = {
   start: (data: StartFocusRequest) => http.post('/focus-sessions', data),
   getActive: () => http.get('/focus-sessions/active'),
+  getSession: (id: number) => http.get(`/focus-sessions/${id}`),
   pause: (id: number) => http.post(`/focus-sessions/${id}/pause`),
   resume: (id: number) => http.post(`/focus-sessions/${id}/resume`),
   finish: (id: number) => http.post(`/focus-sessions/${id}/finish`),

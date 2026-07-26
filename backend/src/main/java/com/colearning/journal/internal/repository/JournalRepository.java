@@ -27,6 +27,14 @@ public interface JournalRepository extends JpaRepository<Journal, Long> {
     Page<Journal> findPublicJournals(Pageable pageable);
 
     /**
+     * Find a specific public journal by ID.
+     */
+    @Query("SELECT j FROM Journal j WHERE j.id = :journalId " +
+           "AND j.status = 'PUBLISHED' " +
+           "AND j.visibility = 'PUBLIC'")
+    java.util.Optional<Journal> findPublicJournalById(@Param("journalId") Long journalId);
+
+    /**
      * Find published journals by a specific user that are visible to the requester.
      */
     @Query("SELECT j FROM Journal j WHERE j.userId = :userId " +

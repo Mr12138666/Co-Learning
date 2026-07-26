@@ -48,4 +48,8 @@ public class UserProfile extends BaseEntity {
     @Column(nullable = false)
     @Builder.Default
     private String timezone = "Asia/Shanghai";
+
+    @Column(name = "daily_focus_goal_minutes", nullable = false)
+    @Builder.Default
+    private Integer dailyFocusGoalMinutes = 120;
 }

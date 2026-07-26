@@ -19,6 +19,7 @@ import com.colearning.auth.internal.entity.EmailVerification;
 import com.colearning.auth.internal.entity.User;
 import com.colearning.auth.internal.repository.EmailVerificationRepository;
 import com.colearning.auth.internal.repository.UserRepository;
+import com.colearning.gamification.GamificationService;
 import com.colearning.user.internal.entity.UserProfile;
 import com.colearning.user.internal.repository.UserProfileRepository;
 import jakarta.servlet.http.Cookie;
@@ -53,6 +54,7 @@ public class AuthServiceImpl implements AuthService {
     private final MailService mailService;
     private final StorageService storageService;
     private final AppProperties appProperties;
+    private final GamificationService gamificationService;
 
     private final SecureRandom secureRandom = new SecureRandom();
 
@@ -92,6 +94,9 @@ public class AuthServiceImpl implements AuthService {
         // Generate and send verification email
         String rawToken = generateAndStoreVerificationToken(user.getId(), "REGISTER");
         mailService.sendVerificationEmail(user.getEmail(), rawToken);
+
+        // Welcome bonus: 50 tokens for new users
+        gamificationService.addTokens(user.getId(), 50);
 
         log.info("User registered: email={}", user.getEmail());
     }
@@ -245,10 +250,9 @@ public class AuthServiceImpl implements AuthService {
     // ===== Helper Methods =====
 
     private String generateAndStoreVerificationToken(Long userId, String purpose) {
-        // Generate a random token (URL-safe base64)
-        byte[] bytes = new byte[32];
-        secureRandom.nextBytes(bytes);
-        String rawToken = HexFormat.of().formatHex(bytes);
+        // Generate a 6-digit numeric verification code
+        int code = secureRandom.nextInt(900000) + 100000;
+        String rawToken = String.valueOf(code);
 
         // Store the hash
         String tokenHash = hashToken(rawToken);
@@ -285,6 +289,12 @@ public class AuthServiceImpl implements AuthService {
     private TokenResponse buildTokenResponse(String accessToken, PrincipalUser principal) {
         long expiresIn = appProperties.getJwt().getAccessTokenTtl();
         Instant expiresAt = Instant.now().plusSeconds(expiresIn);
+        
+        // Get user profile for displayName and avatarUrl
+        UserProfile profile = userProfileRepository.findByUserId(principal.userId()).orElse(null);
+        String displayName = profile != null ? profile.getDisplayName() : principal.email();
+        String avatarUrl = profile != null ? profile.getAvatarUrl() : null;
+        
         return new TokenResponse(
                 accessToken,
                 expiresIn,
@@ -292,7 +302,9 @@ public class AuthServiceImpl implements AuthService {
                 principal.userId(),
                 principal.email(),
                 principal.role(),
-                principal.emailVerified()
+                principal.emailVerified(),
+                displayName,
+                avatarUrl
         );
     }
 

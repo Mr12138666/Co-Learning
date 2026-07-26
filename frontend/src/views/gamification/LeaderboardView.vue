@@ -18,9 +18,12 @@ function switchTab(name: string) {
 }
 
 function formatScore(score: number): string {
-  if (score >= 3600) return `${(score / 3600).toFixed(1)}h`
-  if (score >= 60) return `${Math.floor(score / 60)}m`
-  return `${Math.round(score)}`
+  const hours = Math.floor(score / 3600)
+  const minutes = Math.floor((score % 3600) / 60)
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`
+  }
+  return `${minutes}m`
 }
 
 function rankColor(rank: number): string {
@@ -56,7 +59,7 @@ const tabLabels: Record<LeaderboardType, string> = {
           </div>
         </n-space>
         <n-space size="large">
-          <n-statistic label="积分" :value="formatScore(store.myRank.score)" />
+          <n-statistic label="专注时长" :value="formatScore(store.myRank.score)" />
         </n-space>
       </n-space>
     </n-card>
@@ -101,7 +104,7 @@ const tabLabels: Record<LeaderboardType, string> = {
 
 .my-rank-card {
   margin-bottom: 20px;
-  background: linear-gradient(135deg, #e8f4f8 0%, #f0e8f8 100%);
+  background-color: var(--bg-card);
 }
 
 .my-name {

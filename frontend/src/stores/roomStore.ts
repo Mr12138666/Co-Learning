@@ -19,6 +19,7 @@ export const useRoomStore = defineStore('room', () => {
   const messages = ref<RoomMessageResponse[]>([])
   const onlineUserIds = ref<Set<number>>(new Set())
   const totalRooms = ref(0)
+  const totalMessages = ref(0)
   const loading = ref(false)
   const connected = ref(false)
 
@@ -90,6 +91,17 @@ export const useRoomStore = defineStore('room', () => {
     const data = res.data.data
     // Messages come newest-first, reverse for display
     messages.value = [...data.items].reverse()
+    totalMessages.value = data.total
+  }
+
+  async function loadMoreMessages(roomId: number, page: number, size = 20) {
+    const res = await roomApi.listMessages(roomId, page, size)
+    const data = res.data.data
+    // Messages come newest-first, reverse for display
+    const newMessages = [...data.items].reverse()
+    // Prepend to existing messages (older messages go first)
+    messages.value = [...newMessages, ...messages.value]
+    totalMessages.value = data.total
   }
 
   async function sendMessage(roomId: number, content: string) {
@@ -192,6 +204,7 @@ export const useRoomStore = defineStore('room', () => {
     members.value = []
     messages.value = []
     onlineUserIds.value = new Set()
+    totalMessages.value = 0
     connected.value = false
   }
 
@@ -203,6 +216,7 @@ export const useRoomStore = defineStore('room', () => {
     messages,
     onlineUserIds,
     totalRooms,
+    totalMessages,
     loading,
     connected,
     // Getters
@@ -217,6 +231,7 @@ export const useRoomStore = defineStore('room', () => {
     leaveRoom,
     loadMembers,
     loadMessages,
+    loadMoreMessages,
     sendMessage,
     kickMember,
     muteMember,

@@ -38,6 +38,17 @@ export default defineConfig({
         target: 'ws://localhost:8080',
         ws: true,
       },
+      '/storage': {
+        target: 'http://localhost:9000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/storage/, ''),
+        configure: (proxy, options) => {
+          proxy.on('proxyRes', (proxyRes, req, res) => {
+            res.setHeader('Access-Control-Allow-Origin', '*');
+          });
+        },
+      },
     },
   },
 })

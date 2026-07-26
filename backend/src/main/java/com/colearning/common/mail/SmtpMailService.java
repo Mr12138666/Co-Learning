@@ -30,51 +30,40 @@ public class SmtpMailService implements MailService {
     @Override
     @Async
     public void sendVerificationEmail(String to, String verificationLink) {
-        String subject = "[Co-Learning] 验证您的邮箱";
+        String subject = "[Co-Learning] 邮箱验证码";
         String html = """
             <div style="max-width:480px;margin:0 auto;font-family:sans-serif;">
               <h2 style="color:#2080F0;">欢迎加入 Co-Learning！</h2>
-              <p>请点击下方按钮验证您的邮箱地址：</p>
-              <p style="margin:24px 0;">
-                <a href="%s%s"
-                   style="display:inline-block;padding:12px 32px;background:#2080F0;color:#fff;
-                          text-decoration:none;border-radius:6px;font-weight:bold;">
-                  验证邮箱
-                </a>
+              <p>请使用以下验证码完成邮箱验证：</p>
+              <p style="margin:24px 0;font-size:28px;font-weight:bold;letter-spacing:4px;color:#2080F0;">
+                %s
               </p>
               <p style="color:#999;font-size:12px;">
-                如果按钮无法点击，请复制以下链接到浏览器：<br>
-                %s%s
+                验证码有效期：24 小时<br>
+                如果这不是您的操作，请忽略此邮件。
               </p>
-              <p style="color:#999;font-size:12px;">此链接将在 24 小时后过期。</p>
             </div>
-            """.formatted(appBaseUrl, "/verify-email?token=" + verificationLink,
-                          appBaseUrl, "/verify-email?token=" + verificationLink);
+            """.formatted(verificationLink);
         sendHtml(to, subject, html);
     }
 
     @Override
     @Async
     public void sendPasswordResetEmail(String to, String resetLink) {
-        String subject = "[Co-Learning] 重置您的密码";
+        String subject = "[Co-Learning] 重置密码验证码";
         String html = """
             <div style="max-width:480px;margin:0 auto;font-family:sans-serif;">
               <h2 style="color:#2080F0;">重置密码</h2>
-              <p>我们收到了您的密码重置请求。请点击下方按钮设置新密码：</p>
-              <p style="margin:24px 0;">
-                <a href="%s%s"
-                   style="display:inline-block;padding:12px 32px;background:#2080F0;color:#fff;
-                          text-decoration:none;border-radius:6px;font-weight:bold;">
-                  重置密码
-                </a>
+              <p>我们收到了您的密码重置请求。请使用以下验证码：</p>
+              <p style="margin:24px 0;font-size:28px;font-weight:bold;letter-spacing:4px;color:#2080F0;">
+                %s
               </p>
               <p style="color:#999;font-size:12px;">
-                如果这不是您的操作，请忽略此邮件。<br>
-                此链接将在 1 小时后过期。
+                验证码有效期：1 小时<br>
+                如果这不是您的操作，请忽略此邮件。
               </p>
             </div>
-            """.formatted(appBaseUrl, "/reset-password?token=" + resetLink,
-                          appBaseUrl, "/reset-password?token=" + resetLink);
+            """.formatted(resetLink);
         sendHtml(to, subject, html);
     }
 

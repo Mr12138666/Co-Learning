@@ -17,4 +17,6 @@ public interface DailyCheckinRepository extends JpaRepository<DailyCheckin, Long
 
     long countByUserIdAndCompletedTrueAndCheckinDateBetween(
             Long userId, LocalDate start, LocalDate end);
+
+    long countByUserIdAndCompletedTrue(Long userId);
 }

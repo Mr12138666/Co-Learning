@@ -26,4 +26,6 @@ export const leaderboardApi = {
   getMyRank(type: 'daily' | 'weekly' | 'alltime' = 'daily') {
     return http.get('/leaderboard/me', { params: { type } })
   },
+
+  syncLeaderboard: () => http.get('/leaderboard/sync'),
 }

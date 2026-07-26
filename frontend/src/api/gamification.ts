@@ -22,6 +22,8 @@ export interface PetResponse {
   hunger: number
   lastFedAt: string | null
   lastInteractedAt: string | null
+  nextHungerDecayInMinutes: number | null
+  nextMoodDecayInMinutes: number | null
 }
 
 export interface PetItemResponse {
@@ -32,6 +34,18 @@ export interface PetItemResponse {
   effectType: string
   effectValue: number
   price: number
+  icon: string | null
+}
+
+export interface UserItemResponse {
+  id: number
+  itemId: number
+  name: string
+  description: string | null
+  itemType: string
+  effectType: string
+  effectValue: number
+  quantity: number
   icon: string | null
 }
 
@@ -48,6 +62,18 @@ export interface AchievementResponse {
   tokenReward: number
   unlocked: boolean
   unlockedAt: string | null
+}
+
+export interface DailyTaskResponse {
+  id: number
+  taskType: string
+  title: string
+  description: string
+  targetValue: number
+  currentProgress: number
+  rewardTokens: number
+  status: string
+  canClaim: boolean
 }
 
 // ===== API =====
@@ -77,11 +103,23 @@ export const gamificationApi = {
     return http.get('/gamification/shop')
   },
 
+  getInventory() {
+    return http.get('/gamification/inventory')
+  },
+
   purchaseItem(itemId: number) {
     return http.post(`/gamification/shop/buy/${itemId}`)
   },
 
   getAchievements() {
     return http.get('/gamification/achievements')
+  },
+
+  getDailyTasks() {
+    return http.get('/gamification/tasks')
+  },
+
+  claimTaskReward(taskId: number) {
+    return http.post(`/gamification/tasks/${taskId}/claim`)
   },
 }

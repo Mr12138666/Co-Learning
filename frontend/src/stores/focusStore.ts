@@ -17,7 +17,7 @@ export const useFocusStore = defineStore('focus', () => {
   async function fetchActive() {
     try {
       const res = await focusApi.getActive()
-      activeSession.value = res.data.data
+      activeSession.value = res.data.data ?? null
     } catch {
       activeSession.value = null
     }
@@ -36,8 +36,10 @@ export const useFocusStore = defineStore('focus', () => {
         resumedAt: session.resumedAt,
         pausedSeconds: session.pausedSeconds,
         elapsedSeconds: session.elapsedSeconds,
-        subjectId: session.subjectId,
-        taskId: session.taskId,
+        subjectId: session.subjectId ?? null,
+        taskId: session.taskId ?? null,
+        graceDeadline: session.graceDeadline ?? null,
+        graceReason: session.graceReason ?? null,
       }
       return session
     } finally {
@@ -55,6 +57,8 @@ export const useFocusStore = defineStore('focus', () => {
       pausedAt: session.pausedAt,
       pausedSeconds: session.pausedSeconds,
       elapsedSeconds: session.elapsedSeconds,
+      graceDeadline: null,
+      graceReason: null,
     }
   }
 
@@ -68,6 +72,8 @@ export const useFocusStore = defineStore('focus', () => {
       resumedAt: session.resumedAt,
       pausedSeconds: session.pausedSeconds,
       elapsedSeconds: session.elapsedSeconds,
+      graceDeadline: null,
+      graceReason: null,
     }
   }
 
@@ -80,8 +86,11 @@ export const useFocusStore = defineStore('focus', () => {
 
   async function abort() {
     if (!activeSession.value) return
-    await focusApi.abort(activeSession.value.sessionId)
-    activeSession.value = null
+    try {
+      await focusApi.abort(activeSession.value.sessionId)
+    } finally {
+      activeSession.value = null
+    }
   }
 
   function clear() {

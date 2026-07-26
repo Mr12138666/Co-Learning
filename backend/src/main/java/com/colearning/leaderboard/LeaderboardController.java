@@ -40,4 +40,11 @@ public class LeaderboardController {
         Long userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(ApiResponse.ok(leaderboardService.getMyRank(type, userId)));
     }
+
+    @GetMapping("/sync")
+    @Operation(summary = "同步排行榜", description = "从数据库同步排行榜数据（用于修复Redis数据丢失）")
+    public ResponseEntity<ApiResponse<Void>> syncLeaderboard() {
+        leaderboardService.syncFromDatabase();
+        return ResponseEntity.ok(ApiResponse.ok(null));
+    }
 }

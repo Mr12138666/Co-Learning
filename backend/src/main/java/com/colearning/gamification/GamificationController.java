@@ -4,9 +4,11 @@ import com.colearning.common.dto.ApiResponse;
 import com.colearning.common.security.SecurityUtils;
 import com.colearning.gamification.dto.request.RenamePetRequest;
 import com.colearning.gamification.dto.response.AchievementResponse;
+import com.colearning.gamification.dto.response.DailyTaskResponse;
 import com.colearning.gamification.dto.response.GamificationProfileResponse;
 import com.colearning.gamification.dto.response.PetItemResponse;
 import com.colearning.gamification.dto.response.PetResponse;
+import com.colearning.gamification.dto.response.UserItemResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -29,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class GamificationController {
 
     private final GamificationService gamificationService;
+    private final DailyTaskService dailyTaskService;
 
     // ===== Experience & Tokens =====
 
@@ -77,6 +80,13 @@ public class GamificationController {
         return ResponseEntity.ok(ApiResponse.ok(gamificationService.getShopItems()));
     }
 
+    @GetMapping("/inventory")
+    @Operation(summary = "获取我的道具", description = "用户已购买的道具列表")
+    public ResponseEntity<ApiResponse<List<UserItemResponse>>> getInventory() {
+        Long userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.ok(gamificationService.getInventory(userId)));
+    }
+
     @PostMapping("/shop/buy/{itemId}")
     @Operation(summary = "购买道具", description = "用代币购买道具")
     public ResponseEntity<ApiResponse<Void>> purchaseItem(@PathVariable Long itemId) {
@@ -92,5 +102,21 @@ public class GamificationController {
     public ResponseEntity<ApiResponse<List<AchievementResponse>>> getAchievements() {
         Long userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(ApiResponse.ok(gamificationService.getAchievements(userId)));
+    }
+
+    // ===== Daily Tasks =====
+
+    @GetMapping("/tasks")
+    @Operation(summary = "获取今日任务", description = "获取今日的日常任务列表")
+    public ResponseEntity<ApiResponse<List<DailyTaskResponse>>> getTodayTasks() {
+        Long userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.ok(dailyTaskService.getTodayTasks(userId)));
+    }
+
+    @PostMapping("/tasks/{taskId}/claim")
+    @Operation(summary = "领取任务奖励", description = "领取已完成任务的代币奖励")
+    public ResponseEntity<ApiResponse<DailyTaskResponse>> claimTaskReward(@PathVariable Long taskId) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.ok(dailyTaskService.claimReward(userId, taskId)));
     }
 }

@@ -141,12 +141,12 @@ const iconEmoji: Record<string, string> = {
 
 .progress-card {
   margin-bottom: 24px;
-  background: linear-gradient(135deg, #e8f4f8 0%, #f0e8f8 100%);
+  background-color: var(--bg-card);
 }
 
 .progress-label {
   font-size: 14px;
-  color: var(--text-color-3);
+  color: var(--text-secondary);
 }
 
 .progress-numbers {
@@ -156,18 +156,18 @@ const iconEmoji: Record<string, string> = {
 .unlocked {
   font-size: 28px;
   font-weight: bold;
-  color: var(--primary-color);
+  color: var(--accent-primary);
 }
 
 .separator {
   font-size: 20px;
-  color: var(--text-color-3);
+  color: var(--text-secondary);
   margin: 0 4px;
 }
 
 .total {
   font-size: 20px;
-  color: var(--text-color-3);
+  color: var(--text-secondary);
 }
 
 .achievement-group {
@@ -211,7 +211,7 @@ const iconEmoji: Record<string, string> = {
 .ach-desc {
   margin: 0 0 8px 0;
   font-size: 12px;
-  color: var(--text-color-3);
+  color: var(--text-secondary);
   text-align: center;
   line-height: 1.4;
   min-height: 32px;

@@ -19,6 +19,8 @@ export interface TokenResponse {
   email: string
   role: string
   emailVerified: boolean
+  displayName: string
+  avatarUrl: string | null
 }
 
 export const authApi = {

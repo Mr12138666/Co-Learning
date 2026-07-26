@@ -34,12 +34,31 @@ public interface FocusSessionRepository extends JpaRepository<FocusSession, Long
             @Param("end") Instant end);
 
     /**
-     * Find sessions that have been active longer than the timeout threshold.
+     * Find all ongoing sessions (ACTIVE or PAUSED).
      * Used by the scheduled timeout guardian.
      */
-    @Query("SELECT fs FROM FocusSession fs WHERE fs.status = 'ACTIVE' " +
-           "AND fs.startedAt < :threshold")
-    List<FocusSession> findActiveSessionsBefore(@Param("threshold") Instant threshold);
+    @Query("SELECT fs FROM FocusSession fs WHERE fs.status IN ('ACTIVE', 'PAUSED')")
+    List<FocusSession> findAllOngoing();
+
+    /**
+     * Sum effective seconds by user for all finished sessions.
+     * Used to rebuild leaderboard from database.
+     */
+    @Query("SELECT fs.userId, SUM(fs.effectiveSeconds) FROM FocusSession fs " +
+           "WHERE fs.status = 'FINISHED' GROUP BY fs.userId")
+    List<Object[]> sumEffectiveSecondsByUserId();
+
+    /**
+     * Sum effective seconds by user for finished sessions within a date range.
+     * Used to rebuild daily/weekly leaderboards from database.
+     */
+    @Query("SELECT fs.userId, SUM(fs.effectiveSeconds) FROM FocusSession fs " +
+           "WHERE fs.status = 'FINISHED' " +
+           "AND fs.startedAt >= :start AND fs.startedAt < :end " +
+           "GROUP BY fs.userId")
+    List<Object[]> sumEffectiveSecondsByUserIdInRange(
+            @Param("start") Instant start,
+            @Param("end") Instant end);
 
     /**
      * Aggregate total effective seconds for a user within a date range.

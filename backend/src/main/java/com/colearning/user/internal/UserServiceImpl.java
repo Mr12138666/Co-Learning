@@ -122,6 +122,9 @@ public class UserServiceImpl implements UserService {
         if (request.timezone() != null && !request.timezone().isBlank()) {
             profile.setTimezone(request.timezone());
         }
+        if (request.dailyFocusGoalMinutes() != null && request.dailyFocusGoalMinutes() > 0) {
+            profile.setDailyFocusGoalMinutes(request.dailyFocusGoalMinutes());
+        }
         profileRepository.save(profile);
 
         User user = getUserOrThrow(userId);
@@ -207,6 +210,7 @@ public class UserServiceImpl implements UserService {
                 profile.getNotifEmailEnabled(),
                 profile.getNotifPushEnabled(),
                 profile.getTimezone(),
+                profile.getDailyFocusGoalMinutes(),
                 user.getRole(),
                 user.getEmailVerified(),
                 profile.getCreatedAt()

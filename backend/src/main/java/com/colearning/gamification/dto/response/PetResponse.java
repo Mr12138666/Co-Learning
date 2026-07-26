@@ -16,7 +16,9 @@ public record PetResponse(
         int mood,
         int hunger,
         Instant lastFedAt,
-        Instant lastInteractedAt
+        Instant lastInteractedAt,
+        Integer nextHungerDecayInMinutes,
+        Integer nextMoodDecayInMinutes
 ) {
     public static PetResponse from(Pet pet) {
         return new PetResponse(
@@ -29,7 +31,26 @@ public record PetResponse(
                 pet.getMood(),
                 pet.getHunger(),
                 pet.getLastFedAt(),
-                pet.getLastInteractedAt()
+                pet.getLastInteractedAt(),
+                null,
+                null
+        );
+    }
+    
+    public static PetResponse from(Pet pet, Integer hungerDecayMinutes, Integer moodDecayMinutes) {
+        return new PetResponse(
+                pet.getId(),
+                pet.getUserId(),
+                pet.getName(),
+                pet.getSpecies(),
+                pet.getLevel(),
+                pet.getExp(),
+                pet.getMood(),
+                pet.getHunger(),
+                pet.getLastFedAt(),
+                pet.getLastInteractedAt(),
+                hungerDecayMinutes,
+                moodDecayMinutes
         );
     }
 }

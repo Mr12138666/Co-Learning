@@ -3,13 +3,14 @@ package com.colearning.journal.internal;
 import com.colearning.common.dto.PageResponse;
 import com.colearning.common.exception.BusinessException;
 import com.colearning.common.exception.ErrorCode;
-import com.colearning.common.util.MarkdownSanitizer;
+import com.colearning.gamification.DailyTaskService;
 import com.colearning.journal.JournalService;
 import com.colearning.journal.dto.request.CreateJournalRequest;
 import com.colearning.journal.dto.request.UpdateJournalRequest;
 import com.colearning.journal.dto.response.JournalResponse;
 import com.colearning.journal.internal.entity.Journal;
 import com.colearning.journal.internal.repository.JournalRepository;
+import com.colearning.common.util.MarkdownSanitizer;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
@@ -30,6 +31,7 @@ public class JournalServiceImpl implements JournalService {
     private final JournalRepository journalRepository;
     private final MarkdownSanitizer markdownSanitizer;
     private final Clock clock;
+    private final DailyTaskService dailyTaskService;
 
     private static final Set<String> VALID_VISIBILITIES = Set.of("PRIVATE", "FRIENDS", "ROOM", "PUBLIC");
     private static final Set<String> VALID_STATUSES = Set.of("DRAFT", "PUBLISHED");
@@ -80,7 +82,7 @@ public class JournalServiceImpl implements JournalService {
         if (request.roomId() != null) journal.setRoomId(request.roomId());
         if (request.status() != null) {
             validateStatus(request.status());
-            if ("PUBLISHED".equals(request.status()) && journal.isDraft()) {
+            if ("PUBLISHED".equals(request.status())) {
                 journal.setPublishedAt(Instant.now(clock));
             }
             journal.setStatus(request.status());
@@ -110,6 +112,10 @@ public class JournalServiceImpl implements JournalService {
         journal.setStatus("PUBLISHED");
         journal.setPublishedAt(Instant.now(clock));
         log.info("Journal published: userId={}, journalId={}", userId, journalId);
+        
+        // Update daily task progress
+        dailyTaskService.onWriteJournal(userId);
+        
         return toResponse(journal);
     }
 
@@ -138,6 +144,14 @@ public class JournalServiceImpl implements JournalService {
                 .map(this::toResponse)
                 .toList();
         return PageResponse.of(items, page, size, journals.getTotalElements());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public JournalResponse getPublicJournalById(Long journalId) {
+        Journal journal = journalRepository.findPublicJournalById(journalId)
+                .orElseThrow(() -> BusinessException.of(ErrorCode.JOURNAL_NOT_FOUND));
+        return toResponse(journal);
     }
 
     @Override

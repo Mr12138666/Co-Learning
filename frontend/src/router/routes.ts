@@ -52,6 +52,12 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '学习日志', requiresAuth: true },
       },
       {
+        path: 'journals/square',
+        name: 'journal-square',
+        component: () => import('@/views/JournalSquareView.vue'),
+        meta: { title: '日志广场', requiresAuth: true },
+      },
+      {
         path: 'journals/new',
         name: 'journal-new',
         component: () => import('@/views/JournalEditView.vue'),
@@ -62,6 +68,12 @@ export const routes: RouteRecordRaw[] = [
         name: 'journal-edit',
         component: () => import('@/views/JournalEditView.vue'),
         meta: { title: '编辑日志', requiresAuth: true },
+      },
+      {
+        path: 'journals/:id',
+        name: 'journal-detail',
+        component: () => import('@/views/JournalDetailView.vue'),
+        meta: { title: '日志详情', requiresAuth: true },
       },
       {
         path: 'rooms',
@@ -92,6 +104,18 @@ export const routes: RouteRecordRaw[] = [
         name: 'achievements',
         component: () => import('@/views/gamification/AchievementsView.vue'),
         meta: { title: '成就', requiresAuth: true },
+      },
+      {
+        path: 'daily-tasks',
+        name: 'daily-tasks',
+        component: () => import('@/views/gamification/DailyTasksView.vue'),
+        meta: { title: '每日任务', requiresAuth: true },
+      },
+      {
+        path: 'profile',
+        name: 'profile',
+        component: () => import('@/views/user/ProfileView.vue'),
+        meta: { title: '个人资料', requiresAuth: true },
       },
     ],
   },

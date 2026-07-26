@@ -1,7 +1,21 @@
 # ===== Development Profile =====
-# Uses Docker Compose services: PostgreSQL, Redis, MinIO, MailHog
+# Uses Docker Compose services: PostgreSQL, Redis, MinIO
+# Mail: Uses yeah.net SMTP (configured via environment variables)
 
 spring:
+  # ===== Mail =====
+  mail:
+    host: ${MAIL_HOST:smtp.yeah.net}
+    port: ${MAIL_PORT:25}
+    username: ${MAIL_USERNAME:REDACTED_EMAIL}
+    password: ${MAIL_PASSWORD:REDACTED_SMTP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
   # ===== DataSource =====
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${POSTGRES_DB:colearning}

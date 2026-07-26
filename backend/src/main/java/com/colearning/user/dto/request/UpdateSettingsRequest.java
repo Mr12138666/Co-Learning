@@ -6,5 +6,6 @@ public record UpdateSettingsRequest(
         @Pattern(regexp = "PUBLIC|FRIENDS|PRIVATE") String privacyLevel,
         Boolean notifEmailEnabled,
         Boolean notifPushEnabled,
-        String timezone
+        String timezone,
+        Integer dailyFocusGoalMinutes
 ) {}
