@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useFocusStore } from '../focusStore'
-import type { FocusSession, ActiveFocusSession } from '@/api/focus'
+import type { FocusSession } from '@/api/focus'
 
 // 模拟 focus API
 vi.mock('@/api/focus', () => ({

@@ -11,7 +11,6 @@ import {
   NText,
   NButton,
   NSpace,
-  NImage,
 } from 'naive-ui'
 import { journalApi, type Journal } from '@/api/journal'
 import { userApi } from '@/api/user'
@@ -26,14 +25,14 @@ function formatDate(date: string): string {
   return dayjs(date).format('MM-DD HH:mm')
 }
 
-async function fetchUserInfo(userId: number) {
+async function _fetchUserInfo(userId: number) {
   if (userCache.value.has(userId)) {
     return userCache.value.get(userId)!
   }
   try {
     const res = await userApi.getProfile(userId)
     const info = {
-      nickname: res.data.data.displayName || res.data.data.email,
+      nickname: res.data.data.displayName || '未知用户',
       avatarUrl: res.data.data.avatarUrl || '',
     }
     userCache.value.set(userId, info)

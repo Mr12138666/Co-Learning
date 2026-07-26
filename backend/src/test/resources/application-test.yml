@@ -30,29 +30,42 @@ spring:
     username: test
     password: test
 
-  # Redis will be overridden by Testcontainers @DynamicPropertySource
-  data:
-    redis:
-      host: localhost
-      port: 6379
+  # Redis will be set by @DynamicPropertySource from Testcontainers
 
 # App config for tests
 app:
   base-url: http://localhost:8080
+  api-prefix: /api
   cors:
-    allowed-origins: http://localhost:5173
+    allowed-origins:
+      - http://localhost:5173
+    allowed-methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+    allowed-headers: "*"
+    allow-credentials: true
+    max-age: 3600
   jwt:
     secret: test-secret-key-for-jwt-signing-must-be-at-least-256-bits-long-for-hs256
-    access-token-ttl: 15m
-    refresh-token-ttl: 7d
+    access-token-ttl: 900
+    refresh-token-ttl: 604800
+    refresh-token-prefix: "colearning:refresh:"
   storage:
-    minio:
-      endpoint: http://localhost:9000
-      access-key: test
-      secret-key: test
-      bucket: colearning-test
+    endpoint: http://localhost:9000
+    access-key: test
+    secret-key: test
+    bucket-avatars: colearning-test
+    bucket-pets: colearning-test
   rate-limit:
-    enabled: true
+    login:
+      max-attempts: 5
+      window-seconds: 300
+    email:
+      max-attempts: 5
+      window-seconds: 60
 
 logging:
   level:

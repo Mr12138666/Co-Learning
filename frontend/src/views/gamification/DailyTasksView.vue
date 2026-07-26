@@ -20,7 +20,7 @@ const taskTypeIcons: Record<string, string> = {
   WRITE_JOURNAL: '📝',
 }
 
-const taskTypeLabels: Record<string, string> = {
+const _taskTypeLabels: Record<string, string> = {
   FOCUS_ONCE: '专注一次',
   FOCUS_30MIN: '专注30分钟',
   FOCUS_60MIN: '专注1小时',

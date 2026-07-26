@@ -12,10 +12,9 @@ export interface ApiResponse<T> {
 }
 
 export const storageApi = {
-  upload: (file: File, bucket = 'images') => {
+  upload: (file: File) => {
     const formData = new FormData()
     formData.append('file', file)
-    formData.append('bucket', bucket)
     return http.post<ApiResponse<UploadResult>>('/storage/upload', formData)
   },
 

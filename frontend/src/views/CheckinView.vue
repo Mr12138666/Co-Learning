@@ -7,8 +7,6 @@ import {
   NInput,
   NRadioGroup,
   NRadio,
-  NGrid,
-  NGridItem,
   NStatistic,
   NTag,
   NText,

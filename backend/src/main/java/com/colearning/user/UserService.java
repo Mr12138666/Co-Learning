@@ -3,6 +3,7 @@ package com.colearning.user;
 import com.colearning.user.dto.request.UpdateProfileRequest;
 import com.colearning.user.dto.request.UpdateSettingsRequest;
 import com.colearning.user.dto.response.BlockedUserResponse;
+import com.colearning.user.dto.response.PublicUserProfileResponse;
 import com.colearning.user.dto.response.UserProfileResponse;
 import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,6 +14,8 @@ import org.springframework.web.multipart.MultipartFile;
 public interface UserService {
 
     UserProfileResponse getProfile(Long userId);
+
+    PublicUserProfileResponse getPublicProfile(Long viewerId, Long targetUserId);
 
     UserProfileResponse updateProfile(Long userId, UpdateProfileRequest request);
 

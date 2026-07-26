@@ -24,6 +24,14 @@ public final class SecurityUtils {
         return getCurrentUser().userId();
     }
 
+    public static Long getCurrentUserIdOrNull() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof PrincipalUser)) {
+            return null;
+        }
+        return ((PrincipalUser) auth.getPrincipal()).userId();
+    }
+
     public static boolean isAuthenticated() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return auth != null && auth.isAuthenticated()

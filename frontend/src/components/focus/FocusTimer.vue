@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { NButton, NSpace, NSelect, NTag, NText, NAlert, NRadioGroup, NRadioButton, NInputNumber, useMessage } from 'naive-ui'
-import { useFocusTimer, type TimerMode } from '@/composables/useFocusTimer'
+import { useFocusTimer } from '@/composables/useFocusTimer'
 import { useStudyStore } from '@/stores/studyStore'
-import { useGamificationStore } from '@/stores/gamificationStore'
 
 const props = withDefaults(defineProps<{
   compact?: boolean
@@ -16,7 +15,6 @@ const emit = defineEmits<{
 }>()
 
 const studyStore = useStudyStore()
-const gamificationStore = useGamificationStore()
 const message = useMessage()
 
 const {
@@ -30,7 +28,6 @@ const {
   pomodoroPhaseLabel,
   countdownMinutes,
   countdownFinished,
-  elapsedSeconds,
   formattedTime,
   progressPercent,
   currentSubject,
@@ -39,7 +36,6 @@ const {
   isInGracePeriod,
   isLearningLimit,
   formattedGraceTime,
-  graceRemainingSeconds,
   hasSession,
   isActive,
   isPaused,

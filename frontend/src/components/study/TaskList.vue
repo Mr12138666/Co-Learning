@@ -11,7 +11,6 @@ import {
   NEmpty,
   NSelect,
   NText,
-  NIcon,
 } from 'naive-ui'
 import { useStudyStore } from '@/stores/studyStore'
 import type { StudyTask } from '@/api/study'

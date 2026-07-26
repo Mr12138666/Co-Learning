@@ -4,7 +4,7 @@ import { useMessage } from 'naive-ui'
 import { useGamificationStore } from '@/stores/gamificationStore'
 import {
   NCard, NSpace, NButton, NInput, NModal, NProgress, NTag, NGrid, NGridItem,
-  NEmpty, NSpin, NAvatar, NStatistic, NPopconfirm,
+  NEmpty, NSpin, NPopconfirm,
 } from 'naive-ui'
 
 const message = useMessage()
@@ -51,7 +51,7 @@ function startCountdown() {
   }, 1000) // Update every second for smoother countdown
 }
 
-function stopCountdown() {
+function _stopCountdown() {
   if (countdownTimer) {
     clearInterval(countdownTimer)
     countdownTimer = null

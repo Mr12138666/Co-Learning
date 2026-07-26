@@ -57,3 +57,8 @@ logs/
 .LSOverride
 ehthumbs.db
 Desktop.ini
+
+# ===== Debug / Temp =====
+*.png
+dy
+expressions.txt

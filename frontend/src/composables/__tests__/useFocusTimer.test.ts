@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import { mount } from '@vue/test-utils'
 
 // Mock stores before importing composable
 vi.mock('@/stores/studyStore', () => ({
@@ -47,7 +48,24 @@ vi.mock('@/stores/focusStore', () => ({
   }),
 }))
 
-import { useFocusTimer, type TimerMode } from '../useFocusTimer'
+import { useFocusTimer } from '../useFocusTimer'
+
+/**
+ * Helper: mount a minimal component so the composable runs inside a valid
+ * Vue component setup (onMounted / onUnmounted register correctly).
+ */
+function withSetup(composable: () => ReturnType<typeof useFocusTimer>) {
+  let result: ReturnType<typeof useFocusTimer>
+  const wrapper = mount({
+    setup() {
+      result = composable()
+      // expose every returned key so the outer scope can read/write refs
+      return result
+    },
+    template: '<div />',
+  })
+  return { result: result!, wrapper }
+}
 
 describe('useFocusTimer', () => {
   beforeEach(() => {
@@ -62,36 +80,42 @@ describe('useFocusTimer', () => {
 
   // ===== Mode Selection =====
   it('defaults to flowtime mode', () => {
-    const { timerMode } = useFocusTimer()
-    expect(timerMode.value).toBe('flowtime')
+    const { result, wrapper } = withSetup(() => useFocusTimer())
+    expect(result.timerMode.value).toBe('flowtime')
+    wrapper.unmount()
   })
 
   it('allows switching to pomodoro mode', () => {
-    const { timerMode } = useFocusTimer()
-    timerMode.value = 'pomodoro'
-    expect(timerMode.value).toBe('pomodoro')
+    const { result, wrapper } = withSetup(() => useFocusTimer())
+    result.timerMode.value = 'pomodoro'
+    expect(result.timerMode.value).toBe('pomodoro')
+    wrapper.unmount()
   })
 
   it('allows switching to countdown mode', () => {
-    const { timerMode } = useFocusTimer()
-    timerMode.value = 'countdown'
-    expect(timerMode.value).toBe('countdown')
+    const { result, wrapper } = withSetup(() => useFocusTimer())
+    result.timerMode.value = 'countdown'
+    expect(result.timerMode.value).toBe('countdown')
+    wrapper.unmount()
   })
 
   // ===== No Session State =====
   it('shows 00:00 when no session', () => {
-    const { formattedTime } = useFocusTimer()
-    expect(formattedTime.value).toBe('00:00')
+    const { result, wrapper } = withSetup(() => useFocusTimer())
+    expect(result.formattedTime.value).toBe('00:00')
+    wrapper.unmount()
   })
 
   it('shows 0 progress when no session', () => {
-    const { progressPercent } = useFocusTimer()
-    expect(progressPercent.value).toBe(0)
+    const { result, wrapper } = withSetup(() => useFocusTimer())
+    expect(result.progressPercent.value).toBe(0)
+    wrapper.unmount()
   })
 
   it('hasSession is false when no session', () => {
-    const { hasSession } = useFocusTimer()
-    expect(hasSession.value).toBe(false)
+    const { result, wrapper } = withSetup(() => useFocusTimer())
+    expect(result.hasSession.value).toBe(false)
+    wrapper.unmount()
   })
 
   // ===== Flowtime Mode =====
@@ -105,9 +129,10 @@ describe('useFocusTimer', () => {
       elapsedSeconds: 125,
     }
 
-    const { formattedTime, elapsedSeconds } = useFocusTimer()
-    expect(elapsedSeconds.value).toBe(125)
-    expect(formattedTime.value).toBe('02:05')
+    const { result, wrapper } = withSetup(() => useFocusTimer())
+    expect(result.elapsedSeconds.value).toBe(125)
+    expect(result.formattedTime.value).toBe('02:05')
+    wrapper.unmount()
   })
 
   it('flowtime shows HH:MM:SS when over 1 hour', () => {
@@ -120,8 +145,9 @@ describe('useFocusTimer', () => {
       elapsedSeconds: 3661,
     }
 
-    const { formattedTime } = useFocusTimer()
-    expect(formattedTime.value).toBe('1:01:01')
+    const { result, wrapper } = withSetup(() => useFocusTimer())
+    expect(result.formattedTime.value).toBe('1:01:01')
+    wrapper.unmount()
   })
 
   it('flowtime accounts for paused seconds', () => {
@@ -134,17 +160,19 @@ describe('useFocusTimer', () => {
       elapsedSeconds: 180,
     }
 
-    const { elapsedSeconds } = useFocusTimer()
-    expect(elapsedSeconds.value).toBe(180) // 300 - 120 = 180
+    const { result, wrapper } = withSetup(() => useFocusTimer())
+    expect(result.elapsedSeconds.value).toBe(180) // 300 - 120 = 180
+    wrapper.unmount()
   })
 
   // ===== Pomodoro Mode =====
   it('pomodoro defaults: 25min work, 5min short break, 15min long break', () => {
-    const { pomodoroWorkMinutes, pomodoroShortBreakMinutes, pomodoroLongBreakMinutes, pomodoroCyclesBeforeLongBreak } = useFocusTimer()
-    expect(pomodoroWorkMinutes.value).toBe(25)
-    expect(pomodoroShortBreakMinutes.value).toBe(5)
-    expect(pomodoroLongBreakMinutes.value).toBe(15)
-    expect(pomodoroCyclesBeforeLongBreak.value).toBe(4)
+    const { result, wrapper } = withSetup(() => useFocusTimer())
+    expect(result.pomodoroWorkMinutes.value).toBe(25)
+    expect(result.pomodoroShortBreakMinutes.value).toBe(5)
+    expect(result.pomodoroLongBreakMinutes.value).toBe(15)
+    expect(result.pomodoroCyclesBeforeLongBreak.value).toBe(4)
+    wrapper.unmount()
   })
 
   it('pomodoro shows work phase initially', () => {
@@ -157,8 +185,9 @@ describe('useFocusTimer', () => {
       elapsedSeconds: 600,
     }
 
-    const { pomodoroPhase } = useFocusTimer()
-    expect(pomodoroPhase.value).toBe('work')
+    const { result, wrapper } = withSetup(() => useFocusTimer())
+    expect(result.pomodoroPhase.value).toBe('work')
+    wrapper.unmount()
   })
 
   it('pomodoro shows short break after work phase', () => {
@@ -171,20 +200,23 @@ describe('useFocusTimer', () => {
       elapsedSeconds: 1560,
     }
 
-    const { pomodoroPhase } = useFocusTimer()
-    expect(pomodoroPhase.value).toBe('shortBreak')
+    const { result, wrapper } = withSetup(() => useFocusTimer())
+    expect(result.pomodoroPhase.value).toBe('shortBreak')
+    wrapper.unmount()
   })
 
   it('pomodoro phase label returns correct Chinese text', () => {
-    const { pomodoroPhaseLabel } = useFocusTimer()
-    expect(pomodoroPhaseLabel.value).toBe('专注中')
+    const { result, wrapper } = withSetup(() => useFocusTimer())
+    expect(result.pomodoroPhaseLabel.value).toBe('专注中')
+    wrapper.unmount()
   })
 
   // ===== Countdown Mode =====
   it('countdown defaults to 30 minutes', () => {
-    const { countdownMinutes, countdownFinished } = useFocusTimer()
-    expect(countdownMinutes.value).toBe(30)
-    expect(countdownFinished.value).toBe(false)
+    const { result, wrapper } = withSetup(() => useFocusTimer())
+    expect(result.countdownMinutes.value).toBe(30)
+    expect(result.countdownFinished.value).toBe(false)
+    wrapper.unmount()
   })
 
   it('countdown shows remaining time', () => {
@@ -197,10 +229,11 @@ describe('useFocusTimer', () => {
       elapsedSeconds: 600,
     }
 
-    const { formattedTime, timerMode, countdownMinutes } = useFocusTimer()
-    timerMode.value = 'countdown'
-    countdownMinutes.value = 30 // 30 min total, 10 elapsed = 20 remaining
-    expect(formattedTime.value).toBe('20:00')
+    const { result, wrapper } = withSetup(() => useFocusTimer())
+    result.timerMode.value = 'countdown'
+    result.countdownMinutes.value = 30 // 30 min total, 10 elapsed = 20 remaining
+    expect(result.formattedTime.value).toBe('20:00')
+    wrapper.unmount()
   })
 
   it('countdown finished when remaining <= 0', () => {
@@ -213,10 +246,11 @@ describe('useFocusTimer', () => {
       elapsedSeconds: 1800,
     }
 
-    const { countdownFinished, timerMode, countdownMinutes } = useFocusTimer()
-    timerMode.value = 'countdown'
-    countdownMinutes.value = 30
-    expect(countdownFinished.value).toBe(true)
+    const { result, wrapper } = withSetup(() => useFocusTimer())
+    result.timerMode.value = 'countdown'
+    result.countdownMinutes.value = 30
+    expect(result.countdownFinished.value).toBe(true)
+    wrapper.unmount()
   })
 
   // ===== Unified Display =====
@@ -230,8 +264,9 @@ describe('useFocusTimer', () => {
       elapsedSeconds: 65,
     }
 
-    const { formattedTime } = useFocusTimer()
-    expect(formattedTime.value).toBe('01:05')
+    const { result, wrapper } = withSetup(() => useFocusTimer())
+    expect(result.formattedTime.value).toBe('01:05')
+    wrapper.unmount()
   })
 
   it('formattedTime delegates to pomodoro when mode set', () => {
@@ -244,11 +279,12 @@ describe('useFocusTimer', () => {
       elapsedSeconds: 120,
     }
 
-    const { formattedTime, timerMode, pomodoroWorkMinutes } = useFocusTimer()
-    timerMode.value = 'pomodoro'
-    pomodoroWorkMinutes.value = 25
+    const { result, wrapper } = withSetup(() => useFocusTimer())
+    result.timerMode.value = 'pomodoro'
+    result.pomodoroWorkMinutes.value = 25
     // 25 min work - 2 min elapsed = 23 min remaining
-    expect(formattedTime.value).toBe('23:00')
+    expect(result.formattedTime.value).toBe('23:00')
+    wrapper.unmount()
   })
 
   // ===== Grace Period =====
@@ -262,8 +298,9 @@ describe('useFocusTimer', () => {
       graceReason: null,
     }
 
-    const { isInGracePeriod } = useFocusTimer()
-    expect(isInGracePeriod.value).toBe(false)
+    const { result, wrapper } = withSetup(() => useFocusTimer())
+    expect(result.isInGracePeriod.value).toBe(false)
+    wrapper.unmount()
   })
 
   it('isInGracePeriod is true when grace deadline set', () => {
@@ -276,9 +313,10 @@ describe('useFocusTimer', () => {
       graceReason: 'LEARNING_LIMIT',
     }
 
-    const { isInGracePeriod, isLearningLimit } = useFocusTimer()
-    expect(isInGracePeriod.value).toBe(true)
-    expect(isLearningLimit.value).toBe(true)
+    const { result, wrapper } = withSetup(() => useFocusTimer())
+    expect(result.isInGracePeriod.value).toBe(true)
+    expect(result.isLearningLimit.value).toBe(true)
+    wrapper.unmount()
   })
 
   // ===== Subject/Task =====
@@ -292,14 +330,16 @@ describe('useFocusTimer', () => {
       taskId: null,
     }
 
-    const { currentSubject, currentTask } = useFocusTimer()
-    expect(currentSubject.value).toBeNull()
-    expect(currentTask.value).toBeNull()
+    const { result, wrapper } = withSetup(() => useFocusTimer())
+    expect(result.currentSubject.value).toBeNull()
+    expect(result.currentTask.value).toBeNull()
+    wrapper.unmount()
   })
 
   // ===== MAX_SESSION_HOURS =====
   it('MAX_SESSION_HOURS is 8', () => {
-    const { MAX_SESSION_HOURS } = useFocusTimer()
-    expect(MAX_SESSION_HOURS).toBe(8)
+    const { result, wrapper } = withSetup(() => useFocusTimer())
+    expect(result.MAX_SESSION_HOURS).toBe(8)
+    wrapper.unmount()
   })
 })

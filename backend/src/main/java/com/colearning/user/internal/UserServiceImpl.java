@@ -9,6 +9,7 @@ import com.colearning.user.UserService;
 import com.colearning.user.dto.request.UpdateProfileRequest;
 import com.colearning.user.dto.request.UpdateSettingsRequest;
 import com.colearning.user.dto.response.BlockedUserResponse;
+import com.colearning.user.dto.response.PublicUserProfileResponse;
 import com.colearning.user.dto.response.UserProfileResponse;
 import com.colearning.user.internal.entity.UserBlock;
 import com.colearning.user.internal.entity.UserProfile;
@@ -49,6 +50,23 @@ public class UserServiceImpl implements UserService {
         UserProfile profile = getProfileOrThrow(userId);
         User user = getUserOrThrow(userId);
         return toResponse(user, profile);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PublicUserProfileResponse getPublicProfile(Long viewerId, Long targetUserId) {
+        UserProfile profile = getProfileOrThrow(targetUserId);
+        if (viewerId != null && !viewerId.equals(targetUserId)) {
+            if (blockRepository.existsByBlockerIdAndBlockedId(targetUserId, viewerId)) {
+                throw BusinessException.of(ErrorCode.USER_NOT_FOUND);
+            }
+        }
+        return new PublicUserProfileResponse(
+                profile.getUserId(),
+                profile.getDisplayName(),
+                profile.getAvatarUrl(),
+                profile.getBio()
+        );
     }
 
     @Override

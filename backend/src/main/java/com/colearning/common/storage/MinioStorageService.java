@@ -4,6 +4,7 @@ import com.colearning.common.config.AppProperties;
 import io.minio.MinioClient;
 import jakarta.annotation.PostConstruct;
 import java.io.ByteArrayInputStream;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,8 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class MinioStorageService implements StorageService {
+
+    private static final Set<String> ALLOWED_BUCKETS = Set.of("avatars", "pets", "images");
 
     private final AppProperties appProperties;
     private MinioClient minioClient;
@@ -33,6 +36,9 @@ public class MinioStorageService implements StorageService {
 
     @Override
     public String upload(String bucket, String objectKey, byte[] content, String contentType) {
+        if (!ALLOWED_BUCKETS.contains(bucket)) {
+            throw new IllegalArgumentException("Bucket not allowed: " + bucket);
+        }
         try {
             ensureBucketExists(bucket);
             minioClient.putObject(
@@ -90,6 +96,7 @@ public class MinioStorageService implements StorageService {
     }
 
     private void ensureBucketExists(String bucket) {
+        if (!ALLOWED_BUCKETS.contains(bucket)) return;
         try {
             boolean exists = minioClient.bucketExists(
                     io.minio.BucketExistsArgs.builder().bucket(bucket).build());

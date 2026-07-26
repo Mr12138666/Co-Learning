@@ -33,7 +33,7 @@ spring:
   mail:
     host: ${MAIL_HOST:smtp.yeah.net}
     port: ${MAIL_PORT:25}
-    username: ${MAIL_USERNAME:REDACTED_EMAIL}
+    username: ${MAIL_USERNAME:}
     password: ${MAIL_PASSWORD:}
     properties:
       mail:
@@ -101,6 +101,16 @@ app:
     email:
       max-attempts: 5
       window-seconds: 3600
+
+# ===== Actuator =====
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
 
 # ===== Springdoc OpenAPI =====
 springdoc:

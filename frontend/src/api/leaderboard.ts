@@ -27,5 +27,5 @@ export const leaderboardApi = {
     return http.get('/leaderboard/me', { params: { type } })
   },
 
-  syncLeaderboard: () => http.get('/leaderboard/sync'),
+  syncLeaderboard: () => http.post('/leaderboard/sync'),
 }

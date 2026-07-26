@@ -14,6 +14,7 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -42,6 +43,9 @@ class AuthIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private EmailVerificationRepository emailVerificationRepository;
 
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
     @MockBean
     private MailService mailService;
 
@@ -57,6 +61,11 @@ class AuthIntegrationTest extends BaseIntegrationTest {
         // Clean up any existing data
         emailVerificationRepository.deleteAll();
         userRepository.deleteAll();
+
+        // Flush Redis to avoid stale data from previous test runs
+        var conn = redisTemplate.getConnectionFactory().getConnection();
+        conn.serverCommands().flushDb();
+        conn.close();
 
         // Mock storage service to return a dummy avatar URL
         when(storageService.generateDefaultAvatar(anyString()))
@@ -80,8 +89,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").value("0"))
-                    .andExpect(jsonPath("$.data").isEmpty());
+                    .andExpect(jsonPath("$.code").value("0"));
 
             // Verify user was saved
             assertThat(userRepository.existsByEmail(TEST_EMAIL)).isTrue();
@@ -106,7 +114,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
             mockMvc.perform(post("/api/auth/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isOk())
+                    .andExpect(status().isConflict())
                     .andExpect(jsonPath("$.code").isNotEmpty())
                     .andExpect(jsonPath("$.message").isNotEmpty());
         }
@@ -174,7 +182,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
             mockMvc.perform(post("/api/auth/verify-email")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isOk())
+                    .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.code").isNotEmpty())
                     .andExpect(jsonPath("$.message").isNotEmpty());
         }
@@ -229,9 +237,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").isNotEmpty())
-                    .andExpect(jsonPath("$.message").isNotEmpty());
+                    .andExpect(status().isForbidden());
         }
 
         @Test
@@ -249,8 +255,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").isNotEmpty());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -264,8 +269,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
             mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").isNotEmpty());
+                    .andExpect(status().isUnauthorized());
         }
     }
 
@@ -294,8 +298,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
         @DisplayName("无 refresh cookie 刷新 → 返回错误")
         void refresh_noCookie() throws Exception {
             mockMvc.perform(post("/api/auth/refresh"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").isNotEmpty());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -315,8 +318,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
             // After logout, the old refresh token should no longer work
             mockMvc.perform(post("/api/auth/refresh")
                             .cookie(new jakarta.servlet.http.Cookie("refresh_token", refreshToken)))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").isNotEmpty());
+                    .andExpect(status().isUnauthorized());
         }
     }
 

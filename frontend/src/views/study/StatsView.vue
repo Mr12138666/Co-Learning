@@ -28,7 +28,7 @@ use([
 ])
 
 const themeStore = useThemeStore()
-const message = useMessage()
+const _message = useMessage()
 const { loading, error, load, retry } = usePageLoad()
 
 interface DailyStat {

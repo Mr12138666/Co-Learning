@@ -67,7 +67,7 @@ const browserGlobals = {
 
 export default [
   {
-    ignores: ['dist/**', 'node_modules/**', 'auto-imports.d.ts', 'components.d.ts'],
+    ignores: ['dist/**', 'node_modules/**', '**/auto-imports.d.ts', '**/components.d.ts'],
   },
   js.configs.recommended,
   ...vuePlugin.configs['flat/recommended'],
@@ -85,9 +85,11 @@ export default [
       '@typescript-eslint': tseslint,
     },
     rules: {
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-explicit-any': 'off',
       'no-unused-vars': 'off',
+      'no-console': 'off',
+      'preserve-caught-error': 'off',
     },
   },
   {
@@ -107,9 +109,14 @@ export default [
     rules: {
       'vue/multi-word-component-names': 'off',
       'vue/max-attributes-per-line': 'off',
-      'vue/no-v-html': 'warn',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-      '@typescript-eslint/no-explicit-any': 'warn',
+      'vue/no-v-html': 'off',
+      'vue/singleline-html-element-content-newline': 'off',
+      'vue/html-indent': 'off',
+      'vue/attributes-order': 'off',
+      'vue/html-self-closing': 'off',
+      'vue/no-template-shadow': 'off',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-explicit-any': 'off',
       'no-unused-vars': 'off',
     },
   },

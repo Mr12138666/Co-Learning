@@ -7,6 +7,17 @@ import { fileURLToPath, URL } from 'node:url'
 
 // https://vite.dev/config/
 export default defineConfig({
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-echarts': ['echarts/core', 'echarts/charts', 'echarts/components', 'echarts/renderers', 'vue-echarts'],
+          'vendor-naive': ['naive-ui'],
+          'vendor-vendor': ['vue', 'vue-router', 'pinia', 'axios'],
+        },
+      },
+    },
+  },
   // Polyfill Node.js `global` for CommonJS deps (e.g. sockjs-client) in browser
   define: {
     global: 'globalThis',
@@ -37,17 +48,6 @@ export default defineConfig({
       '/ws': {
         target: 'ws://localhost:8080',
         ws: true,
-      },
-      '/storage': {
-        target: 'http://localhost:9000',
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/storage/, ''),
-        configure: (proxy, options) => {
-          proxy.on('proxyRes', (proxyRes, req, res) => {
-            res.setHeader('Access-Control-Allow-Origin', '*');
-          });
-        },
       },
     },
   },

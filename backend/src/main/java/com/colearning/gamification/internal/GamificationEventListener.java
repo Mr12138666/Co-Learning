@@ -28,14 +28,25 @@ public class GamificationEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onFocusSessionFinished(FocusSessionFinishedEvent event) {
         try {
-            // Every 10 minutes of focus = 1 EXP (minimum 1)
-            int exp = Math.max(1, event.effectiveSeconds() / 600);
-            gamificationService.addExp(event.userId(), exp);
-            
-            // Every 30 minutes of focus = 1 token (minimum 1)
-            int tokens = Math.max(1, event.effectiveSeconds() / 1800);
-            gamificationService.addTokens(event.userId(), tokens);
-            
+            // Minimum 60 seconds of effective focus to earn rewards
+            if (event.effectiveSeconds() < 60) {
+                log.info("Session too short for rewards: userId={}, effectiveSec={}",
+                        event.userId(), event.effectiveSeconds());
+                return;
+            }
+
+            // Every 10 minutes of focus = 1 EXP
+            int exp = event.effectiveSeconds() / 600;
+            if (exp > 0) {
+                gamificationService.addExp(event.userId(), exp);
+            }
+
+            // Every 30 minutes of focus = 1 token
+            int tokens = event.effectiveSeconds() / 1800;
+            if (tokens > 0) {
+                gamificationService.addTokens(event.userId(), tokens);
+            }
+
             gamificationService.checkAndUnlockAchievements(event.userId());
         } catch (Exception e) {
             log.error("Failed to award EXP/tokens for userId={}: {}", event.userId(), e.getMessage(), e);

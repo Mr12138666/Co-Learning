@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { NCard, NTag, NText, NButton, NSpace, NAvatar, useMessage } from 'naive-ui'
+import { NCard, NText, NButton, NSpace, NAvatar, useMessage } from 'naive-ui'
 import { journalApi, type Journal } from '@/api/journal'
 import { userApi } from '@/api/user'
 import dayjs from 'dayjs'

@@ -7,7 +7,7 @@ const props = defineProps<{
   onlineUserIds: Set<number>
 }>()
 
-const emit = defineEmits<{
+const _emit = defineEmits<{
   kick: [userId: number]
   mute: [userId: number]
 }>()

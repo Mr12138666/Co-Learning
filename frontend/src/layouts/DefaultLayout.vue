@@ -19,7 +19,6 @@ import {
 import type { MenuOption } from 'naive-ui'
 import {
   HomeOutline,
-  TimerOutline,
   ListOutline,
   BarChartOutline,
   PeopleOutline,
@@ -156,7 +155,7 @@ function handleUserAction(key: string) {
   }
 }
 
-function handleMenuUpdate(key: string) {
+function handleMenuUpdate(_key: string) {
   if (isMobile.value) {
     mobileDrawer.value = false
   }

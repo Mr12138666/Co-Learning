@@ -80,29 +80,37 @@ export function useFocusTimer() {
     const workSec = pomodoroWorkMinutes.value * 60
     const shortBreakSec = pomodoroShortBreakMinutes.value * 60
     const longBreakSec = pomodoroLongBreakMinutes.value * 60
-    const cycleLength = workSec + shortBreakSec
-    const fullCycleLength = cycleLength * pomodoroCyclesBeforeLongBreak.value
+    const N = pomodoroCyclesBeforeLongBreak.value
 
-    // Position within the full cycle
-    const fullCycleElapsed = elapsed % fullCycleLength
+    // Full set: N work + (N-1) short breaks + 1 long break
+    const fullSetDuration = N * workSec + (N - 1) * shortBreakSec + longBreakSec
+    const positionInSet = elapsed % fullSetDuration
 
-    // Check if in long break (last break of each full cycle)
-    if (fullCycleElapsed >= cycleLength * pomodoroCyclesBeforeLongBreak.value - shortBreakSec + workSec) {
-      // This shouldn't happen with the modulo, but safety check
+    // Walk through the phases in order
+    let accumulated = 0
+    for (let i = 0; i < N; i++) {
+      // Work phase
+      if (positionInSet < accumulated + workSec) {
+        return 'work'
+      }
+      accumulated += workSec
+
+      // Break phase
+      if (i < N - 1) {
+        // Short break
+        if (positionInSet < accumulated + shortBreakSec) {
+          return 'shortBreak'
+        }
+        accumulated += shortBreakSec
+      } else {
+        // Long break (last cycle)
+        if (positionInSet < accumulated + longBreakSec) {
+          return 'longBreak'
+        }
+        accumulated += longBreakSec
+      }
     }
-
-    // Determine which work/break segment we're in
-    const segmentIndex = Math.floor(fullCycleElapsed / cycleLength)
-    const positionInSegment = fullCycleElapsed % cycleLength
-
-    if (positionInSegment < workSec) {
-      return 'work'
-    }
-    // After work phase, check if this is the last cycle before long break
-    if (segmentIndex === pomodoroCyclesBeforeLongBreak.value - 1) {
-      return 'longBreak'
-    }
-    return 'shortBreak'
+    return 'work' // fallback
   })
 
   const pomodoroCycleCount = computed(() => {
@@ -110,8 +118,24 @@ export function useFocusTimer() {
     const elapsed = elapsedSeconds.value
     const workSec = pomodoroWorkMinutes.value * 60
     const shortBreakSec = pomodoroShortBreakMinutes.value * 60
-    const cycleLength = workSec + shortBreakSec
-    return Math.floor(elapsed / cycleLength) + 1
+    const longBreakSec = pomodoroLongBreakMinutes.value * 60
+    const N = pomodoroCyclesBeforeLongBreak.value
+    const fullSetDuration = N * workSec + (N - 1) * shortBreakSec + longBreakSec
+    const positionInSet = elapsed % fullSetDuration
+
+    let accumulated = 0
+    for (let i = 0; i < N; i++) {
+      if (positionInSet < accumulated + workSec) {
+        return i + 1
+      }
+      accumulated += workSec
+      if (i < N - 1) {
+        accumulated += shortBreakSec
+      } else {
+        accumulated += longBreakSec
+      }
+    }
+    return N
   })
 
   const pomodoroPhaseRemaining = computed(() => {
@@ -120,20 +144,29 @@ export function useFocusTimer() {
     const workSec = pomodoroWorkMinutes.value * 60
     const shortBreakSec = pomodoroShortBreakMinutes.value * 60
     const longBreakSec = pomodoroLongBreakMinutes.value * 60
-    const cycleLength = workSec + shortBreakSec
-    const fullCycleLength = cycleLength * pomodoroCyclesBeforeLongBreak.value
+    const N = pomodoroCyclesBeforeLongBreak.value
+    const fullSetDuration = N * workSec + (N - 1) * shortBreakSec + longBreakSec
+    const positionInSet = elapsed % fullSetDuration
 
-    const fullCycleElapsed = elapsed % fullCycleLength
-    const segmentIndex = Math.floor(fullCycleElapsed / cycleLength)
-    const positionInSegment = fullCycleElapsed % cycleLength
-
-    if (positionInSegment < workSec) {
-      return workSec - positionInSegment
+    let accumulated = 0
+    for (let i = 0; i < N; i++) {
+      if (positionInSet < accumulated + workSec) {
+        return workSec - (positionInSet - accumulated)
+      }
+      accumulated += workSec
+      if (i < N - 1) {
+        if (positionInSet < accumulated + shortBreakSec) {
+          return shortBreakSec - (positionInSet - accumulated)
+        }
+        accumulated += shortBreakSec
+      } else {
+        if (positionInSet < accumulated + longBreakSec) {
+          return longBreakSec - (positionInSet - accumulated)
+        }
+        accumulated += longBreakSec
+      }
     }
-    if (segmentIndex === pomodoroCyclesBeforeLongBreak.value - 1) {
-      return longBreakSec - (positionInSegment - workSec)
-    }
-    return shortBreakSec - (positionInSegment - workSec)
+    return workSec
   })
 
   const pomodoroFormatted = computed(() => {
@@ -148,25 +181,29 @@ export function useFocusTimer() {
     const workSec = pomodoroWorkMinutes.value * 60
     const shortBreakSec = pomodoroShortBreakMinutes.value * 60
     const longBreakSec = pomodoroLongBreakMinutes.value * 60
-    const cycleLength = workSec + shortBreakSec
+    const N = pomodoroCyclesBeforeLongBreak.value
+    const fullSetDuration = N * workSec + (N - 1) * shortBreakSec + longBreakSec
+    const positionInSet = elapsedSeconds.value % fullSetDuration
 
-    const elapsed = elapsedSeconds.value
-    const fullCycleLength = cycleLength * pomodoroCyclesBeforeLongBreak.value
-    const fullCycleElapsed = elapsed % fullCycleLength
-    const segmentIndex = Math.floor(fullCycleElapsed / cycleLength)
-    const positionInSegment = fullCycleElapsed % cycleLength
-
-    let phaseDuration: number
-    if (positionInSegment < workSec) {
-      phaseDuration = workSec
-      return Math.round((positionInSegment / phaseDuration) * 100)
+    let accumulated = 0
+    for (let i = 0; i < N; i++) {
+      if (positionInSet < accumulated + workSec) {
+        return Math.round(((positionInSet - accumulated) / workSec) * 100)
+      }
+      accumulated += workSec
+      if (i < N - 1) {
+        if (positionInSet < accumulated + shortBreakSec) {
+          return Math.round(((positionInSet - accumulated) / shortBreakSec) * 100)
+        }
+        accumulated += shortBreakSec
+      } else {
+        if (positionInSet < accumulated + longBreakSec) {
+          return Math.round(((positionInSet - accumulated) / longBreakSec) * 100)
+        }
+        accumulated += longBreakSec
+      }
     }
-    if (segmentIndex === pomodoroCyclesBeforeLongBreak.value - 1) {
-      phaseDuration = longBreakSec
-      return Math.round(((positionInSegment - workSec) / phaseDuration) * 100)
-    }
-    phaseDuration = shortBreakSec
-    return Math.round(((positionInSegment - workSec) / phaseDuration) * 100)
+    return 0
   })
 
   const pomodoroPhaseLabel = computed(() => {
@@ -292,25 +329,19 @@ export function useFocusTimer() {
   // ===== Actions =====
   async function startFocus(subjectId?: number, taskId?: number) {
     const clientRequestId = `focus-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-    
+
     try {
       await focusStore.start({ subjectId, taskId, clientRequestId })
     } catch (error: any) {
       if (error.response?.status === 409) {
-        try {
-          await focusStore.fetchActive()
-          if (focusStore.hasSession) {
-            await focusStore.abort()
-          }
-        } catch {
-          // Ignore
-        }
-        await focusStore.start({ subjectId, taskId, clientRequestId })
+        // Server says another session is active - restore it instead of aborting
+        await focusStore.fetchActive()
+        throw new Error('EXISTING_SESSION_RESTORED')
       } else {
         throw error
       }
     }
-    
+
     now.value = Date.now()
     startTick()
   }
