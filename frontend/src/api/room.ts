@@ -31,6 +31,8 @@ export interface RoomMemberResponse {
   joinedAt: string
   isOnline: boolean
   focusStatus: string | null
+  focusElapsedSeconds?: number
+  focusTaskTitle?: string
 }
 
 export interface RoomMessageResponse {

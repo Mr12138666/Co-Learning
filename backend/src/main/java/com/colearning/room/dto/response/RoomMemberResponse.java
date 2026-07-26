@@ -12,5 +12,7 @@ public record RoomMemberResponse(
     Instant mutedUntil,
     Instant joinedAt,
     Boolean isOnline,
-    String focusStatus    // STUDYING | PAUSED | IDLE | null
+    String focusStatus,   // STUDYING | PAUSED | IDLE | null
+    Long focusElapsedSeconds,
+    String focusTaskTitle
 ) {}

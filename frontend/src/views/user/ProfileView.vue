@@ -15,9 +15,11 @@ import {
   NSelect,
 } from 'naive-ui'
 import { userApi, type UserProfileResponse, type UpdateProfileRequest, type UpdateSettingsRequest } from '@/api/user'
+import { useAuthStore } from '@/stores/authStore'
 import dayjs from 'dayjs'
 
 const message = useMessage()
+const authStore = useAuthStore()
 const loading = ref(false)
 const profile = ref<UserProfileResponse | null>(null)
 const editingProfile = ref(false)
@@ -114,8 +116,10 @@ function handleAvatarUpload(e: Event) {
 
   loading.value = true
   userApi.uploadAvatar(file)
-    .then(() => {
+    .then((res) => {
+      const newAvatarUrl = res.data.data.avatarUrl
       message.success('头像上传成功')
+      authStore.updateAvatar(newAvatarUrl)
       loadProfile()
     })
     .catch((error: any) => {

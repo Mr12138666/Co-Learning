@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, h, type Component } from 'vue'
 import { useRouter, useRoute, RouterLink, RouterView } from 'vue-router'
-import { NAvatar, NDropdown, NDrawer, NDrawerContent, NInput, NTooltip, useMessage } from 'naive-ui'
+import { NAvatar, NDropdown, NDrawer, NDrawerContent, NInput, NTooltip, NPopconfirm, useMessage } from 'naive-ui'
 import {
   Sun, Moon, Inbox, CalendarRange, Clock, LayoutGrid, ClipboardCheck,
   BarChart3, Users, BookOpen, Trophy, PawPrint, Award, ListChecks,
   Plus, PanelLeftClose, PanelLeftOpen, Menu, ChevronRight, LogOut, User,
-  Hash, BookMarked, Search,
+  Hash, BookMarked, Search, X,
 } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/authStore'
 import { useThemeStore } from '@/stores/themeStore'
@@ -33,11 +33,11 @@ const isMobile = ref(window.innerWidth <= 768)
 interface NavItem { key: string; to: string; label: string; icon: Component }
 
 const primaryNav: NavItem[] = [
-  { key: 'today', to: '/today', label: 'Today', icon: Sun },
-  { key: 'inbox', to: '/inbox', label: 'Inbox', icon: Inbox },
-  { key: 'planner', to: '/planner', label: 'Planner', icon: CalendarRange },
-  { key: 'schedule', to: '/schedule', label: 'Schedule', icon: Clock },
-  { key: 'boards', to: '/boards', label: 'Boards', icon: LayoutGrid },
+  { key: 'today', to: '/today', label: '今日', icon: Sun },
+  { key: 'inbox', to: '/inbox', label: '收件箱', icon: Inbox },
+  { key: 'planner', to: '/planner', label: '规划', icon: CalendarRange },
+  { key: 'schedule', to: '/schedule', label: '日程', icon: Clock },
+  { key: 'boards', to: '/boards', label: '看板', icon: LayoutGrid },
 ]
 
 const secondaryNav: NavItem[] = [
@@ -220,6 +220,12 @@ defineExpose({ refreshInboxCount })
               >
                 <span class="nav-leaf__dot" :style="{ background: s.color }" />
                 <span class="nav-leaf__label">{{ s.name }}</span>
+                <NPopconfirm @positive-click="studyStore.deleteSubject(s.id)">
+                  <template #trigger>
+                    <span class="nav-leaf__action" @click.stop.prevent><X :size="12" /></span>
+                  </template>
+                  删除科目？
+                </NPopconfirm>
               </RouterLink>
               <p v-if="!studyStore.subjects.length && !addingSubject" class="nav-empty">暂无科目</p>
             </div>
@@ -248,6 +254,12 @@ defineExpose({ refreshInboxCount })
               <div v-for="t in taskStore.tags" :key="t.id" class="nav-leaf">
                 <span class="nav-leaf__dot" :style="{ background: t.color }" />
                 <span class="nav-leaf__label">{{ t.name }}</span>
+                <NPopconfirm @positive-click="taskStore.deleteTag(t.id)">
+                  <template #trigger>
+                    <span class="nav-leaf__action"><X :size="12" /></span>
+                  </template>
+                  删除标签？
+                </NPopconfirm>
               </div>
               <p v-if="!taskStore.tags.length && !addingTag" class="nav-empty">暂无标签</p>
             </div>
@@ -457,7 +469,15 @@ defineExpose({ refreshInboxCount })
 }
 .nav-leaf:hover { background: var(--state-hover); color: var(--text-color); }
 .nav-leaf__dot { width: 8px; height: 8px; border-radius: var(--radius-full); flex-shrink: 0; }
-.nav-leaf__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav-leaf__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.nav-leaf__action {
+  display: flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: var(--radius-xs);
+  color: var(--text-color-muted); cursor: pointer; flex-shrink: 0;
+  opacity: 0; transition: opacity var(--transition-fast), background-color var(--transition-fast);
+}
+.nav-leaf:hover .nav-leaf__action { opacity: 0.7; }
+.nav-leaf__action:hover { opacity: 1 !important; background: var(--state-hover); }
 .nav-empty { font-size: var(--text-xs); color: var(--text-color-muted); padding: var(--sp-1) var(--sp-2); }
 
 .sidebar__footer { border-top: 1px solid var(--separator); padding: var(--sp-2); display: flex; flex-direction: column; gap: var(--sp-1); flex-shrink: 0; }

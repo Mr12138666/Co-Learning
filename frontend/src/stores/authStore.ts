@@ -59,6 +59,12 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  function updateAvatar(url: string) {
+    if (user.value) {
+      user.value.avatarUrl = url
+    }
+  }
+
   return {
     accessToken,
     user,
@@ -72,6 +78,7 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     setToken,
     clearAuth,
+    updateAvatar,
   }
 }, {
   persist: {

@@ -77,8 +77,14 @@ const weeklyChartOption = computed(() => {
   
   return {
     tooltip: { trigger: 'axis' },
-    legend: { data: ['专注时长', '打卡次数'], textStyle: { color: themeStore.theme === 'dark' ? '#aaa' : '#666' } },
-    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    legend: {
+      data: ['专注时长', '打卡次数'],
+      top: 0,
+      left: 'center',
+      itemGap: 20,
+      textStyle: { color: themeStore.theme === 'dark' ? '#aaa' : '#666' },
+    },
+    grid: { top: 44, bottom: 12, left: '3%', right: '4%', containLabel: true },
     xAxis: { type: 'category', data: labels, axisLabel: { color: themeStore.theme === 'dark' ? '#aaa' : '#666' } },
     yAxis: [{ type: 'value', name: '分钟', axisLabel: { color: themeStore.theme === 'dark' ? '#aaa' : '#666' } }, 
             { type: 'value', name: '次数', axisLabel: { color: themeStore.theme === 'dark' ? '#aaa' : '#666' } }],
@@ -370,7 +376,9 @@ onMounted(() => load(fetchStats))
 }
 
 .stats-view {
+  width: 100%;
   max-width: var(--content-max-width);
+  margin: 0 auto;
   padding-bottom: var(--sp-4);
 }
 

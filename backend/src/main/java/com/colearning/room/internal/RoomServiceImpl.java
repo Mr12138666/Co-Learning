@@ -46,6 +46,8 @@ public class RoomServiceImpl implements RoomService {
     private final UserProfileRepository userProfileRepository;
     private final Argon2PasswordEncoder passwordEncoder;
     private final PresenceService presenceService;
+    private final FocusSessionRepository focusSessionRepository;
+    private final StudyTaskRepository studyTaskRepository;
 
     // ===== Room CRUD =====
 
@@ -281,12 +283,18 @@ public class RoomServiceImpl implements RoomService {
         Set<Long> onlineUserIds = presenceService.getOnlineUserIds(roomId);
         Map<Long, String> focusStatuses = presenceService.getFocusStatuses(roomId);
 
+        List<FocusSession> ongoingSessions = focusSessionRepository.findOngoingByUserIds(new ArrayList<>(userIds));
+        Map<Long, Long> focusElapsedMap = buildFocusElapsedMap(ongoingSessions);
+        Map<Long, String> focusTaskTitleMap = buildFocusTaskTitleMap(ongoingSessions);
+
         return members.stream()
                 .map(m -> {
                     UserProfile profile = profileMap.get(m.getUserId());
                     boolean isOnline = onlineUserIds.contains(m.getUserId());
                     String focusStatus = focusStatuses.get(m.getUserId());
-                    return toMemberResponse(m, isOnline, focusStatus, profile);
+                    Long focusElapsed = focusElapsedMap.get(m.getUserId());
+                    String focusTaskTitle = focusTaskTitleMap.get(m.getUserId());
+                    return toMemberResponse(m, isOnline, focusStatus, profile, focusElapsed, focusTaskTitle);
                 })
                 .toList();
     }
@@ -357,12 +365,18 @@ public class RoomServiceImpl implements RoomService {
         Set<Long> onlineUserIds = presenceService.getOnlineUserIds(roomId);
         Map<Long, String> focusStatuses = presenceService.getFocusStatuses(roomId);
 
+        List<FocusSession> ongoingSessions = focusSessionRepository.findOngoingByUserIds(new ArrayList<>(userIds));
+        Map<Long, Long> focusElapsedMap = buildFocusElapsedMap(ongoingSessions);
+        Map<Long, String> focusTaskTitleMap = buildFocusTaskTitleMap(ongoingSessions);
+
         List<RoomMemberResponse> memberResponses = members.stream()
                 .map(m -> {
                     UserProfile profile = profileMap.get(m.getUserId());
                     boolean isOnline = onlineUserIds.contains(m.getUserId());
                     String focusStatus = focusStatuses.get(m.getUserId());
-                    return toMemberResponse(m, isOnline, focusStatus, profile);
+                    Long focusElapsed = focusElapsedMap.get(m.getUserId());
+                    String focusTaskTitle = focusTaskTitleMap.get(m.getUserId());
+                    return toMemberResponse(m, isOnline, focusStatus, profile, focusElapsed, focusTaskTitle);
                 })
                 .toList();
 
@@ -461,11 +475,12 @@ public class RoomServiceImpl implements RoomService {
 
     private RoomMemberResponse toMemberResponse(RoomMember member, boolean isOnline, String focusStatus) {
         UserProfile profile = userProfileRepository.findById(member.getUserId()).orElse(null);
-        return toMemberResponse(member, isOnline, focusStatus, profile);
+        return toMemberResponse(member, isOnline, focusStatus, profile, null, null);
     }
 
     private RoomMemberResponse toMemberResponse(RoomMember member, boolean isOnline,
-                                                String focusStatus, UserProfile profile) {
+                                                String focusStatus, UserProfile profile,
+                                                Long focusElapsedSeconds, String focusTaskTitle) {
         String displayName = profile != null ? profile.getDisplayName() : "User" + member.getUserId();
         String avatarUrl = profile != null ? profile.getAvatarUrl() : null;
 
@@ -479,8 +494,36 @@ public class RoomServiceImpl implements RoomService {
                 member.getMutedUntil(),
                 member.getJoinedAt(),
                 isOnline,
-                focusStatus
+                focusStatus,
+                focusElapsedSeconds,
+                focusTaskTitle
         );
+    }
+
+    private Map<Long, Long> buildFocusElapsedMap(List<FocusSession> ongoingSessions) {
+        Instant now = Instant.now();
+        return ongoingSessions.stream()
+                .collect(Collectors.toMap(FocusSession::getUserId, s -> (long) s.computeElapsedSeconds(now)));
+    }
+
+    private Map<Long, String> buildFocusTaskTitleMap(List<FocusSession> ongoingSessions) {
+        Set<Long> taskIds = ongoingSessions.stream()
+                .map(FocusSession::getTaskId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (taskIds.isEmpty()) return Collections.emptyMap();
+        Map<Long, String> taskTitleMap = studyTaskRepository.findAllById(taskIds).stream()
+                .collect(Collectors.toMap(StudyTask::getId, StudyTask::getTitle));
+        Map<Long, String> result = new HashMap<>();
+        for (FocusSession s : ongoingSessions) {
+            if (s.getTaskId() != null) {
+                String title = taskTitleMap.get(s.getTaskId());
+                if (title != null) {
+                    result.put(s.getUserId(), title);
+                }
+            }
+        }
+        return result;
     }
 
     private RoomMessageResponse toMessageResponse(RoomMessage message, UserProfile profile) {

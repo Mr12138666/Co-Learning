@@ -63,7 +63,7 @@ onMounted(() => {
 
     <!-- Empty -->
     <div v-if="!loading && journals.length === 0" class="empty-container">
-      <NEmpty description="还没有公开的日志">
+      <NEmpty description="暂无公开日志，发布日志时选择'公开'即可展示在这里">
         <template #extra>
           <NButton type="primary" size="small" @click="router.push('/journals/new')">发布第一篇日志</NButton>
         </template>

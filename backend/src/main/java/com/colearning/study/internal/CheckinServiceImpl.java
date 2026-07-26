@@ -14,6 +14,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -78,6 +79,7 @@ public class CheckinServiceImpl implements CheckinService {
         if (request.planText() != null) checkin.setPlanText(request.planText());
         if (request.reflectionText() != null) checkin.setReflectionText(request.reflectionText());
         if (request.mood() != null) checkin.setMood(request.mood());
+        if (request.images() != null) checkin.setImages(request.images());
 
         return toResponse(checkin);
     }
@@ -142,6 +144,16 @@ public class CheckinServiceImpl implements CheckinService {
                         "该日期无打卡记录: " + date));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<CheckinResponse> getHistory(Long userId, LocalDate from, LocalDate to) {
+        return dailyCheckinRepository
+                .findByUserIdAndCheckinDateBetweenOrderByCheckinDateDesc(userId, from, to)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
     // ===== Private helpers =====
 
     private void refreshFocusTotal(Long userId, LocalDate date) {
@@ -192,6 +204,7 @@ public class CheckinServiceImpl implements CheckinService {
                 checkin.getMood(),
                 checkin.getFocusTotalSec(),
                 checkin.getCompleted(),
+                checkin.getImages(),
                 checkin.getCreatedAt(),
                 checkin.getUpdatedAt()
         );

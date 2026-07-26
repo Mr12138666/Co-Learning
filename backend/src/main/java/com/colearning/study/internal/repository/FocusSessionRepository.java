@@ -13,6 +13,9 @@ public interface FocusSessionRepository extends JpaRepository<FocusSession, Long
 
     Optional<FocusSession> findByUserIdAndStatusIn(Long userId, List<String> statuses);
 
+    @Query("SELECT fs FROM FocusSession fs WHERE fs.userId IN :userIds AND fs.status IN ('ACTIVE', 'PAUSED')")
+    List<FocusSession> findOngoingByUserIds(@Param("userIds") List<Long> userIds);
+
     Optional<FocusSession> findByUserIdAndClientRequestId(Long userId, String clientRequestId);
 
     /**

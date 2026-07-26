@@ -52,4 +52,8 @@ public class DailyCheckin extends BaseEntity {
     @Column(nullable = false)
     @Builder.Default
     private Boolean completed = false;
+
+    @Column(columnDefinition = "jsonb")
+    @Builder.Default
+    private String images = "[]";
 }

@@ -127,7 +127,7 @@ onMounted(() => {
       v-model:show="showModal"
       preset="card"
       :title="editingTask ? '编辑任务' : '新增任务'"
-      class="task-modal"
+      style="width: 480px; max-width: 90vw"
     >
       <NForm label-placement="top">
         <NFormItem label="任务标题">
@@ -243,8 +243,4 @@ onMounted(() => {
   flex: 1;
 }
 
-.task-modal {
-  max-width: 480px;
-  width: 90vw;
-}
 </style>

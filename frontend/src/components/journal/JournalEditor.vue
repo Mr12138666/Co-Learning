@@ -8,6 +8,7 @@ import {
   NDivider,
   NIcon,
   useMessage,
+  useDialog,
 } from 'naive-ui'
 import { ImageOutline } from '@vicons/ionicons5'
 import type { Journal } from '@/api/journal'
@@ -26,6 +27,7 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
+const dialog = useDialog()
 
 // Local state
 const title = ref(props.modelValue?.title ?? '')
@@ -127,6 +129,28 @@ function handlePublish() {
     message.warning('请输入日志内容')
     return
   }
+
+  if (visibility.value === 'PRIVATE') {
+    dialog.warning({
+      title: '日志可见性确认',
+      content: '当前日志设置为\'私密\'，仅自己可见。是否要设为公开发布？',
+      positiveText: '公开发布',
+      negativeText: '私密发布',
+      onPositiveClick: () => {
+        visibility.value = 'PUBLIC'
+        const data = getData()
+        emit('publish', data)
+        clearDraft()
+      },
+      onNegativeClick: () => {
+        const data = getData()
+        emit('publish', data)
+        clearDraft()
+      },
+    })
+    return
+  }
+
   const data = getData()
   emit('publish', data)
   clearDraft()

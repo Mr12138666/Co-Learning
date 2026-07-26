@@ -1,6 +1,13 @@
 import http from './http'
 import type { ApiResponse } from '@/types/api'
 
+export interface PublicUserProfileResponse {
+  userId: number
+  displayName: string
+  avatarUrl: string | null
+  bio: string | null
+}
+
 export interface UserProfileResponse {
   userId: number
   email: string
@@ -38,7 +45,7 @@ export interface BlockedUserResponse {
 }
 
 export const userApi = {
-  getProfile: (userId: number) => http.get<ApiResponse<UserProfileResponse>>(`/users/${userId}/profile`),
+  getProfile: (userId: number) => http.get<ApiResponse<PublicUserProfileResponse>>(`/users/${userId}/profile`),
   getMyProfile: () => http.get<ApiResponse<UserProfileResponse>>('/me/profile'),
   updateProfile: (data: UpdateProfileRequest) => http.put<ApiResponse<UserProfileResponse>>('/me/profile', data),
   updateSettings: (data: UpdateSettingsRequest) => http.put<ApiResponse<UserProfileResponse>>('/me/settings', data),

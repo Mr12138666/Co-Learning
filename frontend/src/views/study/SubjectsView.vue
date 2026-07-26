@@ -117,7 +117,7 @@ onMounted(() => {
       v-model:show="showModal"
       preset="card"
       :title="editingId ? '编辑科目' : '新增科目'"
-      class="subject-modal"
+      style="width: 400px; max-width: 90vw"
     >
       <NForm label-placement="top">
         <NFormItem label="科目名称">
@@ -219,8 +219,4 @@ onMounted(() => {
   opacity: 1;
 }
 
-.subject-modal {
-  max-width: 400px;
-  width: 90vw;
-}
 </style>

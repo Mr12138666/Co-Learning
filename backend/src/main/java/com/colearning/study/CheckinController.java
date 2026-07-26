@@ -7,6 +7,7 @@ import com.colearning.study.dto.response.CheckinResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -56,5 +57,14 @@ public class CheckinController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         Long userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(ApiResponse.ok(checkinService.getCheckinByDate(userId, date)));
+    }
+
+    @GetMapping("/history")
+    @Operation(summary = "查询打卡历史", description = "按日期区间查询打卡记录")
+    public ResponseEntity<ApiResponse<List<CheckinResponse>>> getHistory(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.ok(checkinService.getHistory(userId, from, to)));
     }
 }

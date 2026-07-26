@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import {
   NButton,
   NPopconfirm,
@@ -36,7 +37,18 @@ const filteredTasks = computed(() => {
 })
 
 // Subject filter
+const route = useRoute()
 const subjectFilter = ref<number | null>(null)
+
+function syncRouteSubject() {
+  const q = route.query.subjectId
+  if (q) {
+    const n = Number(q)
+    if (!isNaN(n) && n > 0) subjectFilter.value = n
+  }
+}
+syncRouteSubject()
+watch(() => route.query.subjectId, syncRouteSubject)
 const subjectOptions = computed(() => [
   { label: '全部科目', value: 0 },
   ...studyStore.subjects.map((s) => ({ label: s.name, value: s.id })),

@@ -30,7 +30,7 @@ async function loadJournal() {
     if (journal.value && journal.value.userId) {
       const userRes = await userApi.getProfile(journal.value.userId)
       authorInfo.value = {
-        nickname: userRes.data.data.displayName || userRes.data.data.email,
+        nickname: userRes.data.data.displayName,
         avatarUrl: userRes.data.data.avatarUrl || '',
       }
     }

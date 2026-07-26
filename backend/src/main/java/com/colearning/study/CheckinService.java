@@ -2,6 +2,8 @@ package com.colearning.study;
 
 import com.colearning.study.dto.request.UpdateCheckinRequest;
 import com.colearning.study.dto.response.CheckinResponse;
+import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Service for daily check-ins and reflections.
@@ -26,5 +28,10 @@ public interface CheckinService {
     /**
      * Get check-in for a specific date.
      */
-    CheckinResponse getCheckinByDate(Long userId, java.time.LocalDate date);
+    CheckinResponse getCheckinByDate(Long userId, LocalDate date);
+
+    /**
+     * Get check-in history within a date range.
+     */
+    List<CheckinResponse> getHistory(Long userId, LocalDate from, LocalDate to);
 }

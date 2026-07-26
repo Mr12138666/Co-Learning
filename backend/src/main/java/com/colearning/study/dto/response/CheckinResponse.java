@@ -11,6 +11,7 @@ public record CheckinResponse(
         Short mood,
         int focusTotalSec,
         boolean completed,
+        String images,
         Instant createdAt,
         Instant updatedAt
 ) {
