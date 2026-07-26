@@ -173,7 +173,7 @@ onMounted(() => {
       v-model:show="showModal"
       preset="card"
       :title="editingId ? '编辑目标' : '新增目标'"
-      style="width: 480px;"
+      style="max-width: 480px; width: 90vw;"
     >
       <NForm label-placement="top">
         <NFormItem label="考试名称">

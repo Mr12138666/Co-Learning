@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { NCard, NStatistic, NSpace, NGrid, NGridItem, NSpin, NEmpty, NButton, useMessage } from 'naive-ui'
+import { usePageLoad } from '@/composables/usePageLoad'
+import StateError from '@/components/common/StateError.vue'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
@@ -27,8 +29,7 @@ use([
 
 const themeStore = useThemeStore()
 const message = useMessage()
-const loading = ref(true)
-const loadError = ref(false)
+const { loading, error, load, retry } = usePageLoad()
 
 interface DailyStat {
   date: string
@@ -216,22 +217,12 @@ const subjectChartOption = computed(() => {
   }
 })
 
-async function loadStats() {
-  loading.value = true
-  loadError.value = false
-  try {
-    const res = await studyApi.getStats()
-    stats.value = res.data.data
-  } catch {
-    loadError.value = true
-  } finally {
-    loading.value = false
-  }
+async function fetchStats() {
+  const res = await studyApi.getStats()
+  stats.value = res.data.data
 }
 
-onMounted(() => {
-  loadStats()
-})
+onMounted(() => load(fetchStats))
 </script>
 
 <template>
@@ -241,13 +232,11 @@ onMounted(() => {
   </div>
 
   <!-- Error state -->
-  <div v-else-if="loadError" class="stats-error">
-    <n-empty description="加载统计数据失败">
-      <template #extra>
-        <n-button type="primary" @click="loadStats">重试</n-button>
-      </template>
-    </n-empty>
-  </div>
+  <StateError
+    v-else-if="error"
+    :title="error"
+    @retry="retry(fetchStats)"
+  />
 
   <!-- Stats content -->
   <div v-else-if="stats" class="stats-view">
@@ -258,13 +247,13 @@ onMounted(() => {
           <span style="font-size: 24px;">📊</span>
           <span style="font-size: 20px; font-weight: 600; margin-left: 8px;">学习统计</span>
         </div>
-        <NButton text @click="loadStats">刷新数据</NButton>
+        <NButton text @click="retry(fetchStats)">刷新数据</NButton>
       </div>
     </NCard>
 
     <!-- Stats Cards -->
-    <NGrid :cols="4" :x-gap="12" :y-gap="12" style="margin-bottom: 24px;">
-      <NGridItem>
+    <NGrid :cols="4" :x-gap="12" :y-gap="12" responsive="screen" item-responsive style="margin-bottom: 24px;">
+      <NGridItem span="4 s:2 m:1">
         <NCard :bordered="false" class="stat-card">
           <NStatistic
             label="今日专注"
@@ -273,7 +262,7 @@ onMounted(() => {
           />
         </NCard>
       </NGridItem>
-      <NGridItem>
+      <NGridItem span="4 s:2 m:1">
         <NCard :bordered="false" class="stat-card">
           <NStatistic
             label="本周专注"
@@ -282,7 +271,7 @@ onMounted(() => {
           />
         </NCard>
       </NGridItem>
-      <NGridItem>
+      <NGridItem span="4 s:2 m:1">
         <NCard :bordered="false" class="stat-card">
           <NStatistic
             label="本月专注"
@@ -291,7 +280,7 @@ onMounted(() => {
           />
         </NCard>
       </NGridItem>
-      <NGridItem>
+      <NGridItem span="4 s:2 m:1">
         <NCard :bordered="false" class="stat-card">
           <NStatistic
             label="本年专注"
@@ -300,7 +289,7 @@ onMounted(() => {
           />
         </NCard>
       </NGridItem>
-      <NGridItem>
+      <NGridItem span="4 s:2 m:1">
         <NCard :bordered="false" class="stat-card">
           <NStatistic
             label="累计专注"
@@ -309,7 +298,7 @@ onMounted(() => {
           />
         </NCard>
       </NGridItem>
-      <NGridItem>
+      <NGridItem span="4 s:2 m:1">
         <NCard :bordered="false" class="stat-card">
           <NStatistic
             label="连续专注"
@@ -319,7 +308,7 @@ onMounted(() => {
           />
         </NCard>
       </NGridItem>
-      <NGridItem>
+      <NGridItem span="4 s:2 m:1">
         <NCard :bordered="false" class="stat-card">
           <NStatistic
             label="专注天数"
@@ -329,7 +318,7 @@ onMounted(() => {
           />
         </NCard>
       </NGridItem>
-      <NGridItem>
+      <NGridItem span="4 s:2 m:1">
         <NCard :bordered="false" class="stat-card">
           <NStatistic
             label="累计打卡"
@@ -342,7 +331,7 @@ onMounted(() => {
     </NGrid>
 
     <!-- Charts -->
-    <NGrid :cols="2" :x-gap="12" :y-gap="12">
+    <NGrid :cols="2" :x-gap="12" :y-gap="12" responsive="screen" item-responsive>
       <!-- Daily Bar Chart -->
       <NGridItem span="2">
         <NCard :bordered="false" class="chart-card">
@@ -356,7 +345,7 @@ onMounted(() => {
       </NGridItem>
 
       <!-- Weekly Line Chart -->
-      <NGridItem>
+      <NGridItem span="2 m:1">
         <NCard :bordered="false" class="chart-card">
           <template #header>
             <span style="font-size: 16px; font-weight: 600;">📈 每周趋势</span>
@@ -368,7 +357,7 @@ onMounted(() => {
       </NGridItem>
 
       <!-- Monthly Bar Chart -->
-      <NGridItem>
+      <NGridItem span="2 m:1">
         <NCard :bordered="false" class="chart-card">
           <template #header>
             <span style="font-size: 16px; font-weight: 600;">📉 每月专注</span>
@@ -380,7 +369,7 @@ onMounted(() => {
       </NGridItem>
 
       <!-- Subject Pie Chart -->
-      <NGridItem>
+      <NGridItem span="2 m:1">
         <NCard :bordered="false" class="chart-card">
           <template #header>
             <span style="font-size: 16px; font-weight: 600;">🥧 科目分布</span>
@@ -393,7 +382,7 @@ onMounted(() => {
       </NGridItem>
 
       <!-- Weekly Stats -->
-      <NGridItem>
+      <NGridItem span="2 m:1">
         <NCard :bordered="false" class="chart-card">
           <template #header>
             <span style="font-size: 16px; font-weight: 600;">📋 本周统计</span>
@@ -438,11 +427,11 @@ onMounted(() => {
 }
 
 .stats-view {
-  padding-bottom: 24px;
+  padding-bottom: var(--sp-6);
 }
 
 .stats-header {
-  margin-bottom: 24px;
+  margin-bottom: var(--sp-6);
 }
 
 .stat-card {
@@ -454,15 +443,15 @@ onMounted(() => {
 }
 
 .chart-container {
-  padding: 8px 0;
+  padding: var(--sp-2) 0;
 }
 
 .stat-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--divider-color);
+  padding: var(--sp-2) 0;
+  border-bottom: 1px solid var(--separator);
 }
 
 .stat-row:last-child {
@@ -471,11 +460,11 @@ onMounted(() => {
 
 .stat-label {
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: var(--text-base);
 }
 
 .stat-value {
-  font-weight: 600;
-  font-size: 14px;
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-base);
 }
 </style>

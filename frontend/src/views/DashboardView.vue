@@ -15,15 +15,18 @@ import {
   NModal,
   NForm,
   NFormItem,
-  NInput,
+  NInputNumber,
+  NSpin,
   useMessage,
 } from 'naive-ui'
 import { useAuthStore } from '@/stores/authStore'
 import { useStudyStore } from '@/stores/studyStore'
 import { useDashboardStore } from '@/stores/dashboardStore'
 import { userApi, type UserProfileResponse } from '@/api/user'
+import { usePageLoad } from '@/composables/usePageLoad'
 import FocusTimer from '@/components/focus/FocusTimer.vue'
 import TaskList from '@/components/study/TaskList.vue'
+import StateError from '@/components/common/StateError.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -31,11 +34,13 @@ const studyStore = useStudyStore()
 const dashboardStore = useDashboardStore()
 const profile = ref<UserProfileResponse | null>(null)
 const message = useMessage()
+const { loading, error, load, retry } = usePageLoad()
 
 // Daily goal edit modal
 const showEditModal = ref(false)
 const editGoalForm = ref({
-  dailyFocusGoalMinutes: 120,
+  hours: 2,
+  minutes: 0,
 })
 
 const greeting = computed(() => {
@@ -81,25 +86,26 @@ async function loadProfile() {
   try {
     const res = await userApi.getMyProfile()
     profile.value = res.data.data
-    editGoalForm.value.dailyFocusGoalMinutes = profile.value.dailyFocusGoalMinutes ?? 120
   } catch {
     // Ignore profile load errors
   }
 }
 
 function openEditModal() {
-  editGoalForm.value.dailyFocusGoalMinutes = profile.value?.dailyFocusGoalMinutes ?? 120
+  const totalMin = profile.value?.dailyFocusGoalMinutes ?? 120
+  editGoalForm.value.hours = Math.floor(totalMin / 60)
+  editGoalForm.value.minutes = totalMin % 60
   showEditModal.value = true
 }
 
 async function saveDailyGoal() {
-  const value = editGoalForm.value.dailyFocusGoalMinutes
-  if (value < 1 || value > 1440) {
-    message.error('请输入1-1440之间的分钟数')
+  const totalMinutes = editGoalForm.value.hours * 60 + editGoalForm.value.minutes
+  if (totalMinutes < 1) {
+    message.error('日目标至少为1分钟')
     return
   }
   try {
-    await userApi.updateSettings({ dailyFocusGoalMinutes: value })
+    await userApi.updateSettings({ dailyFocusGoalMinutes: totalMinutes })
     await loadProfile()
     message.success('日目标已更新')
     showEditModal.value = false
@@ -108,17 +114,32 @@ async function saveDailyGoal() {
   }
 }
 
-onMounted(async () => {
+async function loadDashboard() {
   await Promise.all([
     studyStore.fetchAll(),
     dashboardStore.refreshAll(),
     loadProfile(),
   ])
-})
+}
+
+onMounted(() => load(loadDashboard))
 </script>
 
 <template>
   <div>
+    <!-- Loading State -->
+    <div v-if="loading" style="display: flex; justify-content: center; padding: 80px 0;">
+      <NSpin size="large" />
+    </div>
+
+    <!-- Error State -->
+    <StateError
+      v-else-if="error"
+      :title="error"
+      @retry="retry(loadDashboard)"
+    />
+
+    <template v-else>
     <!-- Greeting -->
     <NCard :bordered="false" size="small" style="margin-bottom: 16px;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -252,13 +273,19 @@ onMounted(async () => {
         </NCard>
       </NGridItem>
     </NGrid>
+    </template>
   </div>
 
   <!-- Daily Goal Edit Modal -->
   <NModal v-model:show="showEditModal" preset="card" title="设置日目标专注时长">
     <NForm :model="editGoalForm">
-      <NFormItem label="日目标专注时长（分钟）">
-        <NInput v-model:value="editGoalForm.dailyFocusGoalMinutes" type="number" :min="1" :max="1440" />
+      <NFormItem label="日目标专注时长">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <NInputNumber v-model:value="editGoalForm.hours" :min="0" :max="24" :step="1" style="width: 100px;" />
+          <span>小时</span>
+          <NInputNumber v-model:value="editGoalForm.minutes" :min="0" :max="59" :step="5" style="width: 100px;" />
+          <span>分钟</span>
+        </div>
       </NFormItem>
       <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
         <NButton @click="showEditModal = false">取消</NButton>
@@ -270,7 +297,7 @@ onMounted(async () => {
 
 <style scoped>
 .greeting-subtitle {
-  margin: 8px 0 0;
+  margin: var(--sp-2) 0 0;
   color: var(--text-secondary);
 }
 </style>

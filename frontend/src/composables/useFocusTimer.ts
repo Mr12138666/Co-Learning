@@ -4,13 +4,17 @@ import { useStudyStore } from '@/stores/studyStore'
 import { useDashboardStore } from '@/stores/dashboardStore'
 import { useGamificationStore } from '@/stores/gamificationStore'
 
+export type TimerMode = 'flowtime' | 'pomodoro' | 'countdown'
+export type PomodoroPhase = 'work' | 'shortBreak' | 'longBreak'
+
 /**
- * Server-authoritative focus timer composable.
+ * Server-authoritative focus timer composable with three modes:
+ * - Flowtime: count up (stopwatch), no fixed duration
+ * - Pomodoro: work/break cycles with configurable durations
+ * - Countdown: count down from a target duration
  *
- * Key design decisions:
- * - Elapsed time is calculated from server's `startedAt` timestamp, not local accumulation.
- * - On mount, checks for active session via GET /api/focus-sessions/active for refresh recovery.
- * - Tab visibility changes don't affect server timing, only local display updates.
+ * The server tracks the actual focus session (startedAt, pausedSeconds).
+ * Pomodoro phases and countdown target are client-side only.
  */
 export function useFocusTimer() {
   const focusStore = useFocusStore()
@@ -21,6 +25,18 @@ export function useFocusTimer() {
   const now = ref(Date.now())
   let timerId: ReturnType<typeof setInterval> | null = null
 
+  // ===== Timer Mode =====
+  const timerMode = ref<TimerMode>('flowtime')
+
+  // Pomodoro config
+  const pomodoroWorkMinutes = ref(25)
+  const pomodoroShortBreakMinutes = ref(5)
+  const pomodoroLongBreakMinutes = ref(15)
+  const pomodoroCyclesBeforeLongBreak = ref(4)
+
+  // Countdown config
+  const countdownMinutes = ref(30)
+
   // Elapsed seconds computed from server timestamps
   const elapsedSeconds = computed(() => {
     const session = focusStore.activeSession
@@ -28,10 +44,8 @@ export function useFocusTimer() {
 
     const startedAt = new Date(session.startedAt).getTime()
     if (focusStore.isActive) {
-      // Active: now - started - pausedSeconds
       return Math.max(0, Math.floor((now.value - startedAt) / 1000) - session.pausedSeconds)
     } else if (focusStore.isPaused) {
-      // Paused: pausedAt - started - pausedSeconds
       if (session.pausedAt) {
         const pausedAt = new Date(session.pausedAt).getTime()
         return Math.max(0, Math.floor((pausedAt - startedAt) / 1000) - session.pausedSeconds)
@@ -41,8 +55,8 @@ export function useFocusTimer() {
     return 0
   })
 
-  // Formatted display strings
-  const formattedTime = computed(() => {
+  // ===== Flowtime Mode =====
+  const flowtimeFormatted = computed(() => {
     const total = elapsedSeconds.value
     const hours = Math.floor(total / 3600)
     const minutes = Math.floor((total % 3600) / 60)
@@ -53,16 +67,162 @@ export function useFocusTimer() {
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
   })
 
-  const progressPercent = computed(() => {
-    // 25-minute pomodoro cycle, circular progress
-    const target = 25 * 60
-    const pct = (elapsedSeconds.value % target) / target
-    return Math.round(pct * 100)
+  const flowtimeProgress = computed(() => {
+    const MAX_SESSION_HOURS = 8
+    const maxSeconds = MAX_SESSION_HOURS * 3600
+    return Math.min(100, Math.round((elapsedSeconds.value / maxSeconds) * 100))
   })
 
-  // 宽限期相关
-  const MAX_SESSION_HOURS = 8
+  // ===== Pomodoro Mode =====
+  const pomodoroPhase = computed<PomodoroPhase>(() => {
+    if (!focusStore.hasSession) return 'work'
+    const elapsed = elapsedSeconds.value
+    const workSec = pomodoroWorkMinutes.value * 60
+    const shortBreakSec = pomodoroShortBreakMinutes.value * 60
+    const longBreakSec = pomodoroLongBreakMinutes.value * 60
+    const cycleLength = workSec + shortBreakSec
+    const fullCycleLength = cycleLength * pomodoroCyclesBeforeLongBreak.value
 
+    // Position within the full cycle
+    const fullCycleElapsed = elapsed % fullCycleLength
+
+    // Check if in long break (last break of each full cycle)
+    if (fullCycleElapsed >= cycleLength * pomodoroCyclesBeforeLongBreak.value - shortBreakSec + workSec) {
+      // This shouldn't happen with the modulo, but safety check
+    }
+
+    // Determine which work/break segment we're in
+    const segmentIndex = Math.floor(fullCycleElapsed / cycleLength)
+    const positionInSegment = fullCycleElapsed % cycleLength
+
+    if (positionInSegment < workSec) {
+      return 'work'
+    }
+    // After work phase, check if this is the last cycle before long break
+    if (segmentIndex === pomodoroCyclesBeforeLongBreak.value - 1) {
+      return 'longBreak'
+    }
+    return 'shortBreak'
+  })
+
+  const pomodoroCycleCount = computed(() => {
+    if (!focusStore.hasSession) return 0
+    const elapsed = elapsedSeconds.value
+    const workSec = pomodoroWorkMinutes.value * 60
+    const shortBreakSec = pomodoroShortBreakMinutes.value * 60
+    const cycleLength = workSec + shortBreakSec
+    return Math.floor(elapsed / cycleLength) + 1
+  })
+
+  const pomodoroPhaseRemaining = computed(() => {
+    if (!focusStore.hasSession) return 0
+    const elapsed = elapsedSeconds.value
+    const workSec = pomodoroWorkMinutes.value * 60
+    const shortBreakSec = pomodoroShortBreakMinutes.value * 60
+    const longBreakSec = pomodoroLongBreakMinutes.value * 60
+    const cycleLength = workSec + shortBreakSec
+    const fullCycleLength = cycleLength * pomodoroCyclesBeforeLongBreak.value
+
+    const fullCycleElapsed = elapsed % fullCycleLength
+    const segmentIndex = Math.floor(fullCycleElapsed / cycleLength)
+    const positionInSegment = fullCycleElapsed % cycleLength
+
+    if (positionInSegment < workSec) {
+      return workSec - positionInSegment
+    }
+    if (segmentIndex === pomodoroCyclesBeforeLongBreak.value - 1) {
+      return longBreakSec - (positionInSegment - workSec)
+    }
+    return shortBreakSec - (positionInSegment - workSec)
+  })
+
+  const pomodoroFormatted = computed(() => {
+    const remaining = pomodoroPhaseRemaining.value
+    const minutes = Math.floor(remaining / 60)
+    const seconds = remaining % 60
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+  })
+
+  const pomodoroProgress = computed(() => {
+    if (!focusStore.hasSession) return 0
+    const workSec = pomodoroWorkMinutes.value * 60
+    const shortBreakSec = pomodoroShortBreakMinutes.value * 60
+    const longBreakSec = pomodoroLongBreakMinutes.value * 60
+    const cycleLength = workSec + shortBreakSec
+
+    const elapsed = elapsedSeconds.value
+    const fullCycleLength = cycleLength * pomodoroCyclesBeforeLongBreak.value
+    const fullCycleElapsed = elapsed % fullCycleLength
+    const segmentIndex = Math.floor(fullCycleElapsed / cycleLength)
+    const positionInSegment = fullCycleElapsed % cycleLength
+
+    let phaseDuration: number
+    if (positionInSegment < workSec) {
+      phaseDuration = workSec
+      return Math.round((positionInSegment / phaseDuration) * 100)
+    }
+    if (segmentIndex === pomodoroCyclesBeforeLongBreak.value - 1) {
+      phaseDuration = longBreakSec
+      return Math.round(((positionInSegment - workSec) / phaseDuration) * 100)
+    }
+    phaseDuration = shortBreakSec
+    return Math.round(((positionInSegment - workSec) / phaseDuration) * 100)
+  })
+
+  const pomodoroPhaseLabel = computed(() => {
+    switch (pomodoroPhase.value) {
+      case 'work': return '专注中'
+      case 'shortBreak': return '短休息'
+      case 'longBreak': return '长休息'
+      default: return '专注中'
+    }
+  })
+
+  // ===== Countdown Mode =====
+  const countdownTargetSeconds = computed(() => countdownMinutes.value * 60)
+  const countdownRemaining = computed(() => {
+    if (!focusStore.hasSession) return countdownTargetSeconds.value
+    return Math.max(0, countdownTargetSeconds.value - elapsedSeconds.value)
+  })
+  const countdownFinished = computed(() => {
+    return focusStore.hasSession && countdownRemaining.value <= 0
+  })
+
+  const countdownFormatted = computed(() => {
+    const remaining = countdownRemaining.value
+    const minutes = Math.floor(remaining / 60)
+    const seconds = remaining % 60
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+  })
+
+  const countdownProgress = computed(() => {
+    if (!focusStore.hasSession) return 0
+    const target = countdownTargetSeconds.value
+    if (target <= 0) return 0
+    return Math.min(100, Math.round((elapsedSeconds.value / target) * 100))
+  })
+
+  // ===== Unified Display =====
+  const formattedTime = computed(() => {
+    switch (timerMode.value) {
+      case 'flowtime': return flowtimeFormatted.value
+      case 'pomodoro': return pomodoroFormatted.value
+      case 'countdown': return countdownFormatted.value
+      default: return flowtimeFormatted.value
+    }
+  })
+
+  const progressPercent = computed(() => {
+    switch (timerMode.value) {
+      case 'flowtime': return flowtimeProgress.value
+      case 'pomodoro': return pomodoroProgress.value
+      case 'countdown': return countdownProgress.value
+      default: return flowtimeProgress.value
+    }
+  })
+
+  // ===== Grace Period =====
+  const MAX_SESSION_HOURS = 8
   const graceDeadline = computed(() => focusStore.activeSession?.graceDeadline ?? null)
   const graceReason = computed(() => focusStore.activeSession?.graceReason ?? null)
   const isInGracePeriod = computed(() => graceDeadline.value !== null)
@@ -81,7 +241,7 @@ export function useFocusTimer() {
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
   })
 
-  // Current subject info
+  // ===== Subject/Task Info =====
   const currentSubject = computed(() => {
     const subjectId = focusStore.activeSession?.subjectId
     if (!subjectId) return null
@@ -94,14 +254,18 @@ export function useFocusTimer() {
     return studyStore.tasks.find((t) => t.id === taskId) ?? null
   })
 
-  // Timer tick - update `now` every second when active or in grace period
+  // ===== Timer Tick =====
   function startTick() {
     stopTick()
     timerId = setInterval(() => {
       now.value = Date.now()
-      // 宽限期过期后，后端会 abort 会话，刷新前端状态
+      // Grace period expiry
       if (isInGracePeriod.value && graceRemainingSeconds.value <= 0) {
         focusStore.fetchActive()
+      }
+      // Countdown auto-finish
+      if (timerMode.value === 'countdown' && countdownFinished.value) {
+        finishFocus()
       }
     }, 1000)
   }
@@ -113,7 +277,6 @@ export function useFocusTimer() {
     }
   }
 
-  // Watch session status to start/stop ticking
   watch(
     () => [focusStore.isActive, isInGracePeriod.value],
     ([active, inGrace]) => {
@@ -126,14 +289,13 @@ export function useFocusTimer() {
     { immediate: true },
   )
 
-  // Actions
+  // ===== Actions =====
   async function startFocus(subjectId?: number, taskId?: number) {
     const clientRequestId = `focus-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
     
     try {
       await focusStore.start({ subjectId, taskId, clientRequestId })
     } catch (error: any) {
-      // If conflict (session already exists), abort it and retry
       if (error.response?.status === 409) {
         try {
           await focusStore.fetchActive()
@@ -141,7 +303,7 @@ export function useFocusTimer() {
             await focusStore.abort()
           }
         } catch {
-          // Ignore abort errors
+          // Ignore
         }
         await focusStore.start({ subjectId, taskId, clientRequestId })
       } else {
@@ -173,7 +335,6 @@ export function useFocusTimer() {
       return result
     } finally {
       stopTick()
-      // Refresh stats after finishing (best effort)
       dashboardStore.fetchStats().catch(() => {})
       dashboardStore.fetchTodayCheckin().catch(() => {})
       gamificationStore.loadProfile().catch(() => {})
@@ -189,10 +350,8 @@ export function useFocusTimer() {
     }
   }
 
-  // Tab visibility handling - re-fetch session state when returning
   function handleVisibilityChange() {
     if (document.visibilityState === 'visible') {
-      // Re-fetch active session to sync with server (may have been auto-paused)
       focusStore.fetchActive()
       now.value = Date.now()
       if (focusStore.isActive) {
@@ -201,7 +360,6 @@ export function useFocusTimer() {
     }
   }
 
-  // Initialize: check for active session on mount (refresh recovery)
   async function init() {
     await focusStore.fetchActive()
     if (focusStore.isActive) {
@@ -221,19 +379,32 @@ export function useFocusTimer() {
   })
 
   return {
-    // State
+    // Mode
+    timerMode,
+    // Pomodoro config
+    pomodoroWorkMinutes,
+    pomodoroShortBreakMinutes,
+    pomodoroLongBreakMinutes,
+    pomodoroCyclesBeforeLongBreak,
+    pomodoroPhase,
+    pomodoroCycleCount,
+    pomodoroPhaseLabel,
+    // Countdown config
+    countdownMinutes,
+    countdownFinished,
+    // Unified display
     elapsedSeconds,
     formattedTime,
     progressPercent,
     currentSubject,
     currentTask,
-    // 宽限期
+    // Grace period
     MAX_SESSION_HOURS,
     isInGracePeriod,
     isLearningLimit,
     graceRemainingSeconds,
     formattedGraceTime,
-    // Store passthrough - use computed to maintain reactivity
+    // Store passthrough
     hasSession: computed(() => focusStore.hasSession),
     isActive: computed(() => focusStore.isActive),
     isPaused: computed(() => focusStore.isPaused),

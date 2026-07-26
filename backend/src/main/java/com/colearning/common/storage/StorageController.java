@@ -33,12 +33,12 @@ public class StorageController {
         
         // Validate file
         if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(400, "文件不能为空"));
+            return ResponseEntity.badRequest().body(ApiResponse.error("GEN-001", "文件不能为空"));
         }
-        
+
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(400, "只支持图片格式"));
+            return ResponseEntity.badRequest().body(ApiResponse.error("GEN-001", "只支持图片格式"));
         }
         
         // Generate unique filename

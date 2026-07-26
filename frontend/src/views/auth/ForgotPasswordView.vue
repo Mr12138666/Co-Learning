@@ -58,7 +58,7 @@ async function handleSend() {
 
 <style scoped>
 .form-description {
-  margin-bottom: 16px;
+  margin-bottom: var(--sp-4);
   color: var(--text-secondary);
 }
 </style>

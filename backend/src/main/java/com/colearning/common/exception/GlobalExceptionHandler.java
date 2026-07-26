@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
         log.warn("Business exception: code={}, detail={}", ec.getCode(), ex.getDetail());
         return ResponseEntity
                 .status(ec.getHttpStatus())
-                .body(ApiResponse.error(ec.getCode().hashCode(), ec.getMessage()));
+                .body(ApiResponse.error(ec.getCode(), ec.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -51,7 +51,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(new ApiResponse<>(
-                        ErrorCode.VALIDATION_ERROR.getCode().hashCode(),
+                        ErrorCode.VALIDATION_ERROR.getCode(),
                         ErrorCode.VALIDATION_ERROR.getMessage(),
                         errors,
                         null,
@@ -70,7 +70,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(new ApiResponse<>(
-                        ErrorCode.VALIDATION_ERROR.getCode().hashCode(),
+                        ErrorCode.VALIDATION_ERROR.getCode(),
                         ErrorCode.VALIDATION_ERROR.getMessage(),
                         errors,
                         null,
@@ -83,7 +83,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(
-                        ErrorCode.BAD_REQUEST.getCode().hashCode(),
+                        ErrorCode.BAD_REQUEST.getCode(),
                         "Invalid parameter: " + ex.getName()));
     }
 
@@ -94,7 +94,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(ApiResponse.error(
-                        ErrorCode.CONFLICT.getCode().hashCode(),
+                        ErrorCode.CONFLICT.getCode(),
                         "Data conflict: the resource already exists or violates a constraint"));
     }
 
@@ -104,7 +104,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error(
-                        ErrorCode.UNAUTHORIZED.getCode().hashCode(),
+                        ErrorCode.UNAUTHORIZED.getCode(),
                         ErrorCode.UNAUTHORIZED.getMessage()));
     }
 
@@ -114,7 +114,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.error(
-                        ErrorCode.FORBIDDEN.getCode().hashCode(),
+                        ErrorCode.FORBIDDEN.getCode(),
                         ErrorCode.FORBIDDEN.getMessage()));
     }
 
@@ -124,7 +124,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error(
-                        ErrorCode.NOT_FOUND.getCode().hashCode(),
+                        ErrorCode.NOT_FOUND.getCode(),
                         ErrorCode.NOT_FOUND.getMessage()));
     }
 
@@ -136,7 +136,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error(
-                        ErrorCode.INTERNAL_ERROR.getCode().hashCode(),
+                        ErrorCode.INTERNAL_ERROR.getCode(),
                         ErrorCode.INTERNAL_ERROR.getMessage()));
     }
 }

@@ -6,6 +6,7 @@ import {
   NForm,
   NFormItem,
   NInput,
+  NInputNumber,
   NButton,
   NSpace,
   NAvatar,
@@ -221,7 +222,7 @@ onMounted(() => {
             </NSpace>
           </NFormItem>
           <NFormItem label="日目标专注时长（分钟）">
-            <NInput v-model:value="settingsForm.dailyFocusGoalMinutes" type="number" :min="1" :max="1440" placeholder="请输入日目标分钟数" />
+            <NInputNumber v-model:value="settingsForm.dailyFocusGoalMinutes" :min="1" :max="1440" placeholder="请输入日目标分钟数" style="width: 100%;" />
           </NFormItem>
           <NSpace>
             <NButton type="primary" @click="saveSettings">保存</NButton>
@@ -262,61 +263,55 @@ onMounted(() => {
 }
 
 .page-title {
-  font-size: 24px;
-  font-weight: 600;
-  margin-bottom: 24px;
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-semibold);
+  margin-bottom: var(--sp-6);
 }
 
 .profile-card,
 .settings-card {
-  margin-bottom: 16px;
+  margin-bottom: var(--sp-4);
 }
 
 .profile-header {
   display: flex;
   align-items: center;
-  gap: 20px;
-  margin-bottom: 20px;
+  gap: var(--sp-5);
+  margin-bottom: var(--sp-5);
 }
 
 .avatar-section {
   position: relative;
 }
 
-.upload-avatar-btn {
-  display: block;
-  margin-top: 8px;
-  cursor: pointer;
-}
-
 .profile-info h3 {
-  font-size: 20px;
-  font-weight: 600;
-  margin: 0 0 4px 0;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  margin: 0 0 var(--sp-1) 0;
 }
 
 .email {
   color: var(--text-tertiary);
-  font-size: 14px;
-  margin: 0 0 8px 0;
+  font-size: var(--text-base);
+  margin: 0 0 var(--sp-2) 0;
 }
 
 .bio-section,
 .edit-section {
-  padding: 16px 0;
-  border-top: 1px solid var(--border-color);
+  padding: var(--sp-4) 0;
+  border-top: 1px solid var(--border-default);
 }
 
 .bio-section p {
-  margin-bottom: 8px;
+  margin-bottom: var(--sp-2);
   color: var(--text-secondary);
 }
 
 .profile-stats {
   display: flex;
-  gap: 24px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border-color);
+  gap: var(--sp-6);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--border-default);
 }
 
 .stat-item {
@@ -325,13 +320,13 @@ onMounted(() => {
 }
 
 .stat-label {
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: var(--text-tertiary);
 }
 
 .stat-value {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
 }
 
 .settings-header {
@@ -343,14 +338,14 @@ onMounted(() => {
 .settings-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
 .setting-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
+  padding: var(--sp-2) 0;
 }
 
 .setting-label {
@@ -358,6 +353,19 @@ onMounted(() => {
 }
 
 .setting-value {
-  font-weight: 500;
+  font-weight: var(--weight-medium);
+}
+
+@media (max-width: 768px) {
+  .profile-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--sp-3);
+  }
+
+  .profile-stats {
+    flex-direction: column;
+    gap: var(--sp-2);
+  }
 }
 </style>

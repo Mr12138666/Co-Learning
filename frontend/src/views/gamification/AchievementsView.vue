@@ -131,12 +131,12 @@ const iconEmoji: Record<string, string> = {
 
 <style scoped>
 .achievements-view {
-  padding: 0 4px;
+  padding: 0 var(--sp-1);
 }
 
 .page-title {
-  margin: 0 0 20px 0;
-  font-size: 22px;
+  margin: 0 0 var(--sp-5) 0;
+  font-size: var(--text-2xl);
 }
 
 .progress-card {
@@ -145,46 +145,46 @@ const iconEmoji: Record<string, string> = {
 }
 
 .progress-label {
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--text-secondary);
 }
 
 .progress-numbers {
-  margin-top: 4px;
+  margin-top: var(--sp-1);
 }
 
 .unlocked {
   font-size: 28px;
-  font-weight: bold;
-  color: var(--accent-primary);
+  font-weight: var(--weight-bold);
+  color: var(--accent);
 }
 
 .separator {
-  font-size: 20px;
+  font-size: var(--text-2xl);
   color: var(--text-secondary);
-  margin: 0 4px;
+  margin: 0 var(--sp-1);
 }
 
 .total {
-  font-size: 20px;
+  font-size: var(--text-2xl);
   color: var(--text-secondary);
 }
 
 .achievement-group {
-  margin-bottom: 24px;
+  margin-bottom: var(--sp-6);
 }
 
 .group-title {
-  margin: 0 0 12px 0;
-  font-size: 16px;
+  margin: 0 0 var(--sp-3) 0;
+  font-size: var(--text-lg);
 }
 
 .achievement-card {
-  transition: transform 0.2s, opacity 0.2s;
+  transition: transform var(--duration-fast) var(--ease-default), opacity var(--duration-fast) var(--ease-default);
 }
 
 .achievement-card.unlocked {
-  border-color: var(--primary-color);
+  border-color: var(--accent);
 }
 
 .achievement-card.locked {
@@ -202,24 +202,24 @@ const iconEmoji: Record<string, string> = {
 }
 
 .ach-name {
-  margin: 0 0 4px 0;
-  font-size: 14px;
-  font-weight: 600;
+  margin: 0 0 var(--sp-1) 0;
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
   text-align: center;
 }
 
 .ach-desc {
-  margin: 0 0 8px 0;
-  font-size: 12px;
+  margin: 0 0 var(--sp-2) 0;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
   text-align: center;
-  line-height: 1.4;
+  line-height: var(--leading-snug);
   min-height: 32px;
 }
 
 .ach-rewards {
   text-align: center;
-  margin-bottom: 8px;
+  margin-bottom: var(--sp-2);
 }
 
 .ach-status {

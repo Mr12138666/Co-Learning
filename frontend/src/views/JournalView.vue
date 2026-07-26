@@ -12,14 +12,18 @@ import {
   NEmpty,
   NPopconfirm,
   NText,
+  NSpin,
   useMessage,
 } from 'naive-ui'
 import { useJournalStore } from '@/stores/journalStore'
+import { usePageLoad } from '@/composables/usePageLoad'
+import StateError from '@/components/common/StateError.vue'
 import dayjs from 'dayjs'
 
 const router = useRouter()
 const journalStore = useJournalStore()
 const message = useMessage()
+const { loading, error, load, retry } = usePageLoad()
 
 const visibilityConfig = {
   PRIVATE: { label: '私密', type: 'default' as const },
@@ -55,13 +59,28 @@ async function handlePublish(id: number) {
   }
 }
 
-onMounted(() => {
-  journalStore.fetchMyJournals({ page: 0, size: 50 })
-})
+onMounted(() => load(async () => {
+  await journalStore.fetchMyJournals({ page: 0, size: 50 })
+}))
 </script>
 
 <template>
   <div>
+    <!-- Loading State -->
+    <div v-if="loading" style="display: flex; justify-content: center; padding: 80px 0;">
+      <NSpin size="large" />
+    </div>
+
+    <!-- Error State -->
+    <StateError
+      v-else-if="error"
+      :title="error"
+      @retry="retry(async () => {
+        await journalStore.fetchMyJournals({ page: 0, size: 50 })
+      })"
+    />
+
+    <template v-else>
     <NCard :bordered="false">
       <template #header>
         <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -132,5 +151,6 @@ onMounted(() => {
         </NListItem>
       </NList>
     </NCard>
+    </template>
   </div>
 </template>

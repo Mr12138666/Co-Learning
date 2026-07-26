@@ -63,8 +63,19 @@ public class DailyTaskServiceImpl implements DailyTaskService {
             throw BusinessException.of(ErrorCode.ITEM_NOT_FOUND);
         }
         
+        if (task.isClaimed()) {
+            return DailyTaskResponse.from(task);
+        }
+        
         if (!task.isCompleted()) {
             throw BusinessException.of(ErrorCode.BAD_REQUEST, "任务未完成");
+        }
+        
+        // Atomic claim to prevent double-claiming under concurrent requests
+        int claimed = dailyTaskRepository.claimTask(taskId);
+        if (claimed == 0) {
+            // Already claimed by a concurrent request
+            return DailyTaskResponse.from(dailyTaskRepository.findById(taskId).orElse(task));
         }
         
         // Award tokens directly
@@ -76,9 +87,8 @@ public class DailyTaskServiceImpl implements DailyTaskService {
         log.info("User {} claimed daily task reward: taskId={}, tokens={}", 
                 userId, taskId, task.getRewardTokens());
         
-        // Mark as claimed
         task.setStatus("CLAIMED");
-        return DailyTaskResponse.from(dailyTaskRepository.save(task));
+        return DailyTaskResponse.from(task);
     }
 
     @Override

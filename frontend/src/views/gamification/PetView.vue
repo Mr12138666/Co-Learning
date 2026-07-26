@@ -354,7 +354,7 @@ const petExpPercent = computed(() => {
     <n-empty v-else description="商店加载中..." style="padding: 40px 0" />
 
     <!-- Rename Modal -->
-    <n-modal v-model:show="showRenameModal" preset="card" title="给宠物改名" style="width: 400px">
+    <n-modal v-model:show="showRenameModal" preset="card" title="给宠物改名" style="max-width: 400px; width: 90vw;">
       <n-input v-model:value="renameValue" placeholder="输入新名字" maxlength="50" />
       <template #footer>
         <n-space justify="end">
@@ -368,12 +368,12 @@ const petExpPercent = computed(() => {
 
 <style scoped>
 .pet-view {
-  padding: 0 4px;
+  padding: 0 var(--sp-1);
 }
 
 .page-title {
-  margin: 0 0 20px 0;
-  font-size: 22px;
+  margin: 0 0 var(--sp-5) 0;
+  font-size: var(--text-2xl);
 }
 
 .pet-card {
@@ -382,15 +382,15 @@ const petExpPercent = computed(() => {
 
 .pet-display {
   display: flex;
-  gap: 20px;
+  gap: var(--sp-5);
   align-items: center;
 }
 
 .pet-avatar {
   width: 80px;
   height: 80px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #e8f4f8 0%, #f0e8f8 100%);
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--info-subtle) 0%, var(--accent-subtle) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -431,19 +431,19 @@ const petExpPercent = computed(() => {
 }
 
 .stat-label {
-  font-size: 12px;
-  color: var(--text-color-3);
-  font-weight: 500;
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  font-weight: var(--weight-medium);
 }
 
 .stat-text {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
 }
 
 .stat-hint {
-  font-size: 11px;
-  color: var(--text-color-4);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
   margin-top: 2px;
 }
 
@@ -464,13 +464,13 @@ const petExpPercent = computed(() => {
 
 .token-amount {
   font-size: 32px;
-  font-weight: 700;
-  color: var(--accent-primary);
+  font-weight: var(--weight-bold);
+  color: var(--accent);
 }
 
 .token-label {
-  font-size: 14px;
-  color: var(--text-color-3);
+  font-size: var(--text-base);
+  color: var(--text-tertiary);
 }
 
 .earn-guide-card {
@@ -498,10 +498,10 @@ const petExpPercent = computed(() => {
 .earn-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  background-color: var(--bg-primary);
-  border-radius: 8px;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  background-color: var(--bg-page);
+  border-radius: var(--radius-md);
 }
 
 .earn-icon {
@@ -524,14 +524,14 @@ const petExpPercent = computed(() => {
 }
 
 .earn-value {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--accent-primary);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--accent);
 }
 
 .section-title {
-  margin: 0 0 16px 0;
-  font-size: 18px;
+  margin: 0 0 var(--sp-4) 0;
+  font-size: var(--text-xl);
 }
 
 .inventory-item, .shop-item {
@@ -557,10 +557,10 @@ const petExpPercent = computed(() => {
 }
 
 .item-desc, .shop-item-desc {
-  margin: 0 0 8px 0;
-  font-size: 12px;
-  color: var(--text-color-3);
-  line-height: 1.4;
+  margin: 0 0 var(--sp-2) 0;
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  line-height: var(--leading-snug);
 }
 
 .item-effect, .shop-item-effect {
@@ -579,8 +579,25 @@ const petExpPercent = computed(() => {
 }
 
 .shop-item-price {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--primary-color);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .pet-display {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .pet-stats {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .earn-item {
+    flex-wrap: wrap;
+  }
 }
 </style>

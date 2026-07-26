@@ -2,12 +2,15 @@
 import { onMounted, watch } from 'vue'
 import { useLeaderboardStore, type LeaderboardType } from '@/stores/leaderboardStore'
 import { NTabs, NTabPane, NCard, NAvatar, NSpin, NEmpty, NTag, NSpace, NStatistic } from 'naive-ui'
+import { usePageLoad } from '@/composables/usePageLoad'
+import StateError from '@/components/common/StateError.vue'
 
 const store = useLeaderboardStore()
+const { loading, error, load, retry } = usePageLoad()
 
-onMounted(() => {
-  store.loadLeaderboard('daily')
-})
+onMounted(() => load(async () => {
+  await store.loadLeaderboard('daily')
+}))
 
 watch(() => store.currentType, (type) => {
   store.loadLeaderboard(type)
@@ -42,6 +45,21 @@ const tabLabels: Record<LeaderboardType, string> = {
 
 <template>
   <div class="leaderboard-view">
+    <!-- Loading State -->
+    <div v-if="loading" style="display: flex; justify-content: center; padding: 80px 0;">
+      <NSpin size="large" />
+    </div>
+
+    <!-- Error State -->
+    <StateError
+      v-else-if="error"
+      :title="error"
+      @retry="retry(async () => {
+        await store.loadLeaderboard('daily')
+      })"
+    />
+
+    <template v-else>
     <h2 class="page-title">排行榜</h2>
 
     <!-- My Rank Card -->
@@ -89,27 +107,28 @@ const tabLabels: Record<LeaderboardType, string> = {
         </n-spin>
       </n-tab-pane>
     </n-tabs>
+    </template>
   </div>
 </template>
 
 <style scoped>
 .leaderboard-view {
-  padding: 0 4px;
+  padding: 0 var(--sp-1);
 }
 
 .page-title {
-  margin: 0 0 20px 0;
-  font-size: 22px;
+  margin: 0 0 var(--sp-5) 0;
+  font-size: var(--text-2xl);
 }
 
 .my-rank-card {
-  margin-bottom: 20px;
+  margin-bottom: var(--sp-5);
   background-color: var(--bg-card);
 }
 
 .my-name {
-  font-weight: 600;
-  font-size: 16px;
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-lg);
 }
 
 .rank-list {
@@ -121,18 +140,18 @@ const tabLabels: Record<LeaderboardType, string> = {
 .rank-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  border-radius: 8px;
-  transition: background-color 0.2s;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius-md);
+  transition: background-color var(--duration-fast) var(--ease-default);
 }
 
 .rank-item:hover {
-  background-color: var(--hover-color);
+  background-color: var(--bg-hover);
 }
 
 .rank-item.rank-top {
-  background-color: var(--tag-color);
+  background-color: var(--bg-sunken);
 }
 
 .rank-number {
@@ -144,13 +163,13 @@ const tabLabels: Record<LeaderboardType, string> = {
 
 .rank-name {
   flex: 1;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
 }
 
 .rank-score {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--primary-color);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--accent);
 }
 </style>

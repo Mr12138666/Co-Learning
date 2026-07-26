@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useMessage } from 'naive-ui'
+import { useMessage, NSpin } from 'naive-ui'
 import { useRoomStore } from '@/stores/roomStore'
+import { usePageLoad } from '@/composables/usePageLoad'
+import StateError from '@/components/common/StateError.vue'
 import RoomCard from '@/components/room/RoomCard.vue'
 
 const router = useRouter()
 const message = useMessage()
 const roomStore = useRoomStore()
+const { loading, error, load, retry } = usePageLoad()
 
 const showCreateModal = ref(false)
 const createForm = ref({
@@ -19,9 +22,9 @@ const createForm = ref({
   topic: '',
 })
 
-onMounted(() => {
-  roomStore.loadRooms()
-})
+onMounted(() => load(async () => {
+  await roomStore.loadRooms()
+}))
 
 function handleCreate() {
   showCreateModal.value = true
@@ -61,6 +64,21 @@ async function submitCreate() {
 
 <template>
   <div class="room-list-view">
+    <!-- Loading State -->
+    <div v-if="loading" style="display: flex; justify-content: center; padding: 80px 0;">
+      <NSpin size="large" />
+    </div>
+
+    <!-- Error State -->
+    <StateError
+      v-else-if="error"
+      :title="error"
+      @retry="retry(async () => {
+        await roomStore.loadRooms()
+      })"
+    />
+
+    <template v-else>
     <div class="page-header">
       <n-space justify="space-between" align="center">
         <h2>陪伴房</h2>
@@ -80,9 +98,10 @@ async function submitCreate() {
       </div>
       <n-empty v-else description="暂无公开房间，快来创建第一个吧！" style="padding: 60px 0" />
     </n-spin>
+    </template>
 
     <!-- Create Room Modal -->
-    <n-modal v-model:show="showCreateModal" preset="card" title="创建陪伴房" style="width: 500px">
+    <n-modal v-model:show="showCreateModal" preset="card" title="创建陪伴房" style="max-width: 500px; width: 90vw;">
       <n-form label-placement="top">
         <n-form-item label="房间名称" required>
           <n-input v-model:value="createForm.name" placeholder="给房间起个名字" maxlength="100" />
@@ -133,12 +152,12 @@ async function submitCreate() {
 
 .page-header h2 {
   margin: 0;
-  font-size: 22px;
+  font-size: var(--text-2xl);
 }
 
 .room-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
+  gap: var(--sp-4);
 }
 </style>

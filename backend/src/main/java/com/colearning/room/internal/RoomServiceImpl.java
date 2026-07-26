@@ -210,14 +210,64 @@ public class RoomServiceImpl implements RoomService {
         RoomMember member = findActiveMember(roomId, userId);
 
         if (member.isOwner()) {
-            throw BusinessException.of(ErrorCode.ROOM_NOT_OWNER,
-                    "Owner cannot leave. Transfer ownership or delete the room.");
+            handleOwnerLeave(room, member, roomId, userId);
+            return;
         }
 
         member.setLeftAt(Instant.now());
         roomMemberRepository.save(member);
 
         createSystemMessage(roomId, userId, "left the room");
+    }
+
+    /**
+     * When the owner leaves: auto-transfer to the most senior admin,
+     * or the most senior member if no admin exists.
+     * If no other members remain, close the room.
+     */
+    private void handleOwnerLeave(Room room, RoomMember ownerMember, Long roomId, Long userId) {
+        List<RoomMember> activeMembers = roomMemberRepository.findActiveMembers(roomId);
+
+        // Find successor: prefer admin, then earliest joined member
+        RoomMember successor = activeMembers.stream()
+                .filter(m -> !m.getUserId().equals(userId) && m.isAdmin())
+                .min(java.util.Comparator.comparing(RoomMember::getJoinedAt))
+                .orElse(null);
+
+        if (successor == null) {
+            successor = activeMembers.stream()
+                    .filter(m -> !m.getUserId().equals(userId))
+                    .min(java.util.Comparator.comparing(RoomMember::getJoinedAt))
+                    .orElse(null);
+        }
+
+        if (successor == null) {
+            // No other members — close the room
+            room.softDelete();
+            room.setStatus("CLOSED");
+            roomRepository.save(room);
+            ownerMember.setLeftAt(Instant.now());
+            roomMemberRepository.save(ownerMember);
+            log.info("Owner left, room closed (no members): roomId={}, userId={}", roomId, userId);
+            return;
+        }
+
+        // Transfer ownership
+        successor.setRole("OWNER");
+        room.setOwnerId(successor.getUserId());
+        roomRepository.save(room);
+        roomMemberRepository.save(successor);
+
+        // Former owner leaves
+        ownerMember.setRole("MEMBER");
+        ownerMember.setLeftAt(Instant.now());
+        roomMemberRepository.save(ownerMember);
+
+        createSystemMessage(roomId, successor.getUserId(),
+                "became the new room owner");
+        createSystemMessage(roomId, userId, "left the room");
+
+        log.info("Ownership transferred: roomId={}, from={} to={}", roomId, userId, successor.getUserId());
     }
 
     @Override

@@ -108,7 +108,7 @@ function getRoleTag(role: string) {
 
 .member-list-header {
   padding: 8px 12px;
-  border-bottom: 1px solid var(--divider-color);
+  border-bottom: 1px solid var(--separator);
 }
 
 .header-title {
@@ -129,7 +129,7 @@ function getRoleTag(role: string) {
 }
 
 .member-item:hover {
-  background-color: var(--hover-color);
+  background-color: var(--bg-hover);
 }
 
 .member-item.offline {

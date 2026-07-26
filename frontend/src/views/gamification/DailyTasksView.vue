@@ -162,28 +162,28 @@ onMounted(() => {
 
 <style scoped>
 .daily-tasks-view {
-  padding: 0 4px;
+  padding: 0 var(--sp-1);
 }
 
 .page-title {
-  margin: 0 0 20px 0;
-  font-size: 22px;
+  margin: 0 0 var(--sp-5) 0;
+  font-size: var(--text-2xl);
 }
 
 .stats-card {
-  margin-bottom: 20px;
+  margin-bottom: var(--sp-5);
 }
 
 .token-icon {
-  font-size: 16px;
+  font-size: var(--text-lg);
 }
 
 .task-card {
-  transition: all 0.3s ease;
+  transition: all var(--duration-normal) var(--ease-default);
 }
 
 .task-card.completed {
-  border: 1px solid var(--success-color) !important;
+  border: 1px solid var(--success) !important;
 }
 
 .task-card.claimed {
@@ -194,7 +194,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: var(--sp-3);
 }
 
 .task-icon {
@@ -202,23 +202,23 @@ onMounted(() => {
 }
 
 .task-title {
-  margin: 0 0 4px 0;
-  font-size: 16px;
-  font-weight: 600;
+  margin: 0 0 var(--sp-1) 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
 }
 
 .task-desc {
-  margin: 0 0 12px 0;
-  font-size: 13px;
-  color: var(--text-color-3);
-  line-height: 1.4;
+  margin: 0 0 var(--sp-3) 0;
+  font-size: var(--text-md);
+  color: var(--text-tertiary);
+  line-height: var(--leading-snug);
 }
 
 .task-progress {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
 }
 
 .progress-bar {
@@ -226,8 +226,8 @@ onMounted(() => {
 }
 
 .progress-text {
-  font-size: 12px;
-  color: var(--text-color-4);
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
   flex-shrink: 0;
 }
 
@@ -238,9 +238,9 @@ onMounted(() => {
 }
 
 .reward-text {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--primary-color);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--accent);
 }
 
 .tips-card {
@@ -267,12 +267,12 @@ onMounted(() => {
 
 .tips-list {
   margin: 0;
-  padding-left: 20px;
-  font-size: 13px;
-  color: var(--text-color-3);
+  padding-left: var(--sp-5);
+  font-size: var(--text-md);
+  color: var(--text-tertiary);
 }
 
 .tips-list li {
-  margin-bottom: 4px;
+  margin-bottom: var(--sp-1);
 }
 </style>

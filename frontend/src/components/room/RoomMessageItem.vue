@@ -82,7 +82,7 @@ const imageUrl = computed(() => {
 .system-text {
   font-size: 12px;
   color: var(--text-tertiary);
-  background-color: var(--bg-tertiary);
+  background-color: var(--bg-sunken);
   padding: 4px 12px;
   border-radius: 12px;
 }
@@ -139,13 +139,13 @@ const imageUrl = computed(() => {
   border-radius: 0 8px 8px 8px;
   background-color: var(--bg-card);
   box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-default);
 }
 
 .message-bubble.own {
   border-radius: 8px 0 8px 8px;
-  background-color: var(--accent-primary);
-  border-color: var(--accent-primary);
+  background-color: var(--accent);
+  border-color: var(--accent);
 }
 
 .message-text {

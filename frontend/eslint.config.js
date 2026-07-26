@@ -1,0 +1,116 @@
+import js from '@eslint/js'
+import tseslint from '@typescript-eslint/eslint-plugin'
+import tsparser from '@typescript-eslint/parser'
+import vuePlugin from 'eslint-plugin-vue'
+import vueParser from 'vue-eslint-parser'
+
+// Browser globals
+const browserGlobals = {
+  window: 'readonly',
+  document: 'readonly',
+  navigator: 'readonly',
+  localStorage: 'readonly',
+  sessionStorage: 'readonly',
+  setTimeout: 'readonly',
+  clearTimeout: 'readonly',
+  setInterval: 'readonly',
+  clearInterval: 'readonly',
+  requestAnimationFrame: 'readonly',
+  cancelAnimationFrame: 'readonly',
+  fetch: 'readonly',
+  console: 'readonly',
+  alert: 'readonly',
+  confirm: 'readonly',
+  prompt: 'readonly',
+  location: 'readonly',
+  history: 'readonly',
+  Event: 'readonly',
+  CustomEvent: 'readonly',
+  KeyboardEvent: 'readonly',
+  MouseEvent: 'readonly',
+  FormData: 'readonly',
+  File: 'readonly',
+  FileReader: 'readonly',
+  Blob: 'readonly',
+  URL: 'readonly',
+  URLSearchParams: 'readonly',
+  Headers: 'readonly',
+  Request: 'readonly',
+  Response: 'readonly',
+  AbortController: 'readonly',
+  HTMLElement: 'readonly',
+  HTMLInputElement: 'readonly',
+  HTMLTextAreaElement: 'readonly',
+  HTMLSelectElement: 'readonly',
+  HTMLFormElement: 'readonly',
+  HTMLDivElement: 'readonly',
+  HTMLAnchorElement: 'readonly',
+  HTMLButtonElement: 'readonly',
+  HTMLImageElement: 'readonly',
+  Element: 'readonly',
+  Node: 'readonly',
+  NodeList: 'readonly',
+  MutationObserver: 'readonly',
+  IntersectionObserver: 'readonly',
+  ResizeObserver: 'readonly',
+  Image: 'readonly',
+  XMLHttpRequest: 'readonly',
+  WebSocket: 'readonly',
+  crypto: 'readonly',
+  atob: 'readonly',
+  btoa: 'readonly',
+  performance: 'readonly',
+  matchMedia: 'readonly',
+  getComputedStyle: 'readonly',
+  DOMParser: 'readonly',
+}
+
+export default [
+  {
+    ignores: ['dist/**', 'node_modules/**', 'auto-imports.d.ts', 'components.d.ts'],
+  },
+  js.configs.recommended,
+  ...vuePlugin.configs['flat/recommended'],
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    languageOptions: {
+      parser: tsparser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+      globals: browserGlobals,
+    },
+    plugins: {
+      '@typescript-eslint': tseslint,
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-explicit-any': 'warn',
+      'no-unused-vars': 'off',
+    },
+  },
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      parser: vueParser,
+      parserOptions: {
+        parser: tsparser,
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+      globals: browserGlobals,
+    },
+    plugins: {
+      '@typescript-eslint': tseslint,
+    },
+    rules: {
+      'vue/multi-word-component-names': 'off',
+      'vue/max-attributes-per-line': 'off',
+      'vue/no-v-html': 'warn',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-explicit-any': 'warn',
+      'no-unused-vars': 'off',
+    },
+  },
+]

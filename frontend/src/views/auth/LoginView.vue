@@ -69,7 +69,7 @@ async function handleLogin() {
       </NFormItem>
     </NForm>
 
-    <div class="test-accounts">
+    <div v-if="isDev" class="test-accounts">
       <p class="test-title">测试账号：</p>
       <p>管理员: admin@colearning.local / admin123</p>
       <p>学生: student@test.com / student123</p>
@@ -77,18 +77,22 @@ async function handleLogin() {
   </NCard>
 </template>
 
+<script lang="ts">
+const isDev = import.meta.env.DEV
+</script>
+
 <style scoped>
 .test-accounts {
-  margin-top: 16px;
-  padding: 12px;
-  background-color: var(--bg-tertiary);
+  margin-top: var(--sp-4);
+  padding: var(--sp-3);
+  background-color: var(--bg-sunken);
   border-radius: var(--radius-sm);
-  font-size: 12px;
+  font-size: var(--text-sm);
   color: var(--text-tertiary);
 }
 
 .test-title {
-  font-weight: bold;
-  margin-bottom: 4px;
+  font-weight: var(--weight-bold);
+  margin-bottom: var(--sp-1);
 }
 </style>

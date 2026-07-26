@@ -4,7 +4,6 @@ import com.colearning.common.event.FocusSessionFinishedEvent;
 import com.colearning.common.exception.BusinessException;
 import com.colearning.common.exception.ErrorCode;
 import com.colearning.gamification.DailyTaskService;
-import com.colearning.gamification.GamificationService;
 import com.colearning.study.FocusSessionService;
 import com.colearning.study.dto.request.StartFocusRequest;
 import com.colearning.study.dto.response.ActiveFocusResponse;
@@ -34,7 +33,6 @@ public class FocusSessionServiceImpl implements FocusSessionService {
     private final FocusSessionRepository focusSessionRepository;
     private final Clock clock;
     private final ApplicationEventPublisher eventPublisher;
-    private final GamificationService gamificationService;
     private final DailyTaskService dailyTaskService;
 
     @Value("${app.focus.max-session-hours:8}")
@@ -164,20 +162,6 @@ public class FocusSessionServiceImpl implements FocusSessionService {
         log.info("Focus session finished: userId={}, sessionId={}, effectiveSec={}",
                 userId, sessionId, effective);
 
-        // Directly award EXP and tokens for reliability
-        // EXP: every 10 min = 1 EXP (600 seconds)
-        // Tokens: every 10 min = 1 token (600 seconds) - increased from 30 min
-        try {
-            int exp = Math.max(1, effective / 600);
-            int tokens = Math.max(1, effective / 600);
-            gamificationService.addExp(userId, exp);
-            gamificationService.addTokens(userId, tokens);
-            gamificationService.checkAndUnlockAchievements(userId);
-            log.info("Awarded EXP={}, tokens={} for focus session: userId={}", exp, tokens, userId);
-        } catch (Exception e) {
-            log.error("Failed to award EXP/tokens for userId={}: {}", userId, e.getMessage(), e);
-        }
-        
         // Update daily task progress
         try {
             dailyTaskService.onFocusSessionFinished(userId, effective);
@@ -185,7 +169,7 @@ public class FocusSessionServiceImpl implements FocusSessionService {
             log.error("Failed to update daily tasks for userId={}: {}", userId, e.getMessage());
         }
 
-        // Publish event for stats, leaderboard
+        // Publish event for stats, leaderboard, and gamification (EXP/tokens/achievements)
         LocalDate sessionDate = session.getStartedAt()
                 .atZone(clock.getZone())
                 .toLocalDate();

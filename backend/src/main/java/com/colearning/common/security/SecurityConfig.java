@@ -44,8 +44,8 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**").permitAll()
                         // Storage proxy - public access for images
                         .requestMatchers("/api/storage/proxy/**").permitAll()
-                        // Leaderboard sync - public access for admin operations
-                        .requestMatchers("/api/leaderboard/sync").permitAll()
+                        // Leaderboard sync - admin only (destructive Redis rebuild)
+                        .requestMatchers("/api/leaderboard/sync").hasRole("ADMIN")
                         // Swagger / OpenAPI
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         // Admin endpoints

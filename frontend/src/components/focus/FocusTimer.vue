@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { NButton, NSpace, NSelect, NTag, NText, NAlert, useMessage } from 'naive-ui'
-import { useFocusTimer } from '@/composables/useFocusTimer'
+import { NButton, NSpace, NSelect, NTag, NText, NAlert, NRadioGroup, NRadioButton, NInputNumber, useMessage } from 'naive-ui'
+import { useFocusTimer, type TimerMode } from '@/composables/useFocusTimer'
 import { useStudyStore } from '@/stores/studyStore'
 import { useGamificationStore } from '@/stores/gamificationStore'
 
@@ -20,6 +20,16 @@ const gamificationStore = useGamificationStore()
 const message = useMessage()
 
 const {
+  timerMode,
+  pomodoroWorkMinutes,
+  pomodoroShortBreakMinutes,
+  pomodoroLongBreakMinutes,
+  pomodoroCyclesBeforeLongBreak,
+  pomodoroPhase,
+  pomodoroCycleCount,
+  pomodoroPhaseLabel,
+  countdownMinutes,
+  countdownFinished,
   elapsedSeconds,
   formattedTime,
   progressPercent,
@@ -41,7 +51,6 @@ const {
   abortFocus,
 } = useFocusTimer()
 
-// Subject options for starting
 const subjectOptions = computed(() =>
   studyStore.subjects.map((s) => ({
     label: s.name,
@@ -49,7 +58,6 @@ const subjectOptions = computed(() =>
   })),
 )
 
-// Selected subject for new session
 const selectedSubjectId = ref<number | null>(null)
 
 async function handleStart() {
@@ -60,18 +68,15 @@ async function handleFinish() {
   const result = await finishFocus()
   emit('finished', result)
 
-  // Show reward notification
   if (result && (result as any).effectiveSeconds) {
     const effectiveSeconds = (result as any).effectiveSeconds
-    // EXP and Tokens: every 10 minutes = 1 (600 seconds)
     const exp = Math.max(1, Math.floor(effectiveSeconds / 600))
     const tokens = Math.max(1, Math.floor(effectiveSeconds / 600))
-
-    message.success(`专注完成！获得 ${exp} 经验 + ${tokens} 代币 🪙`)
+    message.success(`专注完成！获得 ${exp} 经验 + ${tokens} 代币`)
   }
 }
 
-// Ring size
+// Ring
 const ringSize = computed(() => (props.compact ? 160 : 220))
 const ringStroke = computed(() => (props.compact ? 8 : 12))
 const ringRadius = computed(() => (ringSize.value - ringStroke.value) / 2)
@@ -79,10 +84,85 @@ const ringCircumference = computed(() => 2 * Math.PI * ringRadius.value)
 const ringDashOffset = computed(() =>
   ringCircumference.value - (progressPercent.value / 100) * ringCircumference.value,
 )
+
+// Mode options for radio group
+const modeOptions = [
+  { label: '正计时', value: 'flowtime' },
+  { label: '番茄钟', value: 'pomodoro' },
+  { label: '倒计时', value: 'countdown' },
+]
+
+// Countdown preset options
+const countdownPresets = [
+  { label: '15分钟', value: 15 },
+  { label: '25分钟', value: 25 },
+  { label: '30分钟', value: 30 },
+  { label: '45分钟', value: 45 },
+  { label: '60分钟', value: 60 },
+  { label: '90分钟', value: 90 },
+]
+
+// Status label based on mode
+const statusLabel = computed(() => {
+  if (!hasSession.value) return '准备开始'
+  if (isInGracePeriod.value) return `宽限期 ${formattedGraceTime.value}`
+  if (isPaused.value) return '已暂停'
+  if (timerMode.value === 'pomodoro') return pomodoroPhaseLabel.value
+  if (timerMode.value === 'countdown' && countdownFinished.value) return '倒计时结束'
+  return '专注中'
+})
+
+const statusType = computed(() => {
+  if (isInGracePeriod.value) return 'error'
+  if (isPaused.value) return 'warning'
+  if (timerMode.value === 'pomodoro' && pomodoroPhase.value !== 'work') return 'info'
+  return 'success'
+})
 </script>
 
 <template>
   <div class="focus-timer" :class="{ compact }">
+    <!-- Mode Selector (only when no active session) -->
+    <div v-if="!hasSession && !compact" class="mode-selector">
+      <NRadioGroup v-model:value="timerMode" size="small">
+        <NRadioButton
+          v-for="opt in modeOptions"
+          :key="opt.value"
+          :value="opt.value"
+          :label="opt.label"
+        />
+      </NRadioGroup>
+    </div>
+
+    <!-- Pomodoro Settings (only when pomodoro mode and no session) -->
+    <div v-if="timerMode === 'pomodoro' && !hasSession && !compact" class="mode-settings">
+      <NSpace align="center" :size="8">
+        <NText depth="3" style="font-size: 12px;">专注</NText>
+        <NInputNumber v-model:value="pomodoroWorkMinutes" :min="1" :max="120" size="small" style="width: 70px;" />
+        <NText depth="3" style="font-size: 12px;">分钟</NText>
+        <NText depth="3" style="font-size: 12px; margin-left: 8px;">短休</NText>
+        <NInputNumber v-model:value="pomodoroShortBreakMinutes" :min="1" :max="30" size="small" style="width: 70px;" />
+        <NText depth="3" style="font-size: 12px;">分钟</NText>
+        <NText depth="3" style="font-size: 12px; margin-left: 8px;">长休</NText>
+        <NInputNumber v-model:value="pomodoroLongBreakMinutes" :min="1" :max="60" size="small" style="width: 70px;" />
+        <NText depth="3" style="font-size: 12px;">分钟</NText>
+      </NSpace>
+    </div>
+
+    <!-- Countdown Settings (only when countdown mode and no session) -->
+    <div v-if="timerMode === 'countdown' && !hasSession && !compact" class="mode-settings">
+      <NSpace align="center" :size="8">
+        <NText depth="3" style="font-size: 12px;">时长</NText>
+        <NSelect
+          v-model:value="countdownMinutes"
+          :options="countdownPresets"
+          size="small"
+          style="width: 120px;"
+        />
+        <NText depth="3" style="font-size: 12px;">分钟</NText>
+      </NSpace>
+    </div>
+
     <!-- Timer Ring -->
     <div class="timer-ring" :style="{ width: `${ringSize}px`, height: `${ringSize}px` }">
       <svg :width="ringSize" :height="ringSize" class="ring-svg">
@@ -91,7 +171,7 @@ const ringDashOffset = computed(() =>
           :cy="ringSize / 2"
           :r="ringRadius"
           fill="none"
-          stroke="var(--border-color, #e0e0e6)"
+          stroke="var(--border-default, #e0e0e6)"
           :stroke-width="ringStroke"
         />
         <circle
@@ -99,7 +179,7 @@ const ringDashOffset = computed(() =>
           :cy="ringSize / 2"
           :r="ringRadius"
           fill="none"
-          stroke="var(--accent-primary, #2080F0)"
+          :stroke="timerMode === 'pomodoro' && pomodoroPhase !== 'work' ? 'var(--info, #3b82f6)' : 'var(--accent, #2080F0)'"
           :stroke-width="ringStroke"
           stroke-linecap="round"
           :stroke-dasharray="ringCircumference"
@@ -113,17 +193,21 @@ const ringDashOffset = computed(() =>
       <div class="timer-display">
         <div class="time-text">{{ formattedTime }}</div>
         <div v-if="hasSession" class="session-status">
-          <NTag v-if="isInGracePeriod" type="error" size="small" round>
-            宽限期 {{ formattedGraceTime }}
-          </NTag>
-          <NTag v-else :type="isActive ? 'success' : 'warning'" size="small" round>
-            {{ isActive ? '专注中' : '已暂停' }}
+          <NTag :type="statusType" size="small" round>
+            {{ statusLabel }}
           </NTag>
         </div>
         <div v-else class="session-status">
           <NText depth="3" style="font-size: 13px;">准备开始</NText>
         </div>
       </div>
+    </div>
+
+    <!-- Pomodoro cycle indicator -->
+    <div v-if="timerMode === 'pomodoro' && hasSession && !compact" class="pomodoro-cycles">
+      <NText depth="3" style="font-size: 12px;">
+        第 {{ pomodoroCycleCount }} / {{ pomodoroCyclesBeforeLongBreak }} 轮
+      </NText>
     </div>
 
     <!-- Grace period warning -->
@@ -160,8 +244,8 @@ const ringDashOffset = computed(() =>
       </NSpace>
     </div>
 
-    <!-- Max session hint (only when no session) -->
-    <div v-if="!hasSession && !compact" class="max-session-hint">
+    <!-- Max session hint -->
+    <div v-if="!hasSession && !compact && timerMode === 'flowtime'" class="max-session-hint">
       <NText depth="3" style="font-size: 12px;">
         单次专注最多 {{ MAX_SESSION_HOURS }} 小时，超过将自动暂停
       </NText>
@@ -189,7 +273,6 @@ const ringDashOffset = computed(() =>
       </template>
       <template v-else>
         <NSpace justify="center" :size="12">
-          <!-- ACTIVE 状态：可暂停 -->
           <NButton
             v-if="isActive"
             size="large"
@@ -197,7 +280,6 @@ const ringDashOffset = computed(() =>
           >
             暂停
           </NButton>
-          <!-- PAUSED 且非8h超限：可继续 -->
           <NButton
             v-if="isPaused && !isLearningLimit"
             type="primary"
@@ -206,7 +288,6 @@ const ringDashOffset = computed(() =>
           >
             继续
           </NButton>
-          <!-- 始终可结束 -->
           <NButton
             type="success"
             size="large"
@@ -214,7 +295,6 @@ const ringDashOffset = computed(() =>
           >
             结束
           </NButton>
-          <!-- 始终可放弃 -->
           <NButton
             size="large"
             quaternary
@@ -234,7 +314,25 @@ const ringDashOffset = computed(() =>
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: var(--sp-4);
+}
+
+.mode-selector {
+  display: flex;
+  justify-content: center;
+}
+
+.mode-settings {
+  display: flex;
+  justify-content: center;
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--bg-sunken);
+  border-radius: var(--radius-md);
+}
+
+.pomodoro-cycles {
+  display: flex;
+  justify-content: center;
 }
 
 .timer-ring {
@@ -262,15 +360,15 @@ const ringDashOffset = computed(() =>
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   z-index: 1;
 }
 
 .time-text {
   font-size: 36px;
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   font-variant-numeric: tabular-nums;
-  color: #2080F0;
+  color: var(--accent);
   line-height: 1;
 }
 
@@ -281,7 +379,7 @@ const ringDashOffset = computed(() =>
 .session-status {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .session-info {
@@ -292,14 +390,14 @@ const ringDashOffset = computed(() =>
   display: inline-block;
   width: 10px;
   height: 10px;
-  border-radius: 50%;
-  margin-right: 4px;
+  border-radius: var(--radius-full);
+  margin-right: var(--sp-1);
 }
 
 .controls {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-3);
   justify-content: center;
   flex-wrap: wrap;
 }

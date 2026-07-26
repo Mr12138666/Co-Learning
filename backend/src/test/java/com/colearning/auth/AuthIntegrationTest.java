@@ -80,7 +80,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").value(0))
+                    .andExpect(jsonPath("$.code").value("0"))
                     .andExpect(jsonPath("$.data").isEmpty());
 
             // Verify user was saved
@@ -107,7 +107,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").doesNotExist())
+                    .andExpect(jsonPath("$.code").isNotEmpty())
                     .andExpect(jsonPath("$.message").isNotEmpty());
         }
 
@@ -159,7 +159,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").value(0));
+                    .andExpect(jsonPath("$.code").value("0"));
 
             // Verify email_verified flag is set
             var user = userRepository.findByEmail(TEST_EMAIL).orElseThrow();
@@ -175,7 +175,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").doesNotExist())
+                    .andExpect(jsonPath("$.code").isNotEmpty())
                     .andExpect(jsonPath("$.message").isNotEmpty());
         }
     }
@@ -201,7 +201,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").value(0))
+                    .andExpect(jsonPath("$.code").value("0"))
                     .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
                     .andExpect(jsonPath("$.data.userId").isNumber())
                     .andExpect(jsonPath("$.data.email").value(TEST_EMAIL))
@@ -230,7 +230,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").doesNotExist())
+                    .andExpect(jsonPath("$.code").isNotEmpty())
                     .andExpect(jsonPath("$.message").isNotEmpty());
         }
 
@@ -250,7 +250,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").doesNotExist());
+                    .andExpect(jsonPath("$.code").isNotEmpty());
         }
 
         @Test
@@ -265,7 +265,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").doesNotExist());
+                    .andExpect(jsonPath("$.code").isNotEmpty());
         }
     }
 
@@ -285,7 +285,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
             mockMvc.perform(post("/api/auth/refresh")
                             .cookie(new jakarta.servlet.http.Cookie("refresh_token", refreshToken)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").value(0))
+                    .andExpect(jsonPath("$.code").value("0"))
                     .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
                     .andExpect(cookie().exists("refresh_token"));
         }
@@ -295,7 +295,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
         void refresh_noCookie() throws Exception {
             mockMvc.perform(post("/api/auth/refresh"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").doesNotExist());
+                    .andExpect(jsonPath("$.code").isNotEmpty());
         }
 
         @Test
@@ -309,14 +309,14 @@ class AuthIntegrationTest extends BaseIntegrationTest {
             mockMvc.perform(post("/api/auth/logout")
                             .cookie(new jakarta.servlet.http.Cookie("refresh_token", refreshToken)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").value(0))
+                    .andExpect(jsonPath("$.code").value("0"))
                     .andExpect(cookie().maxAge("refresh_token", 0));
 
             // After logout, the old refresh token should no longer work
             mockMvc.perform(post("/api/auth/refresh")
                             .cookie(new jakarta.servlet.http.Cookie("refresh_token", refreshToken)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").doesNotExist());
+                    .andExpect(jsonPath("$.code").isNotEmpty());
         }
     }
 
@@ -333,7 +333,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").value(0));
+                    .andExpect(jsonPath("$.code").value("0"));
         }
 
         @Test
@@ -348,7 +348,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").value(0));
+                    .andExpect(jsonPath("$.code").value("0"));
 
             // Verify password reset email was sent
             verify(mailService).sendPasswordResetEmail(anyString(), anyString());
@@ -380,7 +380,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").value(0));
+                    .andExpect(jsonPath("$.code").value("0"));
 
             // Login with new password (after verifying email first)
             var user = userRepository.findByEmail(TEST_EMAIL).orElseThrow();
@@ -396,7 +396,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(loginRequest)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.code").value(0))
+                    .andExpect(jsonPath("$.code").value("0"))
                     .andExpect(jsonPath("$.data.accessToken").isNotEmpty());
         }
     }

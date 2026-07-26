@@ -1,5 +1,6 @@
-# Co-Learning 伴学平台 - 开发环境 Docker Compose
-# 启动: docker compose up -d
+# Co-Learning 伴学平台 - Docker Compose
+# 完整启动: docker compose up -d --build
+# 仅基础设施: docker compose up -d postgres redis minio minio-init mailhog
 # 停止: docker compose down
 # 清除数据: docker compose down -v
 
@@ -72,9 +73,9 @@ services:
       mc anonymous set download local/avatars &&
       mc anonymous set download local/pets &&
       mc anonymous set download local/images &&
-      mc cors set --origin 'http://localhost:5173' --origin 'http://localhost:8080' --method 'GET' --header 'Content-Type' local/avatars &&
-      mc cors set --origin 'http://localhost:5173' --origin 'http://localhost:8080' --method 'GET' --header 'Content-Type' local/pets &&
-      mc cors set --origin 'http://localhost:5173' --origin 'http://localhost:8080' --method 'GET' --header 'Content-Type' local/images &&
+      mc cors set --origin 'http://localhost:5173' --origin 'http://localhost:3000' --method 'GET' --header 'Content-Type' local/avatars &&
+      mc cors set --origin 'http://localhost:5173' --origin 'http://localhost:3000' --method 'GET' --header 'Content-Type' local/pets &&
+      mc cors set --origin 'http://localhost:5173' --origin 'http://localhost:3000' --method 'GET' --header 'Content-Type' local/images &&
       echo 'MinIO buckets initialized successfully'
       "
     restart: "no"
@@ -85,6 +86,64 @@ services:
     ports:
       - "1025:1025"
       - "8025:8025"
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: colearning-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: postgres
+      DB_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-colearning}
+      POSTGRES_USER: ${POSTGRES_USER:-colearning}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-colearning_dev}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minio}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minio123}
+      MINIO_BUCKET_AVATARS: ${MINIO_BUCKET_AVATARS:-avatars}
+      MINIO_BUCKET_PETS: ${MINIO_BUCKET_PETS:-pets}
+      MAIL_HOST: mailhog
+      MAIL_PORT: 1025
+      MAIL_USERNAME: ""
+      MAIL_PASSWORD: ""
+      MAIL_FROM: noreply@colearning.local
+      JWT_SECRET: ${JWT_SECRET:-change-this-in-production-use-a-secure-random-string-at-least-256-bits}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-900}
+      JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-604800}
+      APP_BASE_URL: http://localhost:3000
+      BACKEND_PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: colearning-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:

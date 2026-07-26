@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -41,8 +42,8 @@ public class LeaderboardController {
         return ResponseEntity.ok(ApiResponse.ok(leaderboardService.getMyRank(type, userId)));
     }
 
-    @GetMapping("/sync")
-    @Operation(summary = "同步排行榜", description = "从数据库同步排行榜数据（用于修复Redis数据丢失）")
+    @PostMapping("/sync")
+    @Operation(summary = "同步排行榜", description = "从数据库同步排行榜数据（用于修复Redis数据丢失），仅管理员可用")
     public ResponseEntity<ApiResponse<Void>> syncLeaderboard() {
         leaderboardService.syncFromDatabase();
         return ResponseEntity.ok(ApiResponse.ok(null));

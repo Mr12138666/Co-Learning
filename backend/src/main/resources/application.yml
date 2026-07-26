@@ -34,7 +34,7 @@ spring:
     host: ${MAIL_HOST:smtp.yeah.net}
     port: ${MAIL_PORT:25}
     username: ${MAIL_USERNAME:REDACTED_EMAIL}
-    password: ${MAIL_PASSWORD:REDACTED_SMTP_PASSWORD}
+    password: ${MAIL_PASSWORD:}
     properties:
       mail:
         smtp:

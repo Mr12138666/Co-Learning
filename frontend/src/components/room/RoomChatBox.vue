@@ -260,7 +260,7 @@ onUnmounted(() => {
   display: flex;
   gap: 8px;
   padding: 8px 12px;
-  border-top: 1px solid var(--divider-color);
+  border-top: 1px solid var(--separator);
   align-items: flex-end;
   position: relative;
 }
@@ -287,8 +287,8 @@ onUnmounted(() => {
   bottom: 100%;
   left: 12px;
   background-color: var(--bg-card);
-  border: 1px solid var(--divider-color);
-  border-radius: 8px;
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-md);
   padding: 8px;
   display: grid;
   grid-template-columns: repeat(8, 1fr);
@@ -308,6 +308,6 @@ onUnmounted(() => {
 }
 
 .emoji-item:hover {
-  background-color: var(--bg-primary);
+  background-color: var(--bg-hover);
 }
 </style>

@@ -329,10 +329,10 @@ async function insertImage(e: Event) {
 }
 
 .preview-pane {
-  background: var(--n-color, #fff);
-  border: 1px solid var(--n-border-color, #e0e0e6);
-  border-radius: 6px;
-  padding: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-4);
   overflow-y: auto;
 }
 
@@ -348,21 +348,33 @@ async function insertImage(e: Event) {
 .preview-content :deep(ul) { padding-left: 20px; margin: 8px 0; }
 .preview-content :deep(li) { margin: 4px 0; }
 .preview-content :deep(code) {
-  background: #f5f5f5;
+  background: var(--bg-sunken);
   padding: 2px 6px;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   font-size: 13px;
 }
 .preview-content :deep(pre) {
-  background: #f5f5f5;
-  padding: 12px;
-  border-radius: 6px;
+  background: var(--bg-sunken);
+  padding: var(--sp-3);
+  border-radius: var(--radius-sm);
   overflow-x: auto;
 }
 .preview-content :deep(pre code) {
   background: none;
   padding: 0;
 }
-.preview-content :deep(strong) { font-weight: 600; }
-.preview-content :deep(.preview-image) { max-width: 100%; border-radius: 4px; }
+.preview-content :deep(strong) { font-weight: var(--weight-semibold); }
+.preview-content :deep(.preview-image) { max-width: 100%; border-radius: var(--radius-xs); }
+
+@media (max-width: 768px) {
+  .editor-area.split {
+    flex-direction: column;
+  }
+
+  .editor-area.split .editor-pane,
+  .editor-area.split .preview-pane {
+    flex: none;
+    width: 100%;
+  }
+}
 </style>

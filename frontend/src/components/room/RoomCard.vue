@@ -78,11 +78,12 @@ function enterRoom() {
 <style scoped>
 .room-card {
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: transform var(--duration-fast) var(--ease-default);
 }
 
 .room-card:hover {
   transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .room-header {
@@ -92,19 +93,19 @@ function enterRoom() {
 }
 
 .room-name {
-  font-weight: 600;
-  font-size: 16px;
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-lg);
 }
 
 .room-description {
-  color: var(--text-color-2);
-  margin: 0 0 12px 0;
-  font-size: 14px;
-  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0 0 var(--sp-3) 0;
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
 }
 
 .room-no-desc {
-  color: var(--text-color-3);
+  color: var(--text-tertiary);
   font-style: italic;
 }
 
@@ -115,12 +116,12 @@ function enterRoom() {
 }
 
 .owner-name {
-  font-size: 13px;
-  color: var(--text-color-2);
+  font-size: var(--text-md);
+  color: var(--text-secondary);
 }
 
 .member-count {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
 }
 </style>

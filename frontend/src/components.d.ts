@@ -34,6 +34,9 @@ declare module 'vue' {
     RoomMessageItem: typeof import('./components/room/RoomMessageItem.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    StateEmpty: typeof import('./components/common/StateEmpty.vue')['default']
+    StateError: typeof import('./components/common/StateError.vue')['default']
+    StateLoading: typeof import('./components/common/StateLoading.vue')['default']
     TaskList: typeof import('./components/study/TaskList.vue')['default']
   }
 }

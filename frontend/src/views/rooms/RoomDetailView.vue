@@ -256,20 +256,20 @@ function goBack() {
 }
 
 .room-header {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--divider-color);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--separator);
   flex-shrink: 0;
 }
 
 .room-title {
   margin: 0;
-  font-size: 18px;
+  font-size: var(--text-xl);
 }
 
 .room-subtitle {
-  margin: 4px 0 0 0;
-  font-size: 13px;
-  color: var(--text-color-3);
+  margin: var(--sp-1) 0 0 0;
+  font-size: var(--text-md);
+  color: var(--text-tertiary);
 }
 
 .room-body {
@@ -285,14 +285,14 @@ function goBack() {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--divider-color);
+  border-right: 1px solid var(--separator);
   overflow: hidden;
 }
 
 .member-sidebar {
   width: 280px;
   flex-shrink: 0;
-  border-left: 1px solid var(--divider-color);
+  border-left: 1px solid var(--separator);
   overflow: hidden;
 }
 
@@ -302,5 +302,26 @@ function goBack() {
   justify-content: center;
   height: 100%;
   min-height: 400px;
+}
+
+@media (max-width: 768px) {
+  .room-detail-view {
+    height: calc(100vh - var(--header-height) - var(--bottom-nav-height));
+  }
+
+  .room-body {
+    flex-direction: column;
+  }
+
+  .chat-area {
+    border-right: none;
+    border-bottom: 1px solid var(--separator);
+  }
+
+  .member-sidebar {
+    width: 100%;
+    max-height: 200px;
+    border-left: none;
+  }
 }
 </style>

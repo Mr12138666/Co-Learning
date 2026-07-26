@@ -13,13 +13,17 @@ import {
   NTag,
   NText,
   NDivider,
+  NSpin,
   useMessage,
 } from 'naive-ui'
 import { useDashboardStore } from '@/stores/dashboardStore'
+import { usePageLoad } from '@/composables/usePageLoad'
+import StateError from '@/components/common/StateError.vue'
 import dayjs from 'dayjs'
 
 const dashboardStore = useDashboardStore()
 const message = useMessage()
+const { loading, error, load, retry } = usePageLoad()
 
 const planText = ref('')
 const reflectionText = ref('')
@@ -75,7 +79,7 @@ async function handleComplete() {
   }
 }
 
-onMounted(async () => {
+async function loadData() {
   await dashboardStore.fetchTodayCheckin()
   const checkin = dashboardStore.todayCheckin
   if (checkin) {
@@ -83,11 +87,26 @@ onMounted(async () => {
     reflectionText.value = checkin.reflectionText ?? ''
     mood.value = checkin.mood
   }
-})
+}
+
+onMounted(() => load(loadData))
 </script>
 
 <template>
   <div>
+    <!-- Loading State -->
+    <div v-if="loading" style="display: flex; justify-content: center; padding: 80px 0;">
+      <NSpin size="large" />
+    </div>
+
+    <!-- Error State -->
+    <StateError
+      v-else-if="error"
+      :title="error"
+      @retry="retry(loadData)"
+    />
+
+    <template v-else>
     <!-- Header -->
     <NCard :bordered="false" style="margin-bottom: 16px;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -150,5 +169,6 @@ onMounted(async () => {
         {{ isCompleted ? '已打卡' : '完成打卡' }}
       </NButton>
     </NSpace>
+    </template>
   </div>
 </template>

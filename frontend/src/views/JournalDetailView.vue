@@ -126,17 +126,17 @@ onMounted(() => {
 .content-preview :deep(ul) { padding-left: 24px; margin: 10px 0; }
 .content-preview :deep(li) { margin: 6px 0; }
 .content-preview :deep(code) {
-  background: var(--bg-tertiary);
+  background: var(--bg-sunken);
   padding: 2px 6px;
-  border-radius: 3px;
-  font-size: 14px;
+  border-radius: var(--radius-xs);
+  font-size: var(--text-base);
 }
 .content-preview :deep(pre) {
-  background: var(--bg-tertiary);
-  padding: 16px;
-  border-radius: 8px;
+  background: var(--bg-sunken);
+  padding: var(--sp-4);
+  border-radius: var(--radius-md);
   overflow-x: auto;
-  margin: 12px 0;
+  margin: var(--sp-3) 0;
 }
 .content-preview :deep(pre code) {
   background: none;
