@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import {
-  NCard,
   NButton,
   NSpace,
   NModal,
@@ -10,9 +9,6 @@ import {
   NInput,
   NDatePicker,
   NInputNumber,
-  NList,
-  NListItem,
-  NThing,
   NTag,
   NEmpty,
   NPopconfirm,
@@ -98,82 +94,73 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
-    <NCard :bordered="false">
-      <template #header>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span>考试目标</span>
-          <NButton type="primary" @click="openCreate">
-            + 新增目标
-          </NButton>
-        </div>
-      </template>
+  <div class="page-container">
+    <!-- Page Header -->
+    <div class="page-header">
+      <h3 class="page-title">考试目标</h3>
+      <NButton type="primary" size="small" @click="openCreate">+ 新增目标</NButton>
+    </div>
 
-      <NEmpty v-if="studyStore.goals.length === 0" description="还没有设定考试目标">
+    <div class="page-divider" />
+
+    <!-- Empty State -->
+    <div v-if="studyStore.goals.length === 0" class="empty-state">
+      <NEmpty description="还没有设定考试目标">
         <template #extra>
-          <NButton type="primary" @click="openCreate">设定第一个目标</NButton>
+          <NButton type="primary" size="small" @click="openCreate">设定第一个目标</NButton>
         </template>
       </NEmpty>
+    </div>
 
-      <NList v-else hoverable>
-        <NListItem v-for="goal in studyStore.goals" :key="goal.id">
-          <NThing>
-            <template #header>
-              <NSpace align="center" :size="8">
-                <span style="font-size: 16px; font-weight: 600;">{{ goal.examName }}</span>
-                <NTag
-                  size="small"
-                  round
-                  :type="goal.status === 'ACTIVE' ? 'success' : goal.status === 'COMPLETED' ? 'info' : 'default'"
-                >
-                  {{ goal.status === 'ACTIVE' ? '进行中' : goal.status === 'COMPLETED' ? '已完成' : '已归档' }}
-                </NTag>
-              </NSpace>
+    <!-- Goal List -->
+    <div v-else class="goal-list">
+      <div v-for="goal in studyStore.goals" :key="goal.id" class="goal-row">
+        <div class="goal-row__main">
+          <div class="goal-row__title">
+            <span class="goal-row__name">{{ goal.examName }}</span>
+            <NTag
+              size="small"
+              :type="goal.status === 'ACTIVE' ? 'success' : goal.status === 'COMPLETED' ? 'info' : 'default'"
+            >
+              {{ goal.status === 'ACTIVE' ? '进行中' : goal.status === 'COMPLETED' ? '已完成' : '已归档' }}
+            </NTag>
+            <NTag
+              v-if="goal.status === 'ACTIVE'"
+              size="small"
+              :type="goal.daysRemaining <= 30 ? 'error' : goal.daysRemaining <= 60 ? 'warning' : 'info'"
+            >
+              还剩 {{ goal.daysRemaining }} 天
+            </NTag>
+          </div>
+          <div class="goal-row__meta">
+            <span>考试日期: {{ goal.examDate }}</span>
+            <span v-if="goal.targetScore">目标分数: {{ goal.targetScore }}</span>
+          </div>
+        </div>
+        <div class="goal-row__actions">
+          <NButton size="tiny" quaternary @click="openEdit(goal)">编辑</NButton>
+          <NButton v-if="goal.status === 'ACTIVE'" size="tiny" quaternary @click="toggleStatus(goal)">
+            归档
+          </NButton>
+          <NButton v-if="goal.status === 'ARCHIVED'" size="tiny" quaternary @click="toggleStatus(goal)">
+            恢复
+          </NButton>
+          <NPopconfirm @positive-click="handleDelete(goal.id)">
+            <template #trigger>
+              <NButton size="tiny" quaternary type="error">删除</NButton>
             </template>
-            <template #header-extra>
-              <NTag
-                v-if="goal.status === 'ACTIVE'"
-                size="large"
-                round
-                :type="goal.daysRemaining <= 30 ? 'error' : goal.daysRemaining <= 60 ? 'warning' : 'info'"
-              >
-                还剩 {{ goal.daysRemaining }} 天
-              </NTag>
-            </template>
-            <template #description>
-              <NSpace :size="16">
-                <span>考试日期: {{ goal.examDate }}</span>
-                <span v-if="goal.targetScore">目标分数: {{ goal.targetScore }}</span>
-              </NSpace>
-            </template>
-            <template #action>
-              <NSpace :size="4">
-                <NButton size="small" quaternary @click="openEdit(goal)">编辑</NButton>
-                <NButton v-if="goal.status === 'ACTIVE'" size="small" quaternary @click="toggleStatus(goal)">
-                  归档
-                </NButton>
-                <NButton v-if="goal.status === 'ARCHIVED'" size="small" quaternary @click="toggleStatus(goal)">
-                  恢复
-                </NButton>
-                <NPopconfirm @positive-click="handleDelete(goal.id)">
-                  <template #trigger>
-                    <NButton size="small" quaternary type="error">删除</NButton>
-                  </template>
-                  确定删除该目标吗？
-                </NPopconfirm>
-              </NSpace>
-            </template>
-          </NThing>
-        </NListItem>
-      </NList>
-    </NCard>
+            确定删除该目标吗？
+          </NPopconfirm>
+        </div>
+      </div>
+    </div>
 
     <!-- Create/Edit Modal -->
     <NModal
       v-model:show="showModal"
       preset="card"
       :title="editingId ? '编辑目标' : '新增目标'"
-      style="max-width: 480px; width: 90vw;"
+      class="goal-modal"
     >
       <NForm label-placement="top">
         <NFormItem label="考试名称">
@@ -183,20 +170,122 @@ onMounted(() => {
           <NDatePicker
             v-model:value="formData.examDate"
             type="date"
-            style="width: 100%;"
+            class="full-width"
             :is-date-disabled="(ts: number) => ts < Date.now() - 86400000"
           />
         </NFormItem>
         <NFormItem label="目标分数（可选）">
-          <NInputNumber v-model:value="formData.targetScore" placeholder="如: 380" :min="0" :max="999" style="width: 100%;" />
+          <NInputNumber v-model:value="formData.targetScore" placeholder="如: 380" :min="0" :max="999" class="full-width" />
         </NFormItem>
       </NForm>
       <template #footer>
         <NSpace justify="end">
-          <NButton @click="showModal = false">取消</NButton>
-          <NButton type="primary" @click="handleSave">保存</NButton>
+          <NButton size="small" @click="showModal = false">取消</NButton>
+          <NButton type="primary" size="small" @click="handleSave">保存</NButton>
         </NSpace>
       </template>
     </NModal>
   </div>
 </template>
+
+<style scoped>
+.page-container {
+  max-width: var(--content-max-width);
+  padding-bottom: var(--sp-4);
+}
+
+.full-width {
+  width: 100%;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-3) 0;
+}
+
+.page-title {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color-strong);
+}
+
+.page-divider {
+  border-bottom: 1px solid var(--separator);
+  margin-bottom: var(--sp-3);
+}
+
+.empty-state {
+  padding: var(--sp-8) 0;
+  display: flex;
+  justify-content: center;
+}
+
+.goal-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.goal-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-3) var(--sp-4);
+  min-height: 52px;
+  border-bottom: 1px solid var(--separator);
+  transition: background-color var(--transition-fast);
+  gap: var(--sp-3);
+}
+
+.goal-row:last-child {
+  border-bottom: none;
+}
+
+.goal-row:hover {
+  background: var(--state-hover);
+}
+
+.goal-row__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.goal-row__title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.goal-row__name {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color-strong);
+}
+
+.goal-row__meta {
+  display: flex;
+  gap: var(--sp-4);
+  margin-top: var(--sp-1);
+  font-size: var(--text-sm);
+  color: var(--text-color-muted);
+}
+
+.goal-row__actions {
+  display: flex;
+  gap: var(--sp-1);
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.goal-row:hover .goal-row__actions {
+  opacity: 1;
+}
+
+.goal-modal {
+  max-width: 480px;
+  width: 90vw;
+}
+</style>

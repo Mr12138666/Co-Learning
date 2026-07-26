@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { NCard, NText, NButton, NSpace, NAvatar, useMessage } from 'naive-ui'
+import { NText, NButton, NAvatar } from 'naive-ui'
 import { journalApi, type Journal } from '@/api/journal'
 import { userApi } from '@/api/user'
-import dayjs from 'dayjs'
+import { sanitizeHtml } from '@/utils/markdown'
+import { formatDate } from '@/utils/format'
 
 const router = useRouter()
 const route = useRoute()
-const message = useMessage()
 
 const journal = ref<Journal | null>(null)
 const loading = ref(true)
@@ -16,46 +16,16 @@ const authorInfo = ref<{ nickname: string; avatarUrl: string } | null>(null)
 
 const journalId = computed(() => Number(route.params.id))
 
-function formatDate(date: string): string {
-  return dayjs(date).format('YYYY-MM-DD HH:mm')
-}
-
-// Simple markdown to HTML for preview
-function renderMarkdown(md: string): string {
-  let html = md
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/```[\s\S]*?```/g, (match) => {
-      const code = match.replace(/```\w*\n?/g, '').replace(/```$/g, '')
-      return `<pre><code>${code}</code></pre>`
-    })
-    .replace(/`(.+?)`/g, '<code>$1</code>')
-    .replace(/!\[(.+?)\]\((.+?)\)/g, '<img src="$2" alt="$1" class="preview-image" />')
-    .replace(/^- (.+)$/gm, '<li>$1</li>')
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/\n/g, '<br>')
-
-  if (!html.startsWith('<h') && !html.startsWith('<pre')) {
-    html = `<p>${html}</p>`
-  }
-  html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
-  return html
-}
-
-const contentHtml = computed(() => journal.value ? renderMarkdown(journal.value.contentMarkdown) : '')
+// Render the server-provided HTML through DOMPurify (defense in depth) instead
+// of re-parsing markdown client-side with an XSS-prone hand-rolled regex.
+const contentHtml = computed(() => sanitizeHtml(journal.value?.contentHtml))
 
 async function loadJournal() {
   loading.value = true
   try {
     const res = await journalApi.getPublicById(journalId.value)
     journal.value = res.data.data
-    
+
     // Load author info
     if (journal.value && journal.value.userId) {
       const userRes = await userApi.getProfile(journal.value.userId)
@@ -65,7 +35,6 @@ async function loadJournal() {
       }
     }
   } catch {
-    message.error('加载日志失败')
     router.push('/journals/square')
   } finally {
     loading.value = false
@@ -78,59 +47,144 @@ onMounted(() => {
 </script>
 
 <template>
-  <div v-if="!loading && journal">
-    <NCard :bordered="false">
-      <template #header>
-        <NSpace align="center" justify="space-between">
-          <NSpace align="center">
-            <NAvatar round :src="authorInfo?.avatarUrl || undefined">
-              {{ authorInfo?.nickname?.charAt(0) || '?' }}
-            </NAvatar>
-            <div>
-              <NText depth="3" style="font-size: 13px;">{{ authorInfo?.nickname || '未知用户' }}</NText>
-              <NText depth="3" style="font-size: 12px; margin-left: 8px;">{{ formatDate(journal.publishedAt || journal.createdAt) }}</NText>
-            </div>
-          </NSpace>
-          <NButton quaternary @click="router.push('/journals/square')">
-            返回广场
-          </NButton>
-        </NSpace>
-      </template>
-      
-      <h1 style="font-size: 24px; font-weight: 700; margin: 16px 0;">{{ journal.title }}</h1>
-      
-      <div class="content-preview" v-html="contentHtml" />
-    </NCard>
-  </div>
-  
-  <div v-else-if="loading" class="loading-state">
-    <NCard :bordered="false">
-      <div style="display: flex; justify-content: center; padding: 40px;">
-        <NText>加载中...</NText>
+  <div class="journal-detail-view">
+    <!-- Loading -->
+    <div v-if="loading" class="loading-center">
+      <NText depth="3">加载中...</NText>
+    </div>
+
+    <!-- Content -->
+    <template v-else-if="journal">
+      <!-- Toolbar -->
+      <div class="detail-toolbar">
+        <NButton quaternary size="small" @click="router.push('/journals/square')">
+          ← 返回广场
+        </NButton>
       </div>
-    </NCard>
+
+      <!-- Article -->
+      <article class="article">
+        <h1 class="article-title">{{ journal.title }}</h1>
+
+        <div class="article-meta">
+          <NAvatar round size="small" :src="authorInfo?.avatarUrl || undefined">
+            {{ authorInfo?.nickname?.charAt(0) || '?' }}
+          </NAvatar>
+          <span class="meta-author">{{ authorInfo?.nickname || '未知用户' }}</span>
+          <span class="meta-dot">·</span>
+          <span class="meta-date">{{ formatDate(journal.publishedAt || journal.createdAt) }}</span>
+        </div>
+
+        <div class="content-preview" v-html="contentHtml" />
+      </article>
+    </template>
   </div>
 </template>
 
 <style scoped>
-.content-preview {
-  font-size: 15px;
-  line-height: 1.8;
-  padding: 8px 0;
+.journal-detail-view {
+  max-width: var(--component-max-width);
+  margin: 0 auto;
+  padding: var(--sp-4);
 }
 
-.content-preview :deep(h1) { font-size: 24px; font-weight: 700; margin: 16px 0 12px; }
-.content-preview :deep(h2) { font-size: 20px; font-weight: 600; margin: 14px 0 10px; }
-.content-preview :deep(h3) { font-size: 16px; font-weight: 600; margin: 12px 0 8px; }
-.content-preview :deep(p) { margin: 10px 0; }
-.content-preview :deep(ul) { padding-left: 24px; margin: 10px 0; }
-.content-preview :deep(li) { margin: 6px 0; }
+.loading-center {
+  display: flex;
+  justify-content: center;
+  padding: var(--sp-12) 0;
+}
+
+.detail-toolbar {
+  margin-bottom: var(--sp-3);
+}
+
+.article {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--sp-6);
+}
+
+.article-title {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  color: var(--text-color-strong);
+  margin: 0 0 var(--sp-3) 0;
+  line-height: var(--leading-tight);
+}
+
+.article-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding-bottom: var(--sp-4);
+  margin-bottom: var(--sp-4);
+  border-bottom: 1px solid var(--divider);
+}
+
+.meta-author {
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  color: var(--text-color);
+}
+
+.meta-dot {
+  color: var(--text-color-muted);
+}
+
+.meta-date {
+  font-size: var(--text-sm);
+  color: var(--text-color-muted);
+}
+
+.content-preview {
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--text-color);
+}
+
+.content-preview :deep(h1) {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  margin: var(--sp-5) 0 var(--sp-3);
+  color: var(--text-color-strong);
+}
+
+.content-preview :deep(h2) {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  margin: var(--sp-4) 0 var(--sp-2);
+  color: var(--text-color-strong);
+}
+
+.content-preview :deep(h3) {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  margin: var(--sp-3) 0 var(--sp-2);
+  color: var(--text-color-strong);
+}
+
+.content-preview :deep(p) {
+  margin: var(--sp-2) 0;
+}
+
+.content-preview :deep(ul) {
+  padding-left: var(--sp-6);
+  margin: var(--sp-2) 0;
+}
+
+.content-preview :deep(li) {
+  margin: var(--sp-1) 0;
+}
+
 .content-preview :deep(code) {
   background: var(--bg-sunken);
-  padding: 2px 6px;
+  padding: 2px var(--sp-1);
   border-radius: var(--radius-xs);
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
+  font-family: var(--font-mono);
 }
+
 .content-preview :deep(pre) {
   background: var(--bg-sunken);
   padding: var(--sp-4);
@@ -138,10 +192,20 @@ onMounted(() => {
   overflow-x: auto;
   margin: var(--sp-3) 0;
 }
+
 .content-preview :deep(pre code) {
   background: none;
   padding: 0;
 }
-.content-preview :deep(strong) { font-weight: 600; }
-.content-preview :deep(.preview-image) { max-width: 100%; border-radius: 8px; margin: 8px 0; }
+
+.content-preview :deep(strong) {
+  font-weight: var(--weight-semibold);
+  color: var(--text-color-strong);
+}
+
+.content-preview :deep(img) {
+  max-width: 100%;
+  border-radius: var(--radius-sm);
+  margin: var(--sp-2) 0;
+}
 </style>

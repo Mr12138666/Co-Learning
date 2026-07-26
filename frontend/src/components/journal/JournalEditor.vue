@@ -6,10 +6,13 @@ import {
   NSpace,
   NSelect,
   NDivider,
+  NIcon,
   useMessage,
 } from 'naive-ui'
+import { ImageOutline } from '@vicons/ionicons5'
 import type { Journal } from '@/api/journal'
 import { storageApi } from '@/api/storage'
+import { renderMarkdown } from '@/utils/markdown'
 
 const props = defineProps<{
   modelValue?: Partial<Journal>
@@ -58,47 +61,6 @@ const previewModeOptions = [
   { label: '分屏', value: 'split' },
   { label: '预览', value: 'preview' },
 ]
-
-// Simple markdown to HTML for preview (client-side)
-function renderMarkdown(md: string): string {
-  // Basic markdown rendering
-  let html = md
-    // Escape HTML
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    // Headings
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-    // Bold and italic
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    // Code blocks
-    .replace(/```[\s\S]*?```/g, (match) => {
-      const code = match.replace(/```\w*\n?/g, '').replace(/```$/g, '')
-      return `<pre><code>${code}</code></pre>`
-    })
-    // Inline code
-    .replace(/`(.+?)`/g, '<code>$1</code>')
-    // Unordered lists
-    .replace(/^- (.+)$/gm, '<li>$1</li>')
-    // Images
-    .replace(/!\[(.+?)\]\((.+?)\)/g, '<img src="$2" alt="$1" class="preview-image" />')
-    // Line breaks (paragraphs)
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/\n/g, '<br>')
-
-  // Wrap in paragraphs
-  if (!html.startsWith('<h') && !html.startsWith('<pre')) {
-    html = `<p>${html}</p>`
-  }
-
-  // Wrap consecutive <li> in <ul>
-  html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
-
-  return html
-}
 
 const previewHtml = computed(() => renderMarkdown(content.value))
 
@@ -251,7 +213,7 @@ async function insertImage(e: Event) {
           <NButton size="tiny" quaternary @click="insertList">列表</NButton>
           <label class="image-upload-btn">
             <input type="file" accept="image/*" class="file-input" @change="insertImage" />
-            <NButton size="tiny" quaternary>📷 图片</NButton>
+            <NButton size="tiny" quaternary><NIcon :component="ImageOutline" :size="14" /> 图片</NButton>
           </label>
         </div>
         <NInput
@@ -327,7 +289,7 @@ async function insertImage(e: Event) {
 
 .preview-pane {
   background: var(--bg-card);
-  border: 1px solid var(--border-default);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   padding: var(--sp-4);
   overflow-y: auto;
@@ -361,7 +323,7 @@ async function insertImage(e: Event) {
   padding: 0;
 }
 .preview-content :deep(strong) { font-weight: var(--weight-semibold); }
-.preview-content :deep(.preview-image) { max-width: 100%; border-radius: var(--radius-xs); }
+.preview-content :deep(img) { max-width: 100%; border-radius: var(--radius-xs); }
 
 @media (max-width: 768px) {
   .editor-area.split {

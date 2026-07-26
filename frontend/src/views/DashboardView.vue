@@ -2,23 +2,26 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import {
-  NCard,
-  NGrid,
-  NGridItem,
-  NStatistic,
-  NSpace,
   NEmpty,
   NButton,
   NTag,
-  NText,
   NProgress,
   NModal,
   NForm,
   NFormItem,
   NInputNumber,
   NSpin,
+  NIcon,
   useMessage,
 } from 'naive-ui'
+import {
+  TrophyOutline,
+  SchoolOutline,
+  CheckboxOutline,
+  StatsChartOutline,
+  TodayOutline,
+  BookOutline,
+} from '@vicons/ionicons5'
 import { useAuthStore } from '@/stores/authStore'
 import { useStudyStore } from '@/stores/studyStore'
 import { useDashboardStore } from '@/stores/dashboardStore'
@@ -54,10 +57,16 @@ const greeting = computed(() => {
 
 const displayName = computed(() => authStore.user?.email?.split('@')[0] || '同学')
 
+const today = computed(() => {
+  const d = new Date()
+  const weekdays = ['日', '一', '二', '三', '四', '五', '六']
+  return `${d.getMonth() + 1}月${d.getDate()}日 周${weekdays[d.getDay()]}`
+})
+
 // Stats helpers
 function formatMinutes(seconds: number): string {
   const mins = Math.floor(seconds / 60)
-  if (mins < 60) return `${mins}`
+  if (mins < 60) return `${mins}min`
   const hours = Math.floor(mins / 60)
   return `${hours}h${mins % 60}m`
 }
@@ -126,9 +135,9 @@ onMounted(() => load(loadDashboard))
 </script>
 
 <template>
-  <div>
+  <div class="dashboard">
     <!-- Loading State -->
-    <div v-if="loading" style="display: flex; justify-content: center; padding: 80px 0;">
+    <div v-if="loading" class="dashboard__loader">
       <NSpin size="large" />
     </div>
 
@@ -140,139 +149,128 @@ onMounted(() => load(loadDashboard))
     />
 
     <template v-else>
-    <!-- Greeting -->
-    <NCard :bordered="false" size="small" style="margin-bottom: 16px;">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-          <h2 style="margin: 0; font-size: 24px;">
-            {{ greeting }}，{{ displayName }}
-          </h2>
-          <p class="greeting-subtitle">
-            每一分钟专注，都是通向目标的步伐。
-          </p>
+    <!-- 1. Page Header: greeting + date + checkin -->
+    <header class="dashboard__header">
+      <div class="dashboard__header-left">
+        <h2 class="dashboard__greeting">
+          {{ greeting }}，{{ displayName }}
+        </h2>
+        <span class="dashboard__date">{{ today }}</span>
+      </div>
+      <NButton size="small" type="primary" @click="router.push('/checkin')">
+        {{ checkinCompleted ? '查看复盘' : '每日复盘' }}
+      </NButton>
+    </header>
+
+    <!-- 2. Stats Row -->
+    <section class="dashboard__stats">
+      <div class="stat-block">
+        <span class="stat-block__label">今日专注</span>
+        <span class="stat-block__value">{{ formatMinutes(todayFocus) }}</span>
+      </div>
+      <div class="stat-block">
+        <span class="stat-block__label">本周专注</span>
+        <span class="stat-block__value">{{ formatMinutes(weekFocus) }}</span>
+      </div>
+      <div class="stat-block">
+        <span class="stat-block__label">连续天数</span>
+        <span class="stat-block__value">{{ streak }}<span class="stat-block__unit">天</span></span>
+      </div>
+      <div class="stat-block stat-block--goal">
+        <div class="stat-block__goal-header">
+          <span class="stat-block__label">日目标</span>
+          <span class="stat-block__goal-meta">
+            <span class="stat-block__goal-text">{{ formatTimeFromMinutes(dailyGoalMin) }}</span>
+            <NButton text size="tiny" @click="openEditModal">编辑</NButton>
+          </span>
         </div>
-        <NButton strong type="primary" @click="router.push('/checkin')">
-          {{ checkinCompleted ? '查看复盘' : '每日复盘' }}
+        <NProgress
+          type="line"
+          :percentage="dailyProgress"
+          :show-indicator="false"
+          :height="4"
+          class="goal-progress"
+        />
+      </div>
+    </section>
+
+    <!-- 3. Focus Timer -->
+    <section class="dashboard__section">
+      <h4 class="dashboard__section-title">专注计时</h4>
+      <div class="dashboard__timer-card">
+        <FocusTimer @finished="dashboardStore.refreshAll()" />
+      </div>
+    </section>
+
+    <!-- 4. Exam Countdown -->
+    <section v-if="studyStore.activeGoals.length > 0" class="dashboard__section">
+      <h4 class="dashboard__section-title">考试倒计时</h4>
+      <div class="dashboard__exam-tags">
+        <NTag
+          v-for="goal in studyStore.activeGoals.slice(0, 3)"
+          :key="goal.id"
+          size="medium"
+          round
+          :type="goal.daysRemaining <= 30 ? 'error' : goal.daysRemaining <= 60 ? 'warning' : 'info'"
+        >
+          {{ goal.examName }} · {{ goal.daysRemaining }}天
+        </NTag>
+      </div>
+    </section>
+
+    <!-- 5. Today Tasks -->
+    <section class="dashboard__section">
+      <div class="dashboard__section-header">
+        <h4 class="dashboard__section-title">今日任务</h4>
+        <NButton text type="primary" size="small" @click="router.push('/tasks')">
+          全部任务
         </NButton>
       </div>
-    </NCard>
-
-    <!-- Main grid: Timer + Stats -->
-    <NGrid :cols="3" :x-gap="16" :y-gap="16" responsive="screen" item-responsive>
-      <!-- Focus Timer -->
-      <NGridItem span="3 m:1">
-        <NCard title="专注计时" :bordered="false">
-          <FocusTimer @finished="dashboardStore.refreshAll()" />
-        </NCard>
-      </NGridItem>
-
-      <!-- Stats & Goals -->
-      <NGridItem span="3 m:2">
-        <NGrid :cols="2" :x-gap="12" :y-gap="12" responsive="screen" item-responsive>
-          <NGridItem span="2 m:1">
-            <NCard size="small" :bordered="false">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <NStatistic label="今日专注" :value="formatMinutes(todayFocus)" />
-                <div style="text-align: right; flex: 1; margin-left: 16px;">
-                  <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <NText depth="3" style="font-size: 12px;">日目标 {{ formatTimeFromMinutes(dailyGoalMin) }}</NText>
-                    <NButton text size="small" @click="openEditModal">编辑</NButton>
-                  </div>
-                  <NProgress
-                    type="line"
-                    :percentage="dailyProgress"
-                    :height="8"
-                    style="margin-top: 4px;"
-                  />
-                </div>
-              </div>
-            </NCard>
-          </NGridItem>
-
-          <NGridItem span="2 m:1">
-            <NCard size="small" :bordered="false">
-              <NGrid :cols="2" :x-gap="8">
-                <div>
-                  <NStatistic label="本周专注" :value="formatMinutes(weekFocus)" />
-                </div>
-                <div>
-                  <NStatistic label="连续天数" :value="streak" suffix="天" />
-                </div>
-              </NGrid>
-            </NCard>
-          </NGridItem>
-
-          <!-- Exam goal countdown -->
-          <NGridItem v-if="studyStore.activeGoals.length > 0" span="2">
-            <NCard size="small" :bordered="false">
-              <template #header>
-                <NText strong style="font-size: 14px;">考试倒计时</NText>
-              </template>
-              <NSpace>
-                <NTag
-                  v-for="goal in studyStore.activeGoals.slice(0, 3)"
-                  :key="goal.id"
-                  size="large"
-                  round
-                  :type="goal.daysRemaining <= 30 ? 'error' : goal.daysRemaining <= 60 ? 'warning' : 'info'"
-                >
-                  {{ goal.examName }} - 还剩 {{ goal.daysRemaining }} 天
-                </NTag>
-              </NSpace>
-            </NCard>
-          </NGridItem>
-        </NGrid>
-      </NGridItem>
-    </NGrid>
-
-    <!-- Tasks + Quick links -->
-    <NGrid :cols="3" :x-gap="16" :y-gap="16" responsive="screen" item-responsive style="margin-top: 16px;">
-      <NGridItem span="3 m:2">
-        <NCard :bordered="false">
-          <template #header>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <NText strong>今日任务</NText>
-              <NButton text type="primary" @click="router.push('/tasks')">
-                全部任务
-              </NButton>
-            </div>
+      <div class="dashboard__tasks-card">
+        <TaskList
+          v-if="studyStore.todoTasks.length > 0 || studyStore.inProgressTasks.length > 0"
+          filter-status="ALL"
+        />
+        <NEmpty v-else description="暂无任务，去创建一个吧" size="small">
+          <template #extra>
+            <NButton type="primary" size="small" @click="router.push('/tasks')">
+              添加任务
+            </NButton>
           </template>
-          <TaskList v-if="studyStore.todoTasks.length > 0 || studyStore.inProgressTasks.length > 0" filter-status="ALL" />
-          <NEmpty v-else description="暂无任务，去创建一个吧">
-            <template #extra>
-              <NButton type="primary" @click="router.push('/tasks')">
-                添加任务
-              </NButton>
-            </template>
-          </NEmpty>
-        </NCard>
-      </NGridItem>
+        </NEmpty>
+      </div>
+    </section>
 
-      <NGridItem span="3 m:1">
-        <NCard title="快捷入口" :bordered="false">
-          <NSpace vertical :size="8">
-            <NButton block @click="router.push('/goals')">
-              考试目标
-            </NButton>
-            <NButton block @click="router.push('/subjects')">
-              科目管理
-            </NButton>
-            <NButton block @click="router.push('/tasks')">
-              任务清单
-            </NButton>
-            <NButton block @click="router.push('/stats')">
-              学习统计
-            </NButton>
-            <NButton block @click="router.push('/checkin')">
-              每日复盘
-            </NButton>
-            <NButton block @click="router.push('/journals')">
-              学习日志
-            </NButton>
-          </NSpace>
-        </NCard>
-      </NGridItem>
-    </NGrid>
+    <!-- 6. Quick Links -->
+    <section class="dashboard__section">
+      <h4 class="dashboard__section-title">快捷入口</h4>
+      <div class="dashboard__quick-links">
+        <button class="quick-link" @click="router.push('/goals')">
+          <NIcon size="18"><TrophyOutline /></NIcon>
+          <span>考试目标</span>
+        </button>
+        <button class="quick-link" @click="router.push('/subjects')">
+          <NIcon size="18"><SchoolOutline /></NIcon>
+          <span>科目管理</span>
+        </button>
+        <button class="quick-link" @click="router.push('/tasks')">
+          <NIcon size="18"><CheckboxOutline /></NIcon>
+          <span>任务清单</span>
+        </button>
+        <button class="quick-link" @click="router.push('/stats')">
+          <NIcon size="18"><StatsChartOutline /></NIcon>
+          <span>学习统计</span>
+        </button>
+        <button class="quick-link" @click="router.push('/checkin')">
+          <NIcon size="18"><TodayOutline /></NIcon>
+          <span>每日复盘</span>
+        </button>
+        <button class="quick-link" @click="router.push('/journals')">
+          <NIcon size="18"><BookOutline /></NIcon>
+          <span>学习日志</span>
+        </button>
+      </div>
+    </section>
     </template>
   </div>
 
@@ -280,14 +278,14 @@ onMounted(() => load(loadDashboard))
   <NModal v-model:show="showEditModal" preset="card" title="设置日目标专注时长">
     <NForm :model="editGoalForm">
       <NFormItem label="日目标专注时长">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <NInputNumber v-model:value="editGoalForm.hours" :min="0" :max="24" :step="1" style="width: 100px;" />
+        <div class="modal-form-row">
+          <NInputNumber v-model:value="editGoalForm.hours" :min="0" :max="24" :step="1" class="modal-input" />
           <span>小时</span>
-          <NInputNumber v-model:value="editGoalForm.minutes" :min="0" :max="59" :step="5" style="width: 100px;" />
+          <NInputNumber v-model:value="editGoalForm.minutes" :min="0" :max="59" :step="5" class="modal-input" />
           <span>分钟</span>
         </div>
       </NFormItem>
-      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
+      <div class="modal-actions">
         <NButton @click="showEditModal = false">取消</NButton>
         <NButton type="primary" @click="saveDailyGoal">保存</NButton>
       </div>
@@ -296,8 +294,234 @@ onMounted(() => load(loadDashboard))
 </template>
 
 <style scoped>
-.greeting-subtitle {
-  margin: var(--sp-2) 0 0;
-  color: var(--text-secondary);
+/* ===== Layout ===== */
+.dashboard {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: var(--sp-4);
+  animation: fadeInUp var(--duration-md) var(--ease-enter);
+}
+
+.dashboard__loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--sp-14) 0;
+}
+
+/* ===== Header ===== */
+.dashboard__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+
+.dashboard__header-left {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.dashboard__greeting {
+  margin: 0;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color-strong);
+  line-height: var(--leading-tight);
+}
+
+.dashboard__date {
+  font-size: var(--text-sm);
+  color: var(--text-color-muted);
+}
+
+/* ===== Stats Row ===== */
+.dashboard__stats {
+  display: flex;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.stat-block {
+  flex: 1;
+  min-width: 100px;
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--divider);
+}
+
+.stat-block__label {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--text-color-muted);
+  margin-bottom: var(--sp-1);
+  letter-spacing: var(--tracking-wide);
+}
+
+.stat-block__value {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color-strong);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--leading-tight);
+}
+
+.stat-block__unit {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-normal);
+  color: var(--text-color-muted);
+  margin-left: 2px;
+}
+
+.stat-block--goal {
+  min-width: 160px;
+}
+
+.stat-block__goal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.stat-block__goal-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.stat-block__goal-text {
+  font-size: var(--text-xs);
+  color: var(--text-color-muted);
+}
+
+/* ===== Sections ===== */
+.dashboard__section {
+  margin-bottom: var(--sp-4);
+}
+
+.dashboard__section-title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color-strong);
+  margin: 0 0 var(--sp-3);
+}
+
+.dashboard__section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--sp-3);
+}
+
+.dashboard__section-header .dashboard__section-title {
+  margin-bottom: 0;
+}
+
+/* ===== Timer ===== */
+.dashboard__timer-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--divider);
+  padding: var(--sp-4);
+}
+
+/* ===== Exam Tags ===== */
+.dashboard__exam-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+/* ===== Tasks ===== */
+.dashboard__tasks-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--divider);
+  padding: var(--sp-3);
+}
+
+/* ===== Quick Links ===== */
+.dashboard__quick-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: var(--sp-2);
+}
+
+.quick-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: var(--sp-3) var(--sp-2);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--text-color);
+  font-size: var(--text-sm);
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.quick-link:hover {
+  background: var(--state-hover);
+  border-color: var(--separator);
+  box-shadow: var(--shadow-1);
+}
+
+.quick-link:active {
+  background: var(--state-pressed);
+}
+
+.quick-link .n-icon {
+  color: var(--text-color-muted);
+}
+
+/* ===== Modal ===== */
+.modal-form-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.modal-input {
+  width: 100px;
+}
+
+.goal-progress {
+  margin-top: 4px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  margin-top: var(--sp-4);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 640px) {
+  .dashboard {
+    padding: var(--sp-4) var(--sp-3);
+  }
+
+  .dashboard__stats {
+    flex-direction: column;
+  }
+
+  .stat-block {
+    min-width: 0;
+  }
+
+  .dashboard__quick-links {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 </style>

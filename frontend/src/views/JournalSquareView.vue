@@ -2,15 +2,9 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
-  NCard,
-  NList,
-  NListItem,
-  NThing,
   NTag,
   NEmpty,
-  NText,
   NButton,
-  NSpace,
 } from 'naive-ui'
 import { journalApi, type Journal } from '@/api/journal'
 import { userApi } from '@/api/user'
@@ -58,52 +52,119 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
-    <NCard :bordered="false">
-      <template #header>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <span style="font-size: 20px;">📝</span>
-            <span style="font-size: 18px; font-weight: 600; margin-left: 8px;">日志广场</span>
-          </div>
-          <NButton type="primary" @click="router.push('/journals/new')">
-            + 写日志
-          </NButton>
-        </div>
-      </template>
+  <div class="journal-square-view">
+    <!-- Page Header -->
+    <div class="page-header">
+      <h3 class="page-title">日志广场</h3>
+      <NButton type="primary" size="small" @click="router.push('/journals/new')">
+        + 写日志
+      </NButton>
+    </div>
 
-      <NEmpty v-if="!loading && journals.length === 0" description="还没有公开的日志">
+    <!-- Empty -->
+    <div v-if="!loading && journals.length === 0" class="empty-container">
+      <NEmpty description="还没有公开的日志">
         <template #extra>
-          <NButton type="primary" @click="router.push('/journals/new')">发布第一篇日志</NButton>
+          <NButton type="primary" size="small" @click="router.push('/journals/new')">发布第一篇日志</NButton>
         </template>
       </NEmpty>
+    </div>
 
-      <NList v-else hoverable>
-        <NListItem
-          v-for="journal in journals"
-          :key="journal.id"
-          @click="router.push(`/journals/${journal.id}`)"
-        >
-          <NThing>
-            <template #header>
-              <NSpace align="center" :size="8">
-                <NText strong>{{ journal.title }}</NText>
-                <NTag size="small" round type="success">
-                  公开
-                </NTag>
-              </NSpace>
-            </template>
-            <template #description>
-              <NText depth="3" style="font-size: 13px;">
-                {{ formatDate(journal.publishedAt || journal.createdAt) }}
-              </NText>
-            </template>
-            <template #action>
-              <NButton size="tiny" quaternary>阅读</NButton>
-            </template>
-          </NThing>
-        </NListItem>
-      </NList>
-    </NCard>
+    <!-- Journal List -->
+    <div v-else class="journal-list">
+      <div
+        v-for="journal in journals"
+        :key="journal.id"
+        class="journal-row"
+        @click="router.push(`/journals/${journal.id}`)"
+      >
+        <div class="journal-row-main">
+          <span class="journal-title">{{ journal.title }}</span>
+          <NTag size="tiny" round type="success" :bordered="false">公开</NTag>
+        </div>
+        <span class="journal-date">{{ formatDate(journal.publishedAt || journal.createdAt) }}</span>
+        <NButton size="tiny" quaternary @click.stop="router.push(`/journals/${journal.id}`)">
+          阅读
+        </NButton>
+      </div>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.journal-square-view {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: var(--sp-4);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--sp-4);
+}
+
+.page-title {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color-strong);
+}
+
+.empty-container {
+  padding: var(--sp-12) 0;
+}
+
+.journal-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-card);
+}
+
+.journal-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  min-height: 44px;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+  border-bottom: 1px solid var(--divider);
+}
+
+.journal-row:last-child {
+  border-bottom: none;
+}
+
+.journal-row:hover {
+  background: var(--state-hover);
+}
+
+.journal-row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.journal-title {
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--text-color-strong);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.journal-date {
+  font-size: var(--text-sm);
+  color: var(--text-color-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+</style>

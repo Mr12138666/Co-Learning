@@ -36,7 +36,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
   async function fetchCheckinByDate(date: string) {
     const res = await checkinApi.getByDate(date)
-    return res.data.data as Checkin
+    return res.data.data
   }
 
   async function refreshAll() {

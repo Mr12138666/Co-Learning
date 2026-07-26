@@ -48,33 +48,37 @@ async function handleLogin() {
 </script>
 
 <template>
-  <NCard title="登录" size="large" :bordered="false">
-    <NForm ref="formRef" :model="formData" :rules="rules" size="large">
-      <NFormItem path="email" label="邮箱">
-        <NInput v-model:value="formData.email" placeholder="请输入邮箱" @keyup.enter="handleLogin" />
-      </NFormItem>
-      <NFormItem path="password" label="密码">
-        <NInput v-model:value="formData.password" type="password" show-password-on="click" placeholder="请输入密码" @keyup.enter="handleLogin" />
-      </NFormItem>
-      <NFormItem>
-        <NSpace vertical style="width: 100%;">
-          <NButton type="primary" block :loading="loading" @click="handleLogin">
-            登录
-          </NButton>
-          <NSpace justify="space-between" style="width: 100%;">
-            <NButton text @click="router.push({ name: 'register' })">注册新账号</NButton>
-            <NButton text @click="router.push({ name: 'forgot-password' })">忘记密码？</NButton>
+  <div class="auth-page">
+    <div class="auth-brand">CL</div>
+    <NCard :bordered="false" class="auth-card">
+      <h1 class="auth-title">登录</h1>
+      <NForm ref="formRef" :model="formData" :rules="rules" size="large">
+        <NFormItem path="email" label="邮箱">
+          <NInput v-model:value="formData.email" placeholder="请输入邮箱" @keyup.enter="handleLogin" />
+        </NFormItem>
+        <NFormItem path="password" label="密码">
+          <NInput v-model:value="formData.password" type="password" show-password-on="click" placeholder="请输入密码" @keyup.enter="handleLogin" />
+        </NFormItem>
+        <NFormItem>
+          <NSpace vertical class="auth-actions">
+            <NButton type="primary" block :loading="loading" @click="handleLogin">
+              登录
+            </NButton>
+            <div class="auth-links">
+              <NButton text @click="router.push({ name: 'register' })">注册新账号</NButton>
+              <NButton text @click="router.push({ name: 'forgot-password' })">忘记密码？</NButton>
+            </div>
           </NSpace>
-        </NSpace>
-      </NFormItem>
-    </NForm>
+        </NFormItem>
+      </NForm>
 
-    <div v-if="isDev" class="test-accounts">
-      <p class="test-title">测试账号：</p>
-      <p>管理员: admin@colearning.local / admin123</p>
-      <p>学生: student@test.com / student123</p>
-    </div>
-  </NCard>
+      <div v-if="isDev" class="test-accounts">
+        <p class="test-title">测试账号：</p>
+        <p>管理员: admin@colearning.local / admin123</p>
+        <p>学生: student@test.com / student123</p>
+      </div>
+    </NCard>
+  </div>
 </template>
 
 <script lang="ts">
@@ -82,13 +86,52 @@ const isDev = import.meta.env.DEV
 </script>
 
 <style scoped>
+.auth-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.auth-brand {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  color: var(--brand);
+  letter-spacing: 0.08em;
+  margin-bottom: var(--sp-5);
+}
+
+.auth-card {
+  width: 100%;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.auth-title {
+  margin: 0 0 var(--sp-5) 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color-strong);
+}
+
+.auth-actions {
+  width: 100%;
+}
+
+.auth-links {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
 .test-accounts {
   margin-top: var(--sp-4);
   padding: var(--sp-3);
-  background-color: var(--bg-sunken);
+  background-color: var(--bg-page);
   border-radius: var(--radius-sm);
-  font-size: var(--text-sm);
-  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+  color: var(--text-color-muted);
+  border: 1px solid var(--separator);
 }
 
 .test-title {

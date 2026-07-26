@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { NCard, useMessage } from 'naive-ui'
+import { NButton, useMessage } from 'naive-ui'
 import JournalEditor from '@/components/journal/JournalEditor.vue'
 import { useJournalStore } from '@/stores/journalStore'
 
@@ -46,7 +46,6 @@ async function handleSave(data: { title: string; contentMarkdown: string; visibi
 async function handlePublish(data: { title: string; contentMarkdown: string; visibility: string }) {
   try {
     if (isEdit.value && journalId.value) {
-      // 编辑模式：直接更新内容并设置为已发布，不需要再调用publish
       await journalStore.update(journalId.value, {
         title: data.title,
         contentMarkdown: data.contentMarkdown,
@@ -54,7 +53,6 @@ async function handlePublish(data: { title: string; contentMarkdown: string; vis
         status: 'PUBLISHED',
       })
     } else {
-      // 新建模式：先创建再发布
       const journal = await journalStore.create({
         title: data.title,
         contentMarkdown: data.contentMarkdown,
@@ -87,15 +85,52 @@ onMounted(async () => {
 </script>
 
 <template>
-  <NCard :bordered="false">
-    <template #header>
-      {{ isEdit ? '编辑日志' : '写日志' }}
-    </template>
-    <JournalEditor
-      :model-value="loadedJournal ?? undefined"
-      :mode="isEdit ? 'edit' : 'create'"
-      @save="handleSave"
-      @publish="handlePublish"
-    />
-  </NCard>
+  <div class="journal-edit-view">
+    <!-- Toolbar -->
+    <div class="edit-toolbar">
+      <h3 class="toolbar-title">{{ isEdit ? '编辑日志' : '写日志' }}</h3>
+      <NButton quaternary size="small" @click="router.push('/journals')">
+        ← 返回列表
+      </NButton>
+    </div>
+
+    <!-- Editor -->
+    <div class="editor-container">
+      <JournalEditor
+        :model-value="loadedJournal ?? undefined"
+        :mode="isEdit ? 'edit' : 'create'"
+        @save="handleSave"
+        @publish="handlePublish"
+      />
+    </div>
+  </div>
 </template>
+
+<style scoped>
+.journal-edit-view {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: var(--sp-4);
+}
+
+.edit-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--sp-3);
+}
+
+.toolbar-title {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color-strong);
+}
+
+.editor-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--sp-4);
+}
+</style>

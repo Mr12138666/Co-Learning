@@ -3,31 +3,20 @@ import { onMounted, computed } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useGamificationStore } from '@/stores/gamificationStore'
 import {
-  NCard, NSpace, NButton, NProgress, NTag, NGrid, NGridItem,
-  NSpin, NStatistic,
+  NCard, NButton, NProgress, NTag, NSpin,
 } from 'naive-ui'
 
 const message = useMessage()
 const store = useGamificationStore()
 
-const taskTypeIcons: Record<string, string> = {
-  FOCUS_ONCE: '📚',
-  FOCUS_30MIN: '⏱️',
-  FOCUS_60MIN: '⏰',
-  FOCUS_120MIN: '🔥',
-  FEED_PET: '🍖',
-  CHECKIN: '✅',
-  WRITE_JOURNAL: '📝',
-}
-
-const _taskTypeLabels: Record<string, string> = {
-  FOCUS_ONCE: '专注一次',
-  FOCUS_30MIN: '专注30分钟',
-  FOCUS_60MIN: '专注1小时',
-  FOCUS_120MIN: '专注2小时',
-  FEED_PET: '喂食宠物',
-  CHECKIN: '每日打卡',
-  WRITE_JOURNAL: '写日志',
+const taskTypeShort: Record<string, string> = {
+  FOCUS_ONCE: 'FO',
+  FOCUS_30MIN: '30',
+  FOCUS_60MIN: '60',
+  FOCUS_120MIN: '2h',
+  FEED_PET: 'FD',
+  CHECKIN: 'CK',
+  WRITE_JOURNAL: 'JR',
 }
 
 const statusLabels: Record<string, string> = {
@@ -46,18 +35,18 @@ function formatProgress(task: typeof store.dailyTasks[0]): string {
   if (task.taskType.startsWith('FOCUS')) {
     const minutes = Math.floor(task.currentProgress / 60)
     const targetMinutes = Math.floor(task.targetValue / 60)
-    return `${minutes}/${targetMinutes} 分钟`
+    return `${minutes}/${targetMinutes} min`
   }
   return `${task.currentProgress}/${task.targetValue}`
 }
 
-const completedCount = computed(() => 
+const completedCount = computed(() =>
   store.dailyTasks.filter((t: typeof store.dailyTasks[0]) => t.status === 'COMPLETED' || t.status === 'CLAIMED').length
 )
 
 const totalCount = computed(() => store.dailyTasks.length)
 
-const totalReward = computed(() => 
+const totalReward = computed(() =>
   store.dailyTasks.filter((t: typeof store.dailyTasks[0]) => t.status === 'COMPLETED').reduce((sum: number, t: typeof store.dailyTasks[0]) => sum + t.rewardTokens, 0)
 )
 
@@ -82,74 +71,73 @@ onMounted(() => {
 
     <!-- Stats Card -->
     <n-card class="stats-card" :bordered="false">
-      <n-space justify="space-around">
-        <n-statistic label="今日进度" :value="`${completedCount}/${totalCount}`" />
-        <n-statistic label="待领取代币" :value="totalReward">
-          <template #suffix><span class="token-icon">🪙</span></template>
-        </n-statistic>
-        <n-statistic label="我的代币" :value="store.profile?.tokens || 0">
-          <template #suffix><span class="token-icon">🪙</span></template>
-        </n-statistic>
-      </n-space>
+      <div class="stats-row">
+        <div class="stat-block">
+          <span class="stat-label">今日进度</span>
+          <span class="stat-value">{{ completedCount }}/{{ totalCount }}</span>
+        </div>
+        <div class="stat-divider" />
+        <div class="stat-block">
+          <span class="stat-label">待领取</span>
+          <span class="stat-value stat-value--brand">{{ totalReward }} T</span>
+        </div>
+        <div class="stat-divider" />
+        <div class="stat-block">
+          <span class="stat-label">我的代币</span>
+          <span class="stat-value">{{ store.profile?.tokens || 0 }} T</span>
+        </div>
+      </div>
     </n-card>
 
     <n-spin :show="store.loading">
       <!-- Tasks List -->
-      <n-grid :cols="2" :x-gap="12" :y-gap="12" responsive="screen" item-responsive>
-        <n-grid-item v-for="task in store.dailyTasks" :key="task.id" span="2 m:1">
-          <n-card 
-            class="task-card" 
-            :bordered="false"
-            :class="{ completed: task.status === 'COMPLETED', claimed: task.status === 'CLAIMED' }"
-          >
-            <div class="task-header">
-              <span class="task-icon">{{ taskTypeIcons[task.taskType] || '📋' }}</span>
-              <n-tag :type="statusColors[task.status]" size="small" round>
+      <div class="task-list">
+        <div
+          v-for="task in store.dailyTasks"
+          :key="task.id"
+          class="task-row"
+          :class="{ 'task-row--completed': task.status === 'COMPLETED', 'task-row--claimed': task.status === 'CLAIMED' }"
+        >
+          <span class="task-badge">{{ taskTypeShort[task.taskType] || '??' }}</span>
+          <div class="task-info">
+            <div class="task-top">
+              <h3 class="task-title">{{ task.title }}</h3>
+              <n-tag :type="statusColors[task.status]" size="tiny" round>
                 {{ statusLabels[task.status] }}
               </n-tag>
             </div>
-            
-            <h3 class="task-title">{{ task.title }}</h3>
-            <p class="task-desc">{{ task.description }}</p>
-            
-            <div class="task-progress">
+            <div class="task-progress-row">
               <n-progress
                 type="line"
                 :percentage="Math.min(100, Math.round((task.currentProgress / task.targetValue) * 100))"
                 :show-indicator="false"
-                :height="6"
-                class="progress-bar"
+                :height="4"
+                class="task-bar"
               />
-              <span class="progress-text">{{ formatProgress(task) }}</span>
+              <span class="task-progress-text">{{ formatProgress(task) }}</span>
             </div>
-            
-            <div class="task-footer">
-              <span class="reward-text">奖励: {{ task.rewardTokens }} 🪙</span>
-              <n-button 
-                v-if="task.status === 'COMPLETED'"
-                size="small" 
-                type="primary" 
-                @click="handleClaim(task.id)"
-              >
-                领取奖励
-              </n-button>
-              <n-tag v-else-if="task.status === 'CLAIMED'" size="small" type="success" round>
-                已领取
-              </n-tag>
-            </div>
-          </n-card>
-        </n-grid-item>
-      </n-grid>
+          </div>
+          <div class="task-action">
+            <span class="task-reward">{{ task.rewardTokens }} T</span>
+            <n-button
+              v-if="task.status === 'COMPLETED'"
+              size="tiny"
+              type="primary"
+              @click="handleClaim(task.id)"
+            >
+              领取
+            </n-button>
+            <span v-else-if="task.status === 'CLAIMED'" class="task-claimed-label">--</span>
+          </div>
+        </div>
+      </div>
 
-      <n-empty v-if="store.dailyTasks.length === 0" description="加载中..." style="padding: 40px 0" />
+      <n-empty v-if="store.dailyTasks.length === 0" description="加载中..." class="section-empty" />
     </n-spin>
 
     <!-- Tips -->
     <n-card class="tips-card" :bordered="false">
-      <div class="tips-header">
-        <span class="tips-icon">💡</span>
-        <h3 class="tips-title">小贴士</h3>
-      </div>
+      <h3 class="tips-title">小贴士</h3>
       <ul class="tips-list">
         <li>每日任务在凌晨0点刷新</li>
         <li>完成任务后请及时领取奖励</li>
@@ -162,117 +150,198 @@ onMounted(() => {
 
 <style scoped>
 .daily-tasks-view {
-  padding: 0 var(--sp-1);
+  padding: var(--sp-4);
 }
 
 .page-title {
-  margin: 0 0 var(--sp-5) 0;
-  font-size: var(--text-2xl);
+  margin: 0 0 var(--sp-4) 0;
+  font-size: var(--text-xl);
 }
 
+/* --- Stats Card --- */
 .stats-card {
-  margin-bottom: var(--sp-5);
+  margin-bottom: var(--sp-4);
+  background: var(--surface-2);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-md);
 }
 
-.token-icon {
-  font-size: var(--text-lg);
-}
-
-.task-card {
-  transition: all var(--duration-normal) var(--ease-default);
-}
-
-.task-card.completed {
-  border: 1px solid var(--success) !important;
-}
-
-.task-card.claimed {
-  opacity: 0.7;
-}
-
-.task-header {
+.stats-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--sp-3);
+  justify-content: space-around;
 }
 
-.task-icon {
-  font-size: 28px;
+.stat-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
 
-.task-title {
-  margin: 0 0 var(--sp-1) 0;
-  font-size: var(--text-lg);
+.stat-label {
+  font-size: var(--text-xs);
+  color: var(--text-color-muted);
+}
+
+.stat-value {
+  font-size: var(--text-base);
   font-weight: var(--weight-semibold);
+  color: var(--text-color);
 }
 
-.task-desc {
-  margin: 0 0 var(--sp-3) 0;
-  font-size: var(--text-md);
-  color: var(--text-tertiary);
-  line-height: var(--leading-snug);
+.stat-value--brand {
+  color: var(--brand);
 }
 
-.task-progress {
+.stat-divider {
+  width: 1px;
+  height: 28px;
+  background: var(--separator);
+}
+
+/* --- Task List --- */
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.task-row {
   display: flex;
   align-items: center;
-  gap: var(--sp-2);
-  margin-bottom: var(--sp-3);
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  background: var(--surface-2);
+  border: 1px solid var(--divider);
+  border-left: 3px solid transparent;
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast), opacity var(--transition-fast);
 }
 
-.progress-bar {
-  flex: 1;
+.task-row--completed {
+  border-left-color: var(--success);
 }
 
-.progress-text {
-  font-size: var(--text-sm);
-  color: var(--text-tertiary);
+.task-row--claimed {
+  opacity: 0.6;
+}
+
+.task-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: var(--bg-page);
+  border: 1px solid var(--separator);
+  font-size: 11px;
+  font-weight: var(--weight-bold);
+  color: var(--text-color-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
 }
 
-.task-footer {
+.task-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-top {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
 }
 
-.reward-text {
-  font-size: var(--text-base);
+.task-title {
+  margin: 0;
+  font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
-  color: var(--accent);
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.tips-card {
-  margin-top: 24px;
-  background-color: var(--bg-card);
-}
-
-.tips-header {
+.task-progress-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: var(--sp-2);
 }
 
-.tips-icon {
-  font-size: 18px;
+.task-bar {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-progress-text {
+  font-size: 11px;
+  color: var(--text-color-muted);
+  flex-shrink: 0;
+  min-width: 50px;
+  text-align: right;
+}
+
+.task-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--sp-1);
+  flex-shrink: 0;
+}
+
+.task-reward {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--brand);
+}
+
+.task-claimed-label {
+  font-size: var(--text-xs);
+  color: var(--text-color-muted);
+}
+
+/* --- Tips --- */
+.tips-card {
+  margin-top: var(--sp-4);
+  background: var(--surface-2);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-md);
 }
 
 .tips-title {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
+  margin: 0 0 var(--sp-2) 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color);
 }
 
 .tips-list {
   margin: 0;
   padding-left: var(--sp-5);
-  font-size: var(--text-md);
-  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  color: var(--text-color-muted);
 }
 
 .tips-list li {
   margin-bottom: var(--sp-1);
+}
+
+.section-empty {
+  padding: var(--sp-8) 0;
+}
+
+@media (max-width: 768px) {
+  .stats-row {
+    gap: var(--sp-3);
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .stat-divider {
+    display: none;
+  }
 }
 </style>

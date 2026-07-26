@@ -1,4 +1,5 @@
 import http from './http'
+import type { ApiResponse } from '@/types/api'
 
 export interface UserProfileResponse {
   userId: number
@@ -37,18 +38,18 @@ export interface BlockedUserResponse {
 }
 
 export const userApi = {
-  getProfile: (userId: number) => http.get(`/users/${userId}/profile`),
-  getMyProfile: () => http.get('/me/profile'),
-  updateProfile: (data: UpdateProfileRequest) => http.put('/me/profile', data),
-  updateSettings: (data: UpdateSettingsRequest) => http.put('/me/settings', data),
+  getProfile: (userId: number) => http.get<ApiResponse<UserProfileResponse>>(`/users/${userId}/profile`),
+  getMyProfile: () => http.get<ApiResponse<UserProfileResponse>>('/me/profile'),
+  updateProfile: (data: UpdateProfileRequest) => http.put<ApiResponse<UserProfileResponse>>('/me/profile', data),
+  updateSettings: (data: UpdateSettingsRequest) => http.put<ApiResponse<UserProfileResponse>>('/me/settings', data),
   uploadAvatar: (file: File) => {
     const formData = new FormData()
     formData.append('file', file)
-    return http.post('/me/avatar', formData)
+    return http.post<ApiResponse<UserProfileResponse>>('/me/avatar', formData)
   },
 
   // Block management
-  listBlocks: () => http.get('/me/blocks'),
-  blockUser: (targetUserId: number) => http.post(`/me/blocks/${targetUserId}`),
-  unblockUser: (targetUserId: number) => http.delete(`/me/blocks/${targetUserId}`),
+  listBlocks: () => http.get<ApiResponse<BlockedUserResponse[]>>('/me/blocks'),
+  blockUser: (targetUserId: number) => http.post<ApiResponse<void>>(`/me/blocks/${targetUserId}`),
+  unblockUser: (targetUserId: number) => http.delete<ApiResponse<void>>(`/me/blocks/${targetUserId}`),
 }

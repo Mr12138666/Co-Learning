@@ -105,18 +105,18 @@ describe('journalStore', () => {
     expect(journalApi.listMy).toHaveBeenCalledOnce()
   })
 
-  it('fetchMyJournals 处理非分页数组响应', async () => {
+  it('fetchMyJournals 处理空分页响应', async () => {
     vi.mocked(journalApi.listMy).mockResolvedValue({
       data: {
-        data: mockJournals,
+        data: { items: [], total: 0 },
       },
     } as any)
 
     const store = useJournalStore()
     await store.fetchMyJournals()
 
-    expect(store.journals).toHaveLength(2)
-    expect(store.total).toBe(2)
+    expect(store.journals).toHaveLength(0)
+    expect(store.total).toBe(0)
   })
 
   it('fetchMyJournals 可传入分页参数', async () => {

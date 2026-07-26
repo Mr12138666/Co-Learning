@@ -29,7 +29,7 @@ const focusStatusText = computed(() => {
 const imageUrl = computed(() => {
   const match = props.message.content?.match(/!\[图片\]\((.+?)\)/)
   if (!match) return null
-  
+
   let url = match[1]
   // Convert old format http://localhost:9000/bucket/key to /api/storage/proxy/bucket/key
   if (url.startsWith('http://localhost:9000/')) {
@@ -56,7 +56,7 @@ const imageUrl = computed(() => {
 
   <div v-else class="message-item" :class="{ own: isOwn }">
     <!-- Avatar -->
-    <n-avatar round size="large" :src="message.avatarUrl || undefined" class="message-avatar">
+    <n-avatar round size="small" :src="message.avatarUrl || undefined" class="message-avatar">
       {{ message.displayName?.charAt(0) }}
     </n-avatar>
 
@@ -76,35 +76,35 @@ const imageUrl = computed(() => {
 .message-system {
   display: flex;
   justify-content: center;
-  margin: 8px 0;
+  margin: var(--sp-2) 0;
 }
 
 .system-text {
-  font-size: 12px;
-  color: var(--text-tertiary);
-  background-color: var(--bg-sunken);
-  padding: 4px 12px;
-  border-radius: 12px;
+  font-size: var(--text-xs);
+  color: var(--text-color-muted);
+  background: var(--bg-sunken);
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--radius-pill);
 }
 
 .message-focus-status {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 8px 0;
-  font-size: 12px;
-  color: var(--text-tertiary);
+  gap: var(--sp-1);
+  padding: var(--sp-2) 0;
+  font-size: var(--text-xs);
+  color: var(--text-color-muted);
 }
 
 .focus-icon {
-  font-size: 14px;
+  font-size: var(--text-sm);
 }
 
 .message-item {
   display: flex;
-  gap: 8px;
-  margin: 16px 0;
+  gap: var(--sp-2);
+  margin: var(--sp-3) 0;
   align-items: flex-start;
 }
 
@@ -120,7 +120,7 @@ const imageUrl = computed(() => {
   display: flex;
   flex-direction: column;
   max-width: 70%;
-  gap: 4px;
+  gap: 2px;
 }
 
 .message-item.own .message-content-wrapper {
@@ -128,45 +128,46 @@ const imageUrl = computed(() => {
 }
 
 .message-author {
-  font-size: 12px;
-  color: var(--text-secondary);
-  font-weight: 500;
+  font-size: var(--text-xs);
+  color: var(--text-color-muted);
+  font-weight: var(--weight-medium);
+  padding: 0 var(--sp-1);
 }
 
 .message-bubble {
-  padding: 8px 12px;
+  padding: var(--sp-2) var(--sp-3);
   word-break: break-word;
-  border-radius: 0 8px 8px 8px;
-  background-color: var(--bg-card);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm) var(--radius-md) var(--radius-md) var(--radius-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
 }
 
 .message-bubble.own {
-  border-radius: 8px 0 8px 8px;
-  background-color: var(--accent);
-  border-color: var(--accent);
+  border-radius: var(--radius-md) var(--radius-sm) var(--radius-md) var(--radius-md);
+  background: var(--brand);
+  border-color: var(--brand);
 }
 
 .message-text {
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--text-primary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: var(--text-color);
+}
+
+.message-bubble.own .message-text {
+  color: var(--ink-on-accent);
 }
 
 .message-image {
   max-width: 200px;
   max-height: 200px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   object-fit: cover;
 }
 
-.message-bubble.own .message-text {
-  color: #fff;
-}
-
 .message-time {
-  font-size: 10px;
-  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+  color: var(--text-color-muted);
+  padding: 0 var(--sp-1);
 }
 </style>

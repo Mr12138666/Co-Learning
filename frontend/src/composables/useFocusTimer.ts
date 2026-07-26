@@ -24,6 +24,9 @@ export function useFocusTimer() {
 
   const now = ref(Date.now())
   let timerId: ReturnType<typeof setInterval> | null = null
+  // Guards against the 1s tick loop firing overlapping async requests.
+  let isFinishing = false
+  let graceExpiryFetched = false
 
   // ===== Timer Mode =====
   const timerMode = ref<TimerMode>('flowtime')
@@ -296,13 +299,18 @@ export function useFocusTimer() {
     stopTick()
     timerId = setInterval(() => {
       now.value = Date.now()
-      // Grace period expiry
+      // Grace period expiry: fetch the refreshed session ONCE, not every second
       if (isInGracePeriod.value && graceRemainingSeconds.value <= 0) {
-        focusStore.fetchActive()
+        if (!graceExpiryFetched) {
+          graceExpiryFetched = true
+          focusStore.fetchActive().catch(() => {})
+        }
+      } else {
+        graceExpiryFetched = false
       }
-      // Countdown auto-finish
-      if (timerMode.value === 'countdown' && countdownFinished.value) {
-        finishFocus()
+      // Countdown auto-finish: guard against overlapping POST /finish requests
+      if (timerMode.value === 'countdown' && countdownFinished.value && !isFinishing) {
+        finishFocus().catch(() => {})
       }
     }, 1000)
   }
@@ -361,15 +369,18 @@ export function useFocusTimer() {
   }
 
   async function finishFocus() {
+    if (isFinishing) return
+    isFinishing = true
+    // Stop ticking immediately so the countdown auto-finish can't re-enter mid-await.
+    stopTick()
     try {
-      const result = await focusStore.finish()
-      return result
+      return await focusStore.finish()
     } finally {
-      stopTick()
       dashboardStore.fetchStats().catch(() => {})
       dashboardStore.fetchTodayCheckin().catch(() => {})
       gamificationStore.loadProfile().catch(() => {})
       gamificationStore.loadPet().catch(() => {})
+      isFinishing = false
     }
   }
 

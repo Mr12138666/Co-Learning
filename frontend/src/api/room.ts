@@ -1,4 +1,5 @@
 import http from './http'
+import type { ApiResponse, Page } from '@/types/api'
 
 // ===== Types =====
 
@@ -91,54 +92,56 @@ export interface MuteMemberRequest {
 
 export const roomApi = {
   listRooms(page = 0, size = 20) {
-    return http.get('/rooms', { params: { page, size } })
+    return http.get<ApiResponse<Page<RoomResponse>>>('/rooms', { params: { page, size } })
   },
 
   getRoom(roomId: number) {
-    return http.get(`/rooms/${roomId}`)
+    return http.get<ApiResponse<RoomResponse>>(`/rooms/${roomId}`)
   },
 
   createRoom(data: CreateRoomRequest) {
-    return http.post('/rooms', data)
+    return http.post<ApiResponse<RoomResponse>>('/rooms', data)
   },
 
   updateRoom(roomId: number, data: UpdateRoomRequest) {
-    return http.put(`/rooms/${roomId}`, data)
+    return http.put<ApiResponse<RoomResponse>>(`/rooms/${roomId}`, data)
   },
 
   deleteRoom(roomId: number) {
-    return http.delete(`/rooms/${roomId}`)
+    return http.delete<ApiResponse<void>>(`/rooms/${roomId}`)
   },
 
   joinRoom(roomId: number, data?: JoinRoomRequest) {
-    return http.post(`/rooms/${roomId}/join`, data || {})
+    return http.post<ApiResponse<void>>(`/rooms/${roomId}/join`, data || {})
   },
 
   leaveRoom(roomId: number) {
-    return http.delete(`/rooms/${roomId}/leave`)
+    return http.delete<ApiResponse<void>>(`/rooms/${roomId}/leave`)
   },
 
   listMembers(roomId: number) {
-    return http.get(`/rooms/${roomId}/members`)
+    return http.get<ApiResponse<RoomMemberResponse[]>>(`/rooms/${roomId}/members`)
   },
 
   kickMember(roomId: number, targetUserId: number) {
-    return http.post(`/rooms/${roomId}/kick/${targetUserId}`)
+    return http.post<ApiResponse<void>>(`/rooms/${roomId}/kick/${targetUserId}`)
   },
 
   muteMember(roomId: number, targetUserId: number, data?: MuteMemberRequest) {
-    return http.post(`/rooms/${roomId}/mute/${targetUserId}`, data || {})
+    return http.post<ApiResponse<void>>(`/rooms/${roomId}/mute/${targetUserId}`, data || {})
   },
 
   listMessages(roomId: number, page = 0, size = 50) {
-    return http.get(`/rooms/${roomId}/messages`, { params: { page, size } })
+    return http.get<ApiResponse<Page<RoomMessageResponse>>>(`/rooms/${roomId}/messages`, {
+      params: { page, size },
+    })
   },
 
   sendMessage(roomId: number, data: SendRoomMessageRequest) {
-    return http.post(`/rooms/${roomId}/messages`, data)
+    return http.post<ApiResponse<RoomMessageResponse>>(`/rooms/${roomId}/messages`, data)
   },
 
   getRoomState(roomId: number) {
-    return http.get(`/rooms/${roomId}/state`)
+    return http.get<ApiResponse<RoomStateResponse>>(`/rooms/${roomId}/state`)
   },
 }

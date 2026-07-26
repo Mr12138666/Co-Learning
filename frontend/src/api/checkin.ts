@@ -1,4 +1,5 @@
 import http from './http'
+import type { ApiResponse } from '@/types/api'
 
 // ===== Types =====
 
@@ -24,8 +25,8 @@ export interface UpdateCheckinRequest {
 // ===== API =====
 
 export const checkinApi = {
-  getToday: () => http.get('/checkins/today'),
-  update: (data: UpdateCheckinRequest) => http.put('/checkins', data),
-  complete: () => http.post('/checkins/complete'),
-  getByDate: (date: string) => http.get('/checkins', { params: { date } }),
+  getToday: () => http.get<ApiResponse<Checkin>>('/checkins/today'),
+  update: (data: UpdateCheckinRequest) => http.put<ApiResponse<Checkin>>('/checkins', data),
+  complete: () => http.post<ApiResponse<Checkin>>('/checkins/complete'),
+  getByDate: (date: string) => http.get<ApiResponse<Checkin>>('/checkins', { params: { date } }),
 }

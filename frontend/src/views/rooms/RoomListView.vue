@@ -64,12 +64,12 @@ async function submitCreate() {
 
 <template>
   <div class="room-list-view">
-    <!-- Loading State -->
-    <div v-if="loading" style="display: flex; justify-content: center; padding: 80px 0;">
+    <!-- Loading -->
+    <div v-if="loading" class="loading-center">
       <NSpin size="large" />
     </div>
 
-    <!-- Error State -->
+    <!-- Error -->
     <StateError
       v-else-if="error"
       :title="error"
@@ -79,29 +79,30 @@ async function submitCreate() {
     />
 
     <template v-else>
-    <div class="page-header">
-      <n-space justify="space-between" align="center">
-        <h2>陪伴房</h2>
-        <n-button type="primary" @click="handleCreate">
+      <!-- Page Header -->
+      <div class="page-header">
+        <h3 class="page-title">陪伴房</h3>
+        <n-button type="primary" size="small" @click="handleCreate">
           创建房间
         </n-button>
-      </n-space>
-    </div>
-
-    <n-spin :show="roomStore.loading">
-      <div v-if="roomStore.rooms.length > 0" class="room-grid">
-        <RoomCard
-          v-for="room in roomStore.rooms"
-          :key="room.id"
-          :room="room"
-        />
       </div>
-      <n-empty v-else description="暂无公开房间，快来创建第一个吧！" style="padding: 60px 0" />
-    </n-spin>
+
+      <n-spin :show="roomStore.loading">
+        <div v-if="roomStore.rooms.length > 0" class="room-grid">
+          <RoomCard
+            v-for="room in roomStore.rooms"
+            :key="room.id"
+            :room="room"
+          />
+        </div>
+        <div v-else class="empty-container">
+          <n-empty description="暂无公开房间，快来创建第一个吧！" />
+        </div>
+      </n-spin>
     </template>
 
     <!-- Create Room Modal -->
-    <n-modal v-model:show="showCreateModal" preset="card" title="创建陪伴房" style="max-width: 500px; width: 90vw;">
+    <n-modal v-model:show="showCreateModal" preset="card" title="创建陪伴房" class="create-modal">
       <n-form label-placement="top">
         <n-form-item label="房间名称" required>
           <n-input v-model:value="createForm.name" placeholder="给房间起个名字" maxlength="100" />
@@ -143,21 +144,43 @@ async function submitCreate() {
 
 <style scoped>
 .room-list-view {
-  padding: 0 4px;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: var(--sp-4);
+}
+
+.loading-center {
+  display: flex;
+  justify-content: center;
+  padding: var(--sp-12) 0;
 }
 
 .page-header {
-  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--sp-4);
 }
 
-.page-header h2 {
+.page-title {
   margin: 0;
-  font-size: var(--text-2xl);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color-strong);
+}
+
+.empty-container {
+  padding: var(--sp-12) 0;
 }
 
 .room-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
-  gap: var(--sp-4);
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
+  gap: var(--sp-3);
+}
+
+.create-modal {
+  max-width: 500px;
+  width: 90vw;
 }
 </style>

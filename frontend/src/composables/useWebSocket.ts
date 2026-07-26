@@ -67,14 +67,18 @@ export function useWebSocket() {
       // Debug logging (disabled in production)
       debug: import.meta.env.DEV ? (msg) => console.debug('[STOMP]', msg) : () => {},
 
-      // Called before each connection attempt - refresh token if needed
+      // Called before each connection attempt - refresh token if needed.
+      // Refresh when the token is missing OR expired (not merely absent): an
+      // expired-but-present token would otherwise loop the STOMP reconnect forever.
       beforeConnect: async () => {
-        if (!authStore.accessToken) {
+        if (!authStore.accessToken || authStore.isAccessTokenExpired) {
           try {
             await authStore.refresh()
           } catch {
             error.value = 'Authentication failed'
             connectionState.value = 'disconnected'
+            // Stop the reconnect loop — there is nothing to authenticate with.
+            stompClient?.deactivate()
             return
           }
         }

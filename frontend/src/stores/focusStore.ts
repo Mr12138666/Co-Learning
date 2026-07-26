@@ -30,7 +30,8 @@ export const useFocusStore = defineStore('focus', () => {
       const session = res.data.data
       activeSession.value = {
         sessionId: session.id,
-        status: session.status,
+        // start/pause/resume always yield an ACTIVE or PAUSED session.
+      status: session.status as ActiveFocusSession['status'],
         startedAt: session.startedAt,
         pausedAt: session.pausedAt,
         resumedAt: session.resumedAt,
@@ -38,8 +39,9 @@ export const useFocusStore = defineStore('focus', () => {
         elapsedSeconds: session.elapsedSeconds,
         subjectId: session.subjectId ?? null,
         taskId: session.taskId ?? null,
-        graceDeadline: session.graceDeadline ?? null,
-        graceReason: session.graceReason ?? null,
+        // A freshly started session is never in a grace period.
+        graceDeadline: null,
+        graceReason: null,
       }
       return session
     } finally {
@@ -53,7 +55,8 @@ export const useFocusStore = defineStore('focus', () => {
     const session = res.data.data
     activeSession.value = {
       ...activeSession.value,
-      status: session.status,
+      // start/pause/resume always yield an ACTIVE or PAUSED session.
+      status: session.status as ActiveFocusSession['status'],
       pausedAt: session.pausedAt,
       pausedSeconds: session.pausedSeconds,
       elapsedSeconds: session.elapsedSeconds,
@@ -68,7 +71,8 @@ export const useFocusStore = defineStore('focus', () => {
     const session = res.data.data
     activeSession.value = {
       ...activeSession.value,
-      status: session.status,
+      // start/pause/resume always yield an ACTIVE or PAUSED session.
+      status: session.status as ActiveFocusSession['status'],
       resumedAt: session.resumedAt,
       pausedSeconds: session.pausedSeconds,
       elapsedSeconds: session.elapsedSeconds,

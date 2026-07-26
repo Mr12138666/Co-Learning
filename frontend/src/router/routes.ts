@@ -7,13 +7,43 @@ export const routes: RouteRecordRaw[] = [
   {
     path: '/',
     component: DefaultLayout,
-    redirect: '/dashboard',
+    redirect: '/today',
     children: [
+      {
+        path: 'today',
+        name: 'today',
+        component: () => import('@/views/workstation/TodayView.vue'),
+        meta: { title: 'Today', requiresAuth: true },
+      },
+      {
+        path: 'inbox',
+        name: 'inbox',
+        component: () => import('@/views/workstation/InboxView.vue'),
+        meta: { title: 'Inbox', requiresAuth: true },
+      },
+      {
+        path: 'planner',
+        name: 'planner',
+        component: () => import('@/views/workstation/PlannerView.vue'),
+        meta: { title: 'Planner', requiresAuth: true },
+      },
+      {
+        path: 'schedule',
+        name: 'schedule',
+        component: () => import('@/views/workstation/ScheduleView.vue'),
+        meta: { title: 'Schedule', requiresAuth: true },
+      },
+      {
+        path: 'boards',
+        name: 'boards',
+        component: () => import('@/views/workstation/BoardsView.vue'),
+        meta: { title: 'Boards', requiresAuth: true },
+      },
       {
         path: 'dashboard',
         name: 'dashboard',
         component: () => import('@/views/DashboardView.vue'),
-        meta: { title: '首页', requiresAuth: true },
+        meta: { title: '概览', requiresAuth: true },
       },
       {
         path: 'goals',

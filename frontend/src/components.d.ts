@@ -8,13 +8,12 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    CommandPalette: typeof import('./components/common/CommandPalette.vue')['default']
+    FocusMiniPlayer: typeof import('./components/focus/FocusMiniPlayer.vue')['default']
     FocusTimer: typeof import('./components/focus/FocusTimer.vue')['default']
     JournalEditor: typeof import('./components/journal/JournalEditor.vue')['default']
     NAvatar: typeof import('naive-ui')['NAvatar']
-    NBadge: typeof import('naive-ui')['NBadge']
     NButton: typeof import('naive-ui')['NButton']
-    NCard: typeof import('naive-ui')['NCard']
-    NDivider: typeof import('naive-ui')['NDivider']
     NEmpty: typeof import('naive-ui')['NEmpty']
     NForm: typeof import('naive-ui')['NForm']
     NFormItem: typeof import('naive-ui')['NFormItem']
@@ -23,11 +22,11 @@ declare module 'vue' {
     NModal: typeof import('naive-ui')['NModal']
     NRadio: typeof import('naive-ui')['NRadio']
     NRadioGroup: typeof import('naive-ui')['NRadioGroup']
-    NScrollbar: typeof import('naive-ui')['NScrollbar']
     NSpace: typeof import('naive-ui')['NSpace']
     NSpin: typeof import('naive-ui')['NSpin']
-    NStatistic: typeof import('naive-ui')['NStatistic']
     NTag: typeof import('naive-ui')['NTag']
+    NTooltip: typeof import('naive-ui')['NTooltip']
+    QuickAddTask: typeof import('./components/task/QuickAddTask.vue')['default']
     RoomCard: typeof import('./components/room/RoomCard.vue')['default']
     RoomChatBox: typeof import('./components/room/RoomChatBox.vue')['default']
     RoomMemberList: typeof import('./components/room/RoomMemberList.vue')['default']
@@ -37,6 +36,8 @@ declare module 'vue' {
     StateEmpty: typeof import('./components/common/StateEmpty.vue')['default']
     StateError: typeof import('./components/common/StateError.vue')['default']
     StateLoading: typeof import('./components/common/StateLoading.vue')['default']
+    TaskEditorDrawer: typeof import('./components/task/TaskEditorDrawer.vue')['default']
     TaskList: typeof import('./components/study/TaskList.vue')['default']
+    TaskRow: typeof import('./components/task/TaskRow.vue')['default']
   }
 }

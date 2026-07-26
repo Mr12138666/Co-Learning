@@ -1,4 +1,5 @@
 import http from './http'
+import type { ApiResponse } from '@/types/api'
 
 export interface RegisterRequest {
   email: string
@@ -24,12 +25,12 @@ export interface TokenResponse {
 }
 
 export const authApi = {
-  register: (data: RegisterRequest) => http.post('/auth/register', data),
-  verifyEmail: (token: string) => http.post('/auth/verify-email', { token }),
-  login: (data: LoginRequest) => http.post('/auth/login', data),
-  refresh: () => http.post('/auth/refresh'),
-  logout: () => http.post('/auth/logout'),
-  forgotPassword: (email: string) => http.post('/auth/forgot-password', { email }),
+  register: (data: RegisterRequest) => http.post<ApiResponse<void>>('/auth/register', data),
+  verifyEmail: (token: string) => http.post<ApiResponse<void>>('/auth/verify-email', { token }),
+  login: (data: LoginRequest) => http.post<ApiResponse<TokenResponse>>('/auth/login', data),
+  refresh: () => http.post<ApiResponse<TokenResponse>>('/auth/refresh'),
+  logout: () => http.post<ApiResponse<void>>('/auth/logout'),
+  forgotPassword: (email: string) => http.post<ApiResponse<void>>('/auth/forgot-password', { email }),
   resetPassword: (token: string, newPassword: string) =>
-    http.post('/auth/reset-password', { token, newPassword }),
+    http.post<ApiResponse<void>>('/auth/reset-password', { token, newPassword }),
 }

@@ -1,14 +1,9 @@
 import http from './http'
+import type { ApiResponse } from '@/types/api'
 
 export interface UploadResult {
   url: string
   objectKey: string
-}
-
-export interface ApiResponse<T> {
-  code: number
-  message: string
-  data: T
 }
 
 export const storageApi = {
@@ -19,8 +14,8 @@ export const storageApi = {
   },
 
   getUrl: (bucket: string, objectKey: string) =>
-    http.get<string>('/storage/url', { params: { bucket, objectKey } }),
+    http.get<ApiResponse<string>>('/storage/url', { params: { bucket, objectKey } }),
 
   deleteFile: (bucket: string, objectKey: string) =>
-    http.delete('/storage/delete', { params: { bucket, objectKey } }),
+    http.delete<ApiResponse<void>>('/storage/delete', { params: { bucket, objectKey } }),
 }

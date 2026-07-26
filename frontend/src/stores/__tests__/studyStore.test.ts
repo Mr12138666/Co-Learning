@@ -79,6 +79,18 @@ const mockSubjects: Subject[] = [
   },
 ]
 
+// Shared defaults for the V13/V14 scheduling + tag fields.
+const taskExtra = {
+  plannedDate: null,
+  scheduledStart: null,
+  scheduledEnd: null,
+  estimatedMinutes: null,
+  urgent: false,
+  important: false,
+  tags: [],
+  totalFocusSeconds: 0,
+}
+
 const mockTasks: StudyTask[] = [
   {
     id: 1,
@@ -91,6 +103,7 @@ const mockTasks: StudyTask[] = [
     status: 'TODO',
     dueDate: '2024-06-01',
     sortOrder: 1,
+    ...taskExtra,
     createdAt: now,
     updatedAt: now,
   },
@@ -105,6 +118,7 @@ const mockTasks: StudyTask[] = [
     status: 'IN_PROGRESS',
     dueDate: null,
     sortOrder: 2,
+    ...taskExtra,
     createdAt: now,
     updatedAt: now,
   },
@@ -119,6 +133,7 @@ const mockTasks: StudyTask[] = [
     status: 'DONE',
     dueDate: null,
     sortOrder: 3,
+    ...taskExtra,
     createdAt: now,
     updatedAt: now,
   },
@@ -133,6 +148,7 @@ const mockTasks: StudyTask[] = [
     status: 'TODO',
     dueDate: '2024-07-01',
     sortOrder: 4,
+    ...taskExtra,
     createdAt: now,
     updatedAt: now,
   },

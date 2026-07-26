@@ -22,8 +22,8 @@ export const useJournalStore = defineStore('journal', () => {
     try {
       const res = await journalApi.listMy(params)
       const pageData = res.data.data
-      journals.value = pageData.items ?? pageData
-      total.value = pageData.total ?? journals.value.length
+      journals.value = pageData.items
+      total.value = pageData.total
     } finally {
       loading.value = false
     }
@@ -31,26 +31,25 @@ export const useJournalStore = defineStore('journal', () => {
 
   async function fetchPublicJournals(params?: JournalListParams) {
     const res = await journalApi.listPublic(params)
-    const pageData = res.data.data
-    publicJournals.value = pageData.items ?? pageData
+    publicJournals.value = res.data.data.items
   }
 
   async function fetchById(id: number) {
     const res = await journalApi.getById(id)
     currentJournal.value = res.data.data
-    return res.data.data as Journal
+    return res.data.data
   }
 
   async function create(data: CreateJournalRequest) {
     const res = await journalApi.create(data)
-    const journal = res.data.data as Journal
+    const journal = res.data.data
     journals.value.unshift(journal)
     return journal
   }
 
   async function update(id: number, data: UpdateJournalRequest) {
     const res = await journalApi.update(id, data)
-    const journal = res.data.data as Journal
+    const journal = res.data.data
     const index = journals.value.findIndex((j) => j.id === id)
     if (index !== -1) journals.value[index] = journal
     if (currentJournal.value?.id === id) currentJournal.value = journal
@@ -64,7 +63,7 @@ export const useJournalStore = defineStore('journal', () => {
 
   async function publish(id: number) {
     const res = await journalApi.publish(id)
-    const journal = res.data.data as Journal
+    const journal = res.data.data
     const index = journals.value.findIndex((j) => j.id === id)
     if (index !== -1) journals.value[index] = journal
     if (currentJournal.value?.id === id) currentJournal.value = journal

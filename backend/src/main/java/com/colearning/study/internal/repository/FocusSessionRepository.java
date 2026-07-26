@@ -41,6 +41,19 @@ public interface FocusSessionRepository extends JpaRepository<FocusSession, Long
     List<FocusSession> findAllOngoing();
 
     /**
+     * Sum effective seconds for a specific task (all finished sessions).
+     */
+    @Query("SELECT COALESCE(SUM(fs.effectiveSeconds), 0) FROM FocusSession fs WHERE fs.taskId = :taskId AND fs.status = 'FINISHED'")
+    long sumEffectiveSecondsByTaskId(@Param("taskId") Long taskId);
+
+    /**
+     * Batch sum effective seconds per task to avoid N+1 when assembling task lists.
+     */
+    @Query("SELECT fs.taskId, SUM(fs.effectiveSeconds) FROM FocusSession fs " +
+           "WHERE fs.taskId IN :taskIds AND fs.status = 'FINISHED' GROUP BY fs.taskId")
+    List<Object[]> sumEffectiveSecondsByTaskIds(@Param("taskIds") List<Long> taskIds);
+
+    /**
      * Sum effective seconds by user for all finished sessions.
      * Used to rebuild leaderboard from database.
      */

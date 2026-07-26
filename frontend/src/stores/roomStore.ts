@@ -23,6 +23,13 @@ export const useRoomStore = defineStore('room', () => {
   const loading = ref(false)
   const connected = ref(false)
 
+  // Message pagination. The API returns messages newest-first; we store them
+  // chronologically (oldest -> newest). messagesPage tracks the oldest page
+  // already loaded so "load older" advances by a consistent page size.
+  const MESSAGES_PAGE_SIZE = 30
+  const messagesPage = ref(0)
+  const hasMoreMessages = ref(false)
+
   // WebSocket composable (singleton-like)
   const ws = useWebSocket()
 
@@ -86,22 +93,34 @@ export const useRoomStore = defineStore('room', () => {
     )
   }
 
-  async function loadMessages(roomId: number, page = 0, size = 50) {
-    const res = await roomApi.listMessages(roomId, page, size)
+  async function loadMessages(roomId: number) {
+    const res = await roomApi.listMessages(roomId, 0, MESSAGES_PAGE_SIZE)
     const data = res.data.data
-    // Messages come newest-first, reverse for display
+    // API is newest-first; reverse to chronological for display.
     messages.value = [...data.items].reverse()
     totalMessages.value = data.total
+    messagesPage.value = 0
+    hasMoreMessages.value = messages.value.length < data.total
   }
 
-  async function loadMoreMessages(roomId: number, page: number, size = 20) {
-    const res = await roomApi.listMessages(roomId, page, size)
+  /**
+   * Loads the next older page of history, prepends it (deduped by id), and
+   * returns how many NEW messages were added so callers can restore scroll.
+   * Never trims already-loaded messages.
+   */
+  async function loadOlderMessages(roomId: number): Promise<number> {
+    if (!hasMoreMessages.value) return 0
+    const nextPage = messagesPage.value + 1
+    const res = await roomApi.listMessages(roomId, nextPage, MESSAGES_PAGE_SIZE)
     const data = res.data.data
-    // Messages come newest-first, reverse for display
-    const newMessages = [...data.items].reverse()
-    // Prepend to existing messages (older messages go first)
-    messages.value = [...newMessages, ...messages.value]
+    const older = [...data.items].reverse()
+    const existingIds = new Set(messages.value.map((m: RoomMessageResponse) => m.id))
+    const fresh = older.filter((m: RoomMessageResponse) => !existingIds.has(m.id))
+    messages.value = [...fresh, ...messages.value]
+    messagesPage.value = nextPage
     totalMessages.value = data.total
+    hasMoreMessages.value = messages.value.length < data.total
+    return fresh.length
   }
 
   async function sendMessage(roomId: number, content: string) {
@@ -131,6 +150,9 @@ export const useRoomStore = defineStore('room', () => {
     members.value = state.members
     messages.value = state.recentMessages
     onlineUserIds.value = new Set(state.onlineUserIds)
+    // Snapshot resets the pagination cursor.
+    messagesPage.value = 0
+    hasMoreMessages.value = state.recentMessages.length < totalMessages.value
 
     return state
   }
@@ -205,7 +227,18 @@ export const useRoomStore = defineStore('room', () => {
     messages.value = []
     onlineUserIds.value = new Set()
     totalMessages.value = 0
+    messagesPage.value = 0
+    hasMoreMessages.value = false
     connected.value = false
+  }
+
+  /**
+   * Fully tears down the realtime connection and clears state.
+   * Called on logout so the STOMP client stops reconnecting with a stale token.
+   */
+  function teardown() {
+    ws.disconnect()
+    reset()
   }
 
   return {
@@ -217,6 +250,7 @@ export const useRoomStore = defineStore('room', () => {
     onlineUserIds,
     totalRooms,
     totalMessages,
+    hasMoreMessages,
     loading,
     connected,
     // Getters
@@ -231,7 +265,7 @@ export const useRoomStore = defineStore('room', () => {
     leaveRoom,
     loadMembers,
     loadMessages,
-    loadMoreMessages,
+    loadOlderMessages,
     sendMessage,
     kickMember,
     muteMember,
@@ -240,5 +274,6 @@ export const useRoomStore = defineStore('room', () => {
     disconnectRoom,
     broadcastFocusStatus,
     reset,
+    teardown,
   }
 })

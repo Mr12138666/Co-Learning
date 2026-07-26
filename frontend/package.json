@@ -12,19 +12,29 @@
     "lint": "eslint src/"
   },
   "dependencies": {
+    "@fullcalendar/daygrid": "^6.1.21",
+    "@fullcalendar/interaction": "^6.1.21",
+    "@fullcalendar/timegrid": "^6.1.21",
+    "@fullcalendar/vue3": "^6.1.21",
     "@stomp/stompjs": "^7.3.0",
     "@vicons/ionicons5": "^0.13.0",
     "@vueuse/core": "^12.5.0",
+    "@vueuse/motion": "^3.0.3",
     "axios": "^1.7.9",
     "dayjs": "^1.11.13",
+    "dompurify": "^3.4.12",
     "echarts": "^6.1.0",
+    "lucide-vue-next": "^0.577.0",
+    "marked": "^18.0.7",
     "naive-ui": "^2.40.3",
     "pinia": "^3.0.0",
     "pinia-plugin-persistedstate": "^4.2.0",
     "sockjs-client": "^1.6.1",
+    "sortablejs": "^1.15.7",
     "vue": "^3.5.13",
     "vue-echarts": "^8.0.1",
-    "vue-router": "^4.5.0"
+    "vue-router": "^4.5.0",
+    "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

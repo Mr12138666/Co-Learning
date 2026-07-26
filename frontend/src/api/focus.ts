@@ -1,4 +1,5 @@
 import http from './http'
+import type { ApiResponse } from '@/types/api'
 
 // ===== Types =====
 
@@ -41,11 +42,11 @@ export interface StartFocusRequest {
 // ===== API =====
 
 export const focusApi = {
-  start: (data: StartFocusRequest) => http.post('/focus-sessions', data),
-  getActive: () => http.get('/focus-sessions/active'),
-  getSession: (id: number) => http.get(`/focus-sessions/${id}`),
-  pause: (id: number) => http.post(`/focus-sessions/${id}/pause`),
-  resume: (id: number) => http.post(`/focus-sessions/${id}/resume`),
-  finish: (id: number) => http.post(`/focus-sessions/${id}/finish`),
-  abort: (id: number) => http.post(`/focus-sessions/${id}/abort`),
+  start: (data: StartFocusRequest) => http.post<ApiResponse<FocusSession>>('/focus-sessions', data),
+  getActive: () => http.get<ApiResponse<ActiveFocusSession | null>>('/focus-sessions/active'),
+  getSession: (id: number) => http.get<ApiResponse<FocusSession>>(`/focus-sessions/${id}`),
+  pause: (id: number) => http.post<ApiResponse<FocusSession>>(`/focus-sessions/${id}/pause`),
+  resume: (id: number) => http.post<ApiResponse<FocusSession>>(`/focus-sessions/${id}/resume`),
+  finish: (id: number) => http.post<ApiResponse<FocusSession>>(`/focus-sessions/${id}/finish`),
+  abort: (id: number) => http.post<ApiResponse<FocusSession>>(`/focus-sessions/${id}/abort`),
 }

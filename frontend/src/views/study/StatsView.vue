@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { NCard, NStatistic, NSpace, NGrid, NGridItem, NSpin, NEmpty, NButton, useMessage } from 'naive-ui'
+import { NStatistic, NGrid, NGridItem, NSpin, NEmpty, NButton, useMessage } from 'naive-ui'
 import { usePageLoad } from '@/composables/usePageLoad'
 import StateError from '@/components/common/StateError.vue'
 import VChart from 'vue-echarts'
@@ -13,7 +13,7 @@ import {
   LegendComponent,
   GridComponent,
 } from 'echarts/components'
-import { studyApi } from '@/api/study'
+import { statsApi, type Stats } from '@/api/stats'
 import { useThemeStore } from '@/stores/themeStore'
 
 use([
@@ -31,56 +31,7 @@ const themeStore = useThemeStore()
 const _message = useMessage()
 const { loading, error, load, retry } = usePageLoad()
 
-interface DailyStat {
-  date: string
-  focusSeconds: number
-  sessionCount: number
-  checkedIn: boolean
-}
-
-interface WeeklyStat {
-  weekOfYear: number
-  weekLabel: string
-  focusSeconds: number
-  sessionCount: number
-  checkinCount: number
-}
-
-interface MonthlyStat {
-  month: string
-  monthLabel: string
-  focusSeconds: number
-  sessionCount: number
-  focusDays: number
-}
-
-interface SubjectStat {
-  subjectId: number
-  subjectName: string
-  subjectColor: string
-  focusSeconds: number
-  sessionCount: number
-}
-
-interface StatsResponse {
-  todayFocusSeconds: number
-  weekFocusSeconds: number
-  monthFocusSeconds: number
-  yearFocusSeconds: number
-  totalFocusSeconds: number
-  streakDays: number
-  focusDays: number
-  totalCheckins: number
-  weekCheckinCount: number
-  weekCompletedCount: number
-  lastCheckinDate: string | null
-  dailyStats: DailyStat[]
-  weeklyStats: WeeklyStat[]
-  monthlyStats: MonthlyStat[]
-  subjectStats: SubjectStat[]
-}
-
-const stats = ref<StatsResponse | null>(null)
+const stats = ref<Stats | null>(null)
 
 function formatSeconds(seconds: number): string {
   const hours = Math.floor(seconds / 3600)
@@ -218,7 +169,7 @@ const subjectChartOption = computed(() => {
 })
 
 async function fetchStats() {
-  const res = await studyApi.getStats()
+  const res = await statsApi.getStats()
   stats.value = res.data.data
 }
 
@@ -241,171 +192,170 @@ onMounted(() => load(fetchStats))
   <!-- Stats content -->
   <div v-else-if="stats" class="stats-view">
     <!-- Header -->
-    <NCard :bordered="false" class="stats-header">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-          <span style="font-size: 24px;">📊</span>
-          <span style="font-size: 20px; font-weight: 600; margin-left: 8px;">学习统计</span>
-        </div>
-        <NButton text @click="retry(fetchStats)">刷新数据</NButton>
-      </div>
-    </NCard>
+    <div class="page-header">
+      <h3 class="page-title">学习统计</h3>
+      <NButton text size="small" @click="retry(fetchStats)">刷新数据</NButton>
+    </div>
 
-    <!-- Stats Cards -->
-    <NGrid :cols="4" :x-gap="12" :y-gap="12" responsive="screen" item-responsive style="margin-bottom: 24px;">
+    <div class="page-divider" />
+
+    <!-- Summary stats grid -->
+    <NGrid :cols="4" :x-gap="8" :y-gap="8" responsive="screen" item-responsive class="summary-grid">
       <NGridItem span="4 s:2 m:1">
-        <NCard :bordered="false" class="stat-card">
+        <div class="summary-card">
           <NStatistic
             label="今日专注"
             :value="formatSeconds(stats.todayFocusSeconds)"
-            :value-style="{ color: '#4f8cff', fontSize: '24px', fontWeight: '700' }"
+            class="stat--brand"
           />
-        </NCard>
+        </div>
       </NGridItem>
       <NGridItem span="4 s:2 m:1">
-        <NCard :bordered="false" class="stat-card">
+        <div class="summary-card">
           <NStatistic
             label="本周专注"
             :value="formatSeconds(stats.weekFocusSeconds)"
-            :value-style="{ color: '#52c41a', fontSize: '24px', fontWeight: '700' }"
+            class="stat--success"
           />
-        </NCard>
+        </div>
       </NGridItem>
       <NGridItem span="4 s:2 m:1">
-        <NCard :bordered="false" class="stat-card">
+        <div class="summary-card">
           <NStatistic
             label="本月专注"
             :value="formatSeconds(stats.monthFocusSeconds)"
-            :value-style="{ color: '#faad14', fontSize: '24px', fontWeight: '700' }"
+            class="stat--warning"
           />
-        </NCard>
+        </div>
       </NGridItem>
       <NGridItem span="4 s:2 m:1">
-        <NCard :bordered="false" class="stat-card">
+        <div class="summary-card">
           <NStatistic
             label="本年专注"
             :value="formatSeconds(stats.yearFocusSeconds)"
-            :value-style="{ color: '#722ed1', fontSize: '24px', fontWeight: '700' }"
+            class="stat--info"
           />
-        </NCard>
+        </div>
       </NGridItem>
       <NGridItem span="4 s:2 m:1">
-        <NCard :bordered="false" class="stat-card">
+        <div class="summary-card">
           <NStatistic
             label="累计专注"
             :value="formatSeconds(stats.totalFocusSeconds)"
-            :value-style="{ color: '#1890ff', fontSize: '24px', fontWeight: '700' }"
+            class="stat--brand"
           />
-        </NCard>
+        </div>
       </NGridItem>
       <NGridItem span="4 s:2 m:1">
-        <NCard :bordered="false" class="stat-card">
+        <div class="summary-card">
           <NStatistic
             label="连续专注"
             :value="stats.streakDays"
             suffix="天"
-            :value-style="{ color: '#f5222d', fontSize: '24px', fontWeight: '700' }"
+            class="stat--danger"
           />
-        </NCard>
+        </div>
       </NGridItem>
       <NGridItem span="4 s:2 m:1">
-        <NCard :bordered="false" class="stat-card">
+        <div class="summary-card">
           <NStatistic
             label="专注天数"
             :value="stats.focusDays"
             suffix="天"
-            :value-style="{ color: '#13c2c2', fontSize: '24px', fontWeight: '700' }"
+            class="stat--info"
           />
-        </NCard>
+        </div>
       </NGridItem>
       <NGridItem span="4 s:2 m:1">
-        <NCard :bordered="false" class="stat-card">
+        <div class="summary-card">
           <NStatistic
             label="累计打卡"
             :value="stats.totalCheckins"
             suffix="次"
-            :value-style="{ color: '#eb2f96', fontSize: '24px', fontWeight: '700' }"
+            class="stat--danger"
           />
-        </NCard>
+        </div>
       </NGridItem>
     </NGrid>
 
     <!-- Charts -->
-    <NGrid :cols="2" :x-gap="12" :y-gap="12" responsive="screen" item-responsive>
+    <NGrid :cols="2" :x-gap="12" :y-gap="12" responsive="screen" item-responsive class="charts-grid">
       <!-- Daily Bar Chart -->
       <NGridItem span="2">
-        <NCard :bordered="false" class="chart-card">
-          <template #header>
-            <span style="font-size: 16px; font-weight: 600;">📅 每日专注时长</span>
-          </template>
-          <div class="chart-container">
-            <v-chart :option="dailyChartOption" style="height: 300px; width: 100%;" autoresize />
+        <div class="chart-panel">
+          <div class="chart-panel__header">
+            <span class="chart-panel__title">每日专注时长</span>
           </div>
-        </NCard>
+          <div class="chart-panel__body">
+            <v-chart :option="dailyChartOption" class="chart-canvas chart-canvas--tall" autoresize />
+          </div>
+        </div>
       </NGridItem>
 
       <!-- Weekly Line Chart -->
       <NGridItem span="2 m:1">
-        <NCard :bordered="false" class="chart-card">
-          <template #header>
-            <span style="font-size: 16px; font-weight: 600;">📈 每周趋势</span>
-          </template>
-          <div class="chart-container">
-            <v-chart :option="weeklyChartOption" style="height: 300px; width: 100%;" autoresize />
+        <div class="chart-panel">
+          <div class="chart-panel__header">
+            <span class="chart-panel__title">每周趋势</span>
           </div>
-        </NCard>
+          <div class="chart-panel__body">
+            <v-chart :option="weeklyChartOption" class="chart-canvas" autoresize />
+          </div>
+        </div>
       </NGridItem>
 
       <!-- Monthly Bar Chart -->
       <NGridItem span="2 m:1">
-        <NCard :bordered="false" class="chart-card">
-          <template #header>
-            <span style="font-size: 16px; font-weight: 600;">📉 每月专注</span>
-          </template>
-          <div class="chart-container">
-            <v-chart :option="monthlyChartOption" style="height: 300px; width: 100%;" autoresize />
+        <div class="chart-panel">
+          <div class="chart-panel__header">
+            <span class="chart-panel__title">每月专注</span>
           </div>
-        </NCard>
+          <div class="chart-panel__body">
+            <v-chart :option="monthlyChartOption" style="height: 260px; width: 100%;" autoresize />
+          </div>
+        </div>
       </NGridItem>
 
       <!-- Subject Pie Chart -->
       <NGridItem span="2 m:1">
-        <NCard :bordered="false" class="chart-card">
-          <template #header>
-            <span style="font-size: 16px; font-weight: 600;">🥧 科目分布</span>
-          </template>
-          <div class="chart-container">
-            <v-chart v-if="stats.subjectStats.length > 0" :option="subjectChartOption" style="height: 300px; width: 100%;" autoresize />
-            <n-empty v-else description="暂无科目数据" style="padding: 80px 0;" />
+        <div class="chart-panel">
+          <div class="chart-panel__header">
+            <span class="chart-panel__title">科目分布</span>
           </div>
-        </NCard>
+          <div class="chart-panel__body">
+            <v-chart v-if="stats.subjectStats.length > 0" :option="subjectChartOption" class="chart-canvas" autoresize />
+            <div v-else class="chart-empty">
+              <n-empty description="暂无科目数据" />
+            </div>
+          </div>
+        </div>
       </NGridItem>
 
       <!-- Weekly Stats -->
       <NGridItem span="2 m:1">
-        <NCard :bordered="false" class="chart-card">
-          <template #header>
-            <span style="font-size: 16px; font-weight: 600;">📋 本周统计</span>
-          </template>
-          <NSpace vertical :size="8">
+        <div class="chart-panel">
+          <div class="chart-panel__header">
+            <span class="chart-panel__title">本周统计</span>
+          </div>
+          <div class="chart-panel__body chart-panel__body--flush">
             <div class="stat-row">
-              <span class="stat-label">本周专注</span>
-              <span class="stat-value">{{ formatSeconds(stats.weekFocusSeconds) }}</span>
+              <span class="stat-row__label">本周专注</span>
+              <span class="stat-row__value">{{ formatSeconds(stats.weekFocusSeconds) }}</span>
             </div>
             <div class="stat-row">
-              <span class="stat-label">本周打卡</span>
-              <span class="stat-value">{{ stats.weekCheckinCount }}次</span>
+              <span class="stat-row__label">本周打卡</span>
+              <span class="stat-row__value">{{ stats.weekCheckinCount }}次</span>
             </div>
             <div class="stat-row">
-              <span class="stat-label">完成复盘</span>
-              <span class="stat-value">{{ stats.weekCompletedCount }}次</span>
+              <span class="stat-row__label">完成复盘</span>
+              <span class="stat-row__value">{{ stats.weekCompletedCount }}次</span>
             </div>
             <div class="stat-row">
-              <span class="stat-label">最后打卡</span>
-              <span class="stat-value">{{ stats.lastCheckinDate || '无' }}</span>
+              <span class="stat-row__label">最后打卡</span>
+              <span class="stat-row__value">{{ stats.lastCheckinDate || '无' }}</span>
             </div>
-          </NSpace>
-        </NCard>
+          </div>
+        </div>
       </NGridItem>
     </NGrid>
   </div>
@@ -419,38 +369,105 @@ onMounted(() => load(fetchStats))
   min-height: 400px;
 }
 
-.stats-error {
+.stats-view {
+  max-width: var(--content-max-width);
+  padding-bottom: var(--sp-4);
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-3) 0;
+}
+
+.page-title {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color-strong);
+}
+
+.page-divider {
+  border-bottom: 1px solid var(--separator);
+  margin-bottom: var(--sp-3);
+}
+
+/* Summary cards - flat, no heavy shadow */
+.summary-grid {
+  margin-bottom: var(--sp-4);
+}
+
+.summary-card {
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+}
+
+/* Stat color variants (applied to NStatistic via deep selector) */
+.stat--brand :deep(.n-statistic-value__content) { color: var(--brand); font-size: var(--text-xl); font-weight: 700; }
+.stat--success :deep(.n-statistic-value__content) { color: var(--success); font-size: var(--text-xl); font-weight: 700; }
+.stat--warning :deep(.n-statistic-value__content) { color: var(--warning); font-size: var(--text-xl); font-weight: 700; }
+.stat--danger :deep(.n-statistic-value__content) { color: var(--danger); font-size: var(--text-xl); font-weight: 700; }
+.stat--info :deep(.n-statistic-value__content) { color: var(--info); font-size: var(--text-xl); font-weight: 700; }
+
+/* Chart panels - subtle border, no heavy card */
+.charts-grid {
+  /* no extra margin needed */
+}
+
+.chart-panel {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  overflow: hidden;
+}
+
+.chart-panel__header {
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--separator);
+}
+
+.chart-panel__title {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color-strong);
+}
+
+.chart-panel__body {
+  padding: var(--sp-3);
+}
+
+.chart-panel__body--flush {
+  padding: 0;
+}
+
+.chart-empty {
+  padding: var(--sp-8) 0;
   display: flex;
   justify-content: center;
-  align-items: center;
-  min-height: 400px;
 }
 
-.stats-view {
-  padding-bottom: var(--sp-6);
+/* Chart canvas dimensions */
+.chart-canvas {
+  height: 260px;
+  width: 100%;
 }
 
-.stats-header {
-  margin-bottom: var(--sp-6);
+.chart-canvas--tall {
+  height: 280px;
 }
 
-.stat-card {
-  background-color: var(--bg-card);
-}
-
-.chart-card {
-  background-color: var(--bg-card);
-}
-
-.chart-container {
-  padding: var(--sp-2) 0;
-}
-
+/* Stat rows inside weekly stats panel */
 .stat-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--sp-2) 0;
+  padding: var(--sp-2) var(--sp-4);
+  min-height: 36px;
   border-bottom: 1px solid var(--separator);
 }
 
@@ -458,13 +475,14 @@ onMounted(() => load(fetchStats))
   border-bottom: none;
 }
 
-.stat-label {
-  color: var(--text-secondary);
-  font-size: var(--text-base);
+.stat-row__label {
+  font-size: var(--text-sm);
+  color: var(--text-color-muted);
 }
 
-.stat-value {
-  font-weight: var(--weight-semibold);
+.stat-row__value {
   font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color-strong);
 }
 </style>

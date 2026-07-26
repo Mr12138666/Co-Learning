@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import {
-  NCard,
   NButton,
   NSpace,
   NModal,
@@ -74,50 +73,51 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
-    <NCard :bordered="false">
-      <template #header>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span>科目管理</span>
-          <NButton type="primary" @click="openCreate">+ 新增科目</NButton>
-        </div>
-      </template>
+  <div class="page-container">
+    <!-- Page Header -->
+    <div class="page-header">
+      <h3 class="page-title">科目管理</h3>
+      <NButton type="primary" size="small" @click="openCreate">+ 新增科目</NButton>
+    </div>
 
-      <NEmpty v-if="studyStore.subjects.length === 0" description="还没有创建科目">
+    <div class="page-divider" />
+
+    <!-- Empty State -->
+    <div v-if="studyStore.subjects.length === 0" class="empty-state">
+      <NEmpty description="还没有创建科目">
         <template #extra>
-          <NButton type="primary" @click="openCreate">创建第一个科目</NButton>
+          <NButton type="primary" size="small" @click="openCreate">创建第一个科目</NButton>
         </template>
       </NEmpty>
+    </div>
 
-      <NGrid v-else :cols="4" :x-gap="12" :y-gap="12" responsive="screen" item-responsive>
-        <NGridItem v-for="subject in studyStore.subjects" :key="subject.id" span="4 s:2 m:1">
-          <NCard size="small" hoverable>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span
-                class="color-dot"
-                :style="{ background: subject.color }"
-              />
-              <span style="font-weight: 600; flex: 1;">{{ subject.name }}</span>
-            </div>
-            <div style="margin-top: 12px; display: flex; gap: 4px; justify-content: flex-end;">
-              <NButton size="tiny" quaternary @click="openEdit(subject)">编辑</NButton>
-              <NPopconfirm @positive-click="handleDelete(subject.id)">
-                <template #trigger>
-                  <NButton size="tiny" quaternary type="error">删除</NButton>
-                </template>
-                删除科目会同时删除该科目下的所有任务，确定吗？
-              </NPopconfirm>
-            </div>
-          </NCard>
-        </NGridItem>
-      </NGrid>
-    </NCard>
+    <!-- Subject Grid -->
+    <NGrid v-else :cols="4" :x-gap="8" :y-gap="8" responsive="screen" item-responsive>
+      <NGridItem v-for="subject in studyStore.subjects" :key="subject.id" span="4 s:2 m:1">
+        <div class="subject-card">
+          <div class="subject-card__body">
+            <span class="subject-card__dot" :style="{ background: subject.color }" />
+            <span class="subject-card__name">{{ subject.name }}</span>
+          </div>
+          <div class="subject-card__actions">
+            <NButton size="tiny" quaternary @click="openEdit(subject)">编辑</NButton>
+            <NPopconfirm @positive-click="handleDelete(subject.id)">
+              <template #trigger>
+                <NButton size="tiny" quaternary type="error">删除</NButton>
+              </template>
+              删除科目会同时删除该科目下的所有任务，确定吗？
+            </NPopconfirm>
+          </div>
+        </div>
+      </NGridItem>
+    </NGrid>
 
+    <!-- Create/Edit Modal -->
     <NModal
       v-model:show="showModal"
       preset="card"
       :title="editingId ? '编辑科目' : '新增科目'"
-      style="max-width: 400px; width: 90vw;"
+      class="subject-modal"
     >
       <NForm label-placement="top">
         <NFormItem label="科目名称">
@@ -129,8 +129,8 @@ onMounted(() => {
       </NForm>
       <template #footer>
         <NSpace justify="end">
-          <NButton @click="showModal = false">取消</NButton>
-          <NButton type="primary" @click="handleSave">保存</NButton>
+          <NButton size="small" @click="showModal = false">取消</NButton>
+          <NButton type="primary" size="small" @click="handleSave">保存</NButton>
         </NSpace>
       </template>
     </NModal>
@@ -138,11 +138,89 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.color-dot {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
+.page-container {
+  max-width: var(--content-max-width);
+  padding-bottom: var(--sp-4);
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-3) 0;
+}
+
+.page-title {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color-strong);
+}
+
+.page-divider {
+  border-bottom: 1px solid var(--separator);
+  margin-bottom: var(--sp-3);
+}
+
+.empty-state {
+  padding: var(--sp-8) 0;
+  display: flex;
+  justify-content: center;
+}
+
+.subject-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-3) var(--sp-4);
+  min-height: 48px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  transition: background-color var(--transition-fast);
+}
+
+.subject-card:hover {
+  background: var(--state-hover);
+}
+
+.subject-card__body {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: 1;
+  min-width: 0;
+}
+
+.subject-card__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
   flex-shrink: 0;
+}
+
+.subject-card__name {
+  font-weight: var(--weight-medium);
+  font-size: var(--text-base);
+  color: var(--text-color-strong);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subject-card__actions {
+  display: flex;
+  gap: var(--sp-1);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.subject-card:hover .subject-card__actions {
+  opacity: 1;
+}
+
+.subject-modal {
+  max-width: 400px;
+  width: 90vw;
 }
 </style>

@@ -167,7 +167,7 @@ const statusType = computed(() => {
           :cy="ringSize / 2"
           :r="ringRadius"
           fill="none"
-          stroke="var(--border-default, #e0e0e6)"
+          stroke="var(--border-color)"
           :stroke-width="ringStroke"
         />
         <circle
@@ -175,7 +175,7 @@ const statusType = computed(() => {
           :cy="ringSize / 2"
           :r="ringRadius"
           fill="none"
-          :stroke="timerMode === 'pomodoro' && pomodoroPhase !== 'work' ? 'var(--info, #3b82f6)' : 'var(--accent, #2080F0)'"
+          :stroke="timerMode === 'pomodoro' && pomodoroPhase !== 'work' ? 'var(--info)' : 'var(--accent)'"
           :stroke-width="ringStroke"
           stroke-linecap="round"
           :stroke-dasharray="ringCircumference"
@@ -349,7 +349,7 @@ const statusType = computed(() => {
 }
 
 .progress-circle.active {
-  filter: drop-shadow(0 0 6px rgba(32, 128, 240, 0.3));
+  filter: drop-shadow(0 0 6px var(--accent-subtle));
 }
 
 .timer-display {

@@ -6,7 +6,7 @@ const router = useRouter()
 </script>
 
 <template>
-  <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
+  <div class="not-found">
     <NResult
       status="404"
       title="页面不存在"
@@ -18,3 +18,13 @@ const router = useRouter()
     </NResult>
   </div>
 </template>
+
+<style scoped>
+.not-found {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--bg-page);
+}
+</style>

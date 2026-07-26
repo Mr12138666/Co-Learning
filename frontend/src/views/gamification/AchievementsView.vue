@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, computed } from 'vue'
 import { useGamificationStore } from '@/stores/gamificationStore'
-import { NCard, NGrid, NGridItem, NTag, NSpin, NProgress, NSpace, NEmpty } from 'naive-ui'
+import { NCard, NTag, NSpin, NProgress, NEmpty } from 'naive-ui'
 import type { AchievementResponse } from '@/api/gamification'
 
 const store = useGamificationStore()
@@ -18,14 +18,13 @@ const categoryLabel: Record<string, string> = {
   SPECIAL: '特殊',
 }
 
-const categoryColor: Record<string, string> = {
+const categoryColor: Record<string, 'info' | 'warning' | 'success' | 'error'> = {
   STUDY: 'info',
   STREAK: 'warning',
   SOCIAL: 'success',
   SPECIAL: 'error',
 }
 
-// Group achievements by category
 const groupedAchievements = computed(() => {
   const groups: Record<string, AchievementResponse[]> = {}
   for (const ach of store.achievements) {
@@ -39,21 +38,6 @@ const progressPercent = computed(() => {
   if (store.totalCount === 0) return 0
   return Math.round((store.unlockedCount / store.totalCount) * 100)
 })
-
-const iconEmoji: Record<string, string> = {
-  baby: '👶',
-  clock: '⏰',
-  book: '📖',
-  graduation: '🎓',
-  fire: '🔥',
-  flame: '🔥',
-  crown: '👑',
-  trophy: '🏆',
-  calendar: '📅',
-  'calendar-check': '✅',
-  star: '⭐',
-  'star-fill': '🌟',
-}
 </script>
 
 <template>
@@ -62,167 +46,236 @@ const iconEmoji: Record<string, string> = {
 
     <!-- Progress Overview -->
     <n-card class="progress-card" :bordered="false">
-      <n-space align="center" justify="space-between">
-        <div>
-          <div class="progress-label">已解锁成就</div>
+      <div class="progress-content">
+        <div class="progress-info">
+          <span class="progress-label">已解锁成就</span>
           <div class="progress-numbers">
-            <span class="unlocked">{{ store.unlockedCount }}</span>
-            <span class="separator">/</span>
-            <span class="total">{{ store.totalCount }}</span>
+            <span class="num-unlocked">{{ store.unlockedCount }}</span>
+            <span class="num-sep">/</span>
+            <span class="num-total">{{ store.totalCount }}</span>
           </div>
         </div>
-        <div class="progress-bar-wrapper">
-          <n-progress
-            type="circle"
-            :percentage="progressPercent"
-            :stroke-width="8"
-            :show-indicator="true"
-          >
-            {{ progressPercent }}%
-          </n-progress>
-        </div>
-      </n-space>
+        <n-progress
+          type="circle"
+          :percentage="progressPercent"
+          :stroke-width="8"
+          :show-indicator="true"
+          class="progress-circle"
+        >
+          {{ progressPercent }}%
+        </n-progress>
+      </div>
     </n-card>
 
     <n-spin :show="store.loading">
-      <!-- Achievement Groups -->
-      <div v-for="(achList, category) in groupedAchievements" :key="category" class="achievement-group">
+      <div v-for="(achList, category) in groupedAchievements" :key="category" class="ach-group">
         <h3 class="group-title">
-          <n-tag :type="(categoryColor[category] as any) || 'default'" size="small" round>
+          <n-tag :type="categoryColor[category] || 'default'" size="small" round>
             {{ categoryLabel[category] || category }}
           </n-tag>
         </h3>
-        <n-grid :cols="4" :x-gap="12" :y-gap="12" responsive="screen" item-responsive>
-          <n-grid-item v-for="ach in achList" :key="ach.id" span="4 m:2 l:1">
-            <n-card
-              hoverable
-              size="small"
-              class="achievement-card"
-              :class="{ unlocked: ach.unlocked, locked: !ach.unlocked }"
-            >
-              <div class="ach-icon">
-                {{ iconEmoji[ach.icon || ''] || '🏅' }}
-              </div>
+        <div class="ach-grid">
+          <div
+            v-for="ach in achList"
+            :key="ach.id"
+            class="ach-card"
+            :class="{ 'ach-card--unlocked': ach.unlocked, 'ach-card--locked': !ach.unlocked }"
+          >
+            <div class="ach-icon-wrapper">
+              <span v-if="ach.unlocked" class="ach-icon ach-icon--unlocked">*</span>
+              <span v-else class="ach-icon ach-icon--locked">-</span>
+            </div>
+            <div class="ach-body">
               <h4 class="ach-name">{{ ach.name }}</h4>
               <p class="ach-desc">{{ ach.description }}</p>
               <div class="ach-rewards">
-                <n-space size="small">
-                  <n-tag v-if="ach.expReward > 0" size="tiny" :bordered="false" type="info">
-                    +{{ ach.expReward }} EXP
-                  </n-tag>
-                  <n-tag v-if="ach.tokenReward > 0" size="tiny" :bordered="false" type="warning">
-                    +{{ ach.tokenReward }} 🪙
-                  </n-tag>
-                </n-space>
+                <n-tag v-if="ach.expReward > 0" size="tiny" :bordered="false" type="info">
+                  +{{ ach.expReward }} EXP
+                </n-tag>
+                <n-tag v-if="ach.tokenReward > 0" size="tiny" :bordered="false" type="warning">
+                  +{{ ach.tokenReward }} T
+                </n-tag>
               </div>
-              <div class="ach-status">
-                <n-tag v-if="ach.unlocked" type="success" size="tiny" round>已解锁</n-tag>
-                <n-tag v-else type="default" size="tiny" round>未解锁</n-tag>
-              </div>
-            </n-card>
-          </n-grid-item>
-        </n-grid>
+            </div>
+            <div class="ach-status">
+              <n-tag v-if="ach.unlocked" type="success" size="tiny" round>已解锁</n-tag>
+              <n-tag v-else type="default" size="tiny" round>未解锁</n-tag>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <n-empty v-if="store.achievements.length === 0 && !store.loading" description="暂无成就数据" style="padding: 60px 0" />
+      <n-empty v-if="store.achievements.length === 0 && !store.loading" description="暂无成就数据" class="section-empty" />
     </n-spin>
   </div>
 </template>
 
 <style scoped>
 .achievements-view {
-  padding: 0 var(--sp-1);
+  padding: var(--sp-4);
 }
 
 .page-title {
-  margin: 0 0 var(--sp-5) 0;
-  font-size: var(--text-2xl);
+  margin: 0 0 var(--sp-4) 0;
+  font-size: var(--text-xl);
 }
 
+/* --- Progress Card --- */
 .progress-card {
-  margin-bottom: 24px;
-  background-color: var(--bg-card);
+  margin-bottom: var(--sp-4);
+  background: var(--surface-2);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-md);
+}
+
+.progress-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .progress-label {
-  font-size: var(--text-base);
-  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  color: var(--text-color-muted);
 }
 
 .progress-numbers {
   margin-top: var(--sp-1);
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-1);
 }
 
-.unlocked {
-  font-size: 28px;
+.num-unlocked {
+  font-size: 24px;
   font-weight: var(--weight-bold);
-  color: var(--accent);
+  color: var(--brand);
 }
 
-.separator {
-  font-size: var(--text-2xl);
-  color: var(--text-secondary);
-  margin: 0 var(--sp-1);
+.num-sep {
+  font-size: var(--text-lg);
+  color: var(--text-color-muted);
 }
 
-.total {
-  font-size: var(--text-2xl);
-  color: var(--text-secondary);
+.num-total {
+  font-size: var(--text-lg);
+  color: var(--text-color-muted);
 }
 
-.achievement-group {
-  margin-bottom: var(--sp-6);
+.progress-circle {
+  flex-shrink: 0;
+}
+
+/* --- Achievement Groups --- */
+.ach-group {
+  margin-bottom: var(--sp-4);
 }
 
 .group-title {
   margin: 0 0 var(--sp-3) 0;
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+}
+
+.ach-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--sp-3);
+}
+
+/* --- Achievement Cards --- */
+.ach-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  background: var(--surface-2);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-md);
+  transition: opacity var(--transition-fast), border-color var(--transition-fast);
+}
+
+.ach-card--unlocked {
+  border-color: var(--brand);
+}
+
+.ach-card--locked {
+  opacity: 0.55;
+}
+
+.ach-icon-wrapper {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
 }
 
-.achievement-card {
-  transition: transform var(--duration-fast) var(--ease-default), opacity var(--duration-fast) var(--ease-default);
+.ach-icon--unlocked {
+  color: var(--brand);
+  background: var(--bg-page);
+  border: 1px solid var(--brand);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.achievement-card.unlocked {
-  border-color: var(--accent);
+.ach-icon--locked {
+  color: var(--text-color-muted);
+  background: var(--bg-page);
+  border: 1px solid var(--separator);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.achievement-card.locked {
-  opacity: 0.6;
-}
-
-.achievement-card.locked .ach-icon {
-  filter: grayscale(1);
-}
-
-.ach-icon {
-  font-size: 32px;
-  text-align: center;
-  margin-bottom: 8px;
+.ach-body {
+  flex: 1;
+  min-width: 0;
 }
 
 .ach-name {
-  margin: 0 0 var(--sp-1) 0;
-  font-size: var(--text-base);
+  margin: 0 0 2px 0;
+  font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
-  text-align: center;
+  color: var(--text-color);
 }
 
 .ach-desc {
   margin: 0 0 var(--sp-2) 0;
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  text-align: center;
-  line-height: var(--leading-snug);
-  min-height: 32px;
+  font-size: 12px;
+  color: var(--text-color-muted);
+  line-height: 1.4;
 }
 
 .ach-rewards {
-  text-align: center;
-  margin-bottom: var(--sp-2);
+  display: flex;
+  gap: var(--sp-1);
+  flex-wrap: wrap;
 }
 
 .ach-status {
-  text-align: center;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.section-empty {
+  padding: var(--sp-10) 0;
+}
+
+@media (max-width: 768px) {
+  .ach-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

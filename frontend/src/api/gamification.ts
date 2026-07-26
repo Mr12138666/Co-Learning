@@ -1,4 +1,5 @@
 import http from './http'
+import type { ApiResponse } from '@/types/api'
 
 // ===== Types =====
 
@@ -80,46 +81,46 @@ export interface DailyTaskResponse {
 
 export const gamificationApi = {
   getProfile() {
-    return http.get('/gamification/profile')
+    return http.get<ApiResponse<GamificationProfileResponse>>('/gamification/profile')
   },
 
   getPet() {
-    return http.get('/gamification/pet')
+    return http.get<ApiResponse<PetResponse>>('/gamification/pet')
   },
 
   renamePet(name: string) {
-    return http.put('/gamification/pet', { name })
+    return http.put<ApiResponse<PetResponse>>('/gamification/pet', { name })
   },
 
   feedPet(itemId: number) {
-    return http.post(`/gamification/pet/feed/${itemId}`)
+    return http.post<ApiResponse<PetResponse>>(`/gamification/pet/feed/${itemId}`)
   },
 
   interactPet(itemId: number) {
-    return http.post(`/gamification/pet/interact/${itemId}`)
+    return http.post<ApiResponse<PetResponse>>(`/gamification/pet/interact/${itemId}`)
   },
 
   getShopItems() {
-    return http.get('/gamification/shop')
+    return http.get<ApiResponse<PetItemResponse[]>>('/gamification/shop')
   },
 
   getInventory() {
-    return http.get('/gamification/inventory')
+    return http.get<ApiResponse<UserItemResponse[]>>('/gamification/inventory')
   },
 
   purchaseItem(itemId: number) {
-    return http.post(`/gamification/shop/buy/${itemId}`)
+    return http.post<ApiResponse<void>>(`/gamification/shop/buy/${itemId}`)
   },
 
   getAchievements() {
-    return http.get('/gamification/achievements')
+    return http.get<ApiResponse<AchievementResponse[]>>('/gamification/achievements')
   },
 
   getDailyTasks() {
-    return http.get('/gamification/tasks')
+    return http.get<ApiResponse<DailyTaskResponse[]>>('/gamification/tasks')
   },
 
   claimTaskReward(taskId: number) {
-    return http.post(`/gamification/tasks/${taskId}/claim`)
+    return http.post<ApiResponse<DailyTaskResponse>>(`/gamification/tasks/${taskId}/claim`)
   },
 }

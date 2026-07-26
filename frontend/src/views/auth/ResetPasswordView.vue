@@ -89,59 +89,101 @@ async function handleReset() {
 </script>
 
 <template>
-  <NCard title="重置密码" size="large" :bordered="false">
-    <template v-if="success">
-      <NAlert type="success" title="密码已重置" show-icon>
-        您的密码已成功重置，请使用新密码登录。
-      </NAlert>
-      <div style="margin-top: 16px; text-align: center;">
-        <NButton type="primary" @click="router.push({ name: 'login' })">前往登录</NButton>
-      </div>
-    </template>
-    <template v-else>
-      <p class="form-description">
-        输入邮件中的6位验证码以及您的新密码。
-      </p>
-      <NForm ref="formRef" :model="formData" :rules="rules" label-placement="top">
-        <NFormItem label="验证码" path="code">
-          <NInput
-            v-model:value="formData.code"
-            placeholder="请输入邮件中的6位验证码"
-            maxlength="6"
-          />
-        </NFormItem>
-        <NFormItem label="新密码" path="newPassword">
-          <NInput
-            v-model:value="formData.newPassword"
-            type="password"
-            show-password-on="click"
-            placeholder="至少 8 个字符"
-          />
-        </NFormItem>
-        <NFormItem label="确认密码" path="confirmPassword">
-          <NInput
-            v-model:value="formData.confirmPassword"
-            type="password"
-            show-password-on="click"
-            placeholder="再次输入新密码"
-          />
-        </NFormItem>
-        <NFormItem>
-          <NSpace vertical style="width: 100%;">
-            <NButton type="primary" block :loading="loading" @click="handleReset">
-              重置密码
-            </NButton>
-            <NButton text block @click="router.push({ name: 'login' })">返回登录</NButton>
-          </NSpace>
-        </NFormItem>
-      </NForm>
-    </template>
-  </NCard>
+  <div class="auth-page">
+    <div class="auth-brand">CL</div>
+    <NCard :bordered="false" class="auth-card">
+      <h1 class="auth-title">重置密码</h1>
+      <template v-if="success">
+        <NAlert type="success" title="密码已重置" show-icon>
+          您的密码已成功重置，请使用新密码登录。
+        </NAlert>
+        <div class="auth-links-sent">
+          <NButton type="primary" @click="router.push({ name: 'login' })">前往登录</NButton>
+        </div>
+      </template>
+      <template v-else>
+        <p class="form-description">
+          输入邮件中的6位验证码以及您的新密码。
+        </p>
+        <NForm ref="formRef" :model="formData" :rules="rules" label-placement="top">
+          <NFormItem label="验证码" path="code">
+            <NInput
+              v-model:value="formData.code"
+              placeholder="请输入邮件中的6位验证码"
+              maxlength="6"
+            />
+          </NFormItem>
+          <NFormItem label="新密码" path="newPassword">
+            <NInput
+              v-model:value="formData.newPassword"
+              type="password"
+              show-password-on="click"
+              placeholder="至少 8 个字符"
+            />
+          </NFormItem>
+          <NFormItem label="确认密码" path="confirmPassword">
+            <NInput
+              v-model:value="formData.confirmPassword"
+              type="password"
+              show-password-on="click"
+              placeholder="再次输入新密码"
+            />
+          </NFormItem>
+          <NFormItem>
+            <NSpace vertical class="auth-actions">
+              <NButton type="primary" block :loading="loading" @click="handleReset">
+                重置密码
+              </NButton>
+              <NButton text block @click="router.push({ name: 'login' })">返回登录</NButton>
+            </NSpace>
+          </NFormItem>
+        </NForm>
+      </template>
+    </NCard>
+  </div>
 </template>
 
 <style scoped>
+.auth-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.auth-brand {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  color: var(--brand);
+  letter-spacing: 0.08em;
+  margin-bottom: var(--sp-5);
+}
+
+.auth-card {
+  width: 100%;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.auth-title {
+  margin: 0 0 var(--sp-5) 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color-strong);
+}
+
+.auth-actions {
+  width: 100%;
+}
+
 .form-description {
   margin-bottom: var(--sp-4);
-  color: var(--text-secondary);
+  color: var(--text-color-muted);
+  font-size: var(--text-sm);
+}
+
+.auth-links-sent {
+  margin-top: var(--sp-4);
+  text-align: center;
 }
 </style>

@@ -1,4 +1,5 @@
 import http from './http'
+import type { ApiResponse } from '@/types/api'
 
 // ===== Types =====
 
@@ -16,16 +17,18 @@ export interface LeaderboardResponse {
   myRank: LeaderboardEntryResponse | null
 }
 
+export type LeaderboardType = 'daily' | 'weekly' | 'alltime'
+
 // ===== API =====
 
 export const leaderboardApi = {
-  getLeaderboard(type: 'daily' | 'weekly' | 'alltime' = 'daily', limit = 20) {
-    return http.get('/leaderboard', { params: { type, limit } })
+  getLeaderboard(type: LeaderboardType = 'daily', limit = 20) {
+    return http.get<ApiResponse<LeaderboardResponse>>('/leaderboard', { params: { type, limit } })
   },
 
-  getMyRank(type: 'daily' | 'weekly' | 'alltime' = 'daily') {
-    return http.get('/leaderboard/me', { params: { type } })
+  getMyRank(type: LeaderboardType = 'daily') {
+    return http.get<ApiResponse<LeaderboardEntryResponse>>('/leaderboard/me', { params: { type } })
   },
 
-  syncLeaderboard: () => http.post('/leaderboard/sync'),
+  syncLeaderboard: () => http.post<ApiResponse<void>>('/leaderboard/sync'),
 }

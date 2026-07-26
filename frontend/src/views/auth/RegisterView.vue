@@ -64,28 +64,66 @@ async function handleRegister() {
 </script>
 
 <template>
-  <NCard title="注册" size="large" :bordered="false">
-    <NForm ref="formRef" :model="formData" :rules="rules" size="large">
-      <NFormItem path="email" label="邮箱">
-        <NInput v-model:value="formData.email" placeholder="请输入邮箱" />
-      </NFormItem>
-      <NFormItem path="displayName" label="昵称">
-        <NInput v-model:value="formData.displayName" placeholder="请输入昵称" />
-      </NFormItem>
-      <NFormItem path="password" label="密码">
-        <NInput v-model:value="formData.password" type="password" show-password-on="click" placeholder="至少 8 位" />
-      </NFormItem>
-      <NFormItem path="confirmPassword" label="确认密码">
-        <NInput v-model:value="formData.confirmPassword" type="password" show-password-on="click" placeholder="再次输入密码" />
-      </NFormItem>
-      <NFormItem>
-        <NSpace vertical style="width: 100%;">
-          <NButton type="primary" block :loading="loading" @click="handleRegister">
-            注册
-          </NButton>
-          <NButton text block @click="router.push({ name: 'login' })">已有账号？去登录</NButton>
-        </NSpace>
-      </NFormItem>
-    </NForm>
-  </NCard>
+  <div class="auth-page">
+    <div class="auth-brand">CL</div>
+    <NCard :bordered="false" class="auth-card">
+      <h1 class="auth-title">注册</h1>
+      <NForm ref="formRef" :model="formData" :rules="rules" size="large">
+        <NFormItem path="email" label="邮箱">
+          <NInput v-model:value="formData.email" placeholder="请输入邮箱" />
+        </NFormItem>
+        <NFormItem path="displayName" label="昵称">
+          <NInput v-model:value="formData.displayName" placeholder="请输入昵称" />
+        </NFormItem>
+        <NFormItem path="password" label="密码">
+          <NInput v-model:value="formData.password" type="password" show-password-on="click" placeholder="至少 8 位" />
+        </NFormItem>
+        <NFormItem path="confirmPassword" label="确认密码">
+          <NInput v-model:value="formData.confirmPassword" type="password" show-password-on="click" placeholder="再次输入密码" />
+        </NFormItem>
+        <NFormItem>
+          <NSpace vertical class="auth-actions">
+            <NButton type="primary" block :loading="loading" @click="handleRegister">
+              注册
+            </NButton>
+            <NButton text block @click="router.push({ name: 'login' })">已有账号？去登录</NButton>
+          </NSpace>
+        </NFormItem>
+      </NForm>
+    </NCard>
+  </div>
 </template>
+
+<style scoped>
+.auth-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.auth-brand {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  color: var(--brand);
+  letter-spacing: 0.08em;
+  margin-bottom: var(--sp-5);
+}
+
+.auth-card {
+  width: 100%;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.auth-title {
+  margin: 0 0 var(--sp-5) 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color-strong);
+}
+
+.auth-actions {
+  width: 100%;
+}
+</style>

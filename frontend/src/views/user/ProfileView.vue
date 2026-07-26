@@ -151,8 +151,8 @@ onMounted(() => {
           />
         </div>
         <div class="profile-info">
-          <h3>{{ profile?.displayName || '未设置昵称' }}</h3>
-          <p class="email">{{ profile?.email }}</p>
+          <h3 class="profile-display-name">{{ profile?.displayName || '未设置昵称' }}</h3>
+          <p class="profile-email">{{ profile?.email }}</p>
           <NSpace>
             <NTag :type="profile?.emailVerified ? 'success' : 'warning'" size="small">
               {{ profile?.emailVerified ? '邮箱已验证' : '邮箱未验证' }}
@@ -171,15 +171,15 @@ onMounted(() => {
           <NFormItem label="个人简介">
             <NInput v-model:value="profileForm.bio" type="textarea" placeholder="介绍一下自己..." :rows="3" />
           </NFormItem>
-          <NSpace>
-            <NButton type="primary" @click="saveProfile">保存</NButton>
-            <NButton @click="editingProfile = false">取消</NButton>
-          </NSpace>
+          <div class="edit-actions">
+            <NButton type="primary" size="small" @click="saveProfile">保存</NButton>
+            <NButton size="small" @click="editingProfile = false">取消</NButton>
+          </div>
         </NForm>
       </div>
 
       <div v-else class="bio-section">
-        <p>{{ profile?.bio || '暂无简介' }}</p>
+        <p class="bio-text">{{ profile?.bio || '暂无简介' }}</p>
         <NButton text size="small" @click="editingProfile = true">编辑资料</NButton>
       </div>
 
@@ -196,7 +196,7 @@ onMounted(() => {
     <NCard :bordered="false" class="settings-card" :loading="loading">
       <template #header>
         <div class="settings-header">
-          <span>账户设置</span>
+          <span class="settings-header-title">账户设置</span>
           <NButton v-if="!editingSettings" text size="small" @click="editingSettings = true">编辑</NButton>
         </div>
       </template>
@@ -212,22 +212,22 @@ onMounted(() => {
           <NFormItem label="邮件通知">
             <NSpace>
               <NSwitch v-model:value="settingsForm.notifEmailEnabled" />
-              <span>{{ settingsForm.notifEmailEnabled ? '开启' : '关闭' }}</span>
+              <span class="switch-label">{{ settingsForm.notifEmailEnabled ? '开启' : '关闭' }}</span>
             </NSpace>
           </NFormItem>
           <NFormItem label="推送通知">
             <NSpace>
               <NSwitch v-model:value="settingsForm.notifPushEnabled" />
-              <span>{{ settingsForm.notifPushEnabled ? '开启' : '关闭' }}</span>
+              <span class="switch-label">{{ settingsForm.notifPushEnabled ? '开启' : '关闭' }}</span>
             </NSpace>
           </NFormItem>
           <NFormItem label="日目标专注时长（分钟）">
-            <NInputNumber v-model:value="settingsForm.dailyFocusGoalMinutes" :min="1" :max="1440" placeholder="请输入日目标分钟数" style="width: 100%;" />
+            <NInputNumber v-model:value="settingsForm.dailyFocusGoalMinutes" :min="1" :max="1440" placeholder="请输入日目标分钟数" class="full-width" />
           </NFormItem>
-          <NSpace>
-            <NButton type="primary" @click="saveSettings">保存</NButton>
-            <NButton @click="editingSettings = false">取消</NButton>
-          </NSpace>
+          <div class="edit-actions">
+            <NButton type="primary" size="small" @click="saveSettings">保存</NButton>
+            <NButton size="small" @click="editingSettings = false">取消</NButton>
+          </div>
         </NForm>
       </div>
 
@@ -259,86 +259,112 @@ onMounted(() => {
 
 <style scoped>
 .profile-view {
-  max-width: 600px;
+  max-width: var(--component-max-width);
 }
 
 .page-title {
-  font-size: var(--text-3xl);
+  font-size: var(--text-xl);
   font-weight: var(--weight-semibold);
-  margin-bottom: var(--sp-6);
+  margin: 0 0 var(--sp-4) 0;
+  color: var(--text-color-strong);
 }
 
+/* --- Cards --- */
 .profile-card,
 .settings-card {
-  margin-bottom: var(--sp-4);
+  margin-bottom: var(--sp-3);
+  background: var(--surface-2);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-md);
 }
 
+/* --- Profile Header --- */
 .profile-header {
   display: flex;
   align-items: center;
-  gap: var(--sp-5);
-  margin-bottom: var(--sp-5);
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-4);
 }
 
 .avatar-section {
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
 }
 
-.profile-info h3 {
-  font-size: var(--text-2xl);
+.profile-display-name {
+  font-size: var(--text-lg);
   font-weight: var(--weight-semibold);
-  margin: 0 0 var(--sp-1) 0;
+  margin: 0 0 2px 0;
+  color: var(--text-color-strong);
 }
 
-.email {
-  color: var(--text-tertiary);
-  font-size: var(--text-base);
+.profile-email {
+  color: var(--text-color-muted);
+  font-size: var(--text-sm);
   margin: 0 0 var(--sp-2) 0;
 }
 
+/* --- Bio / Edit --- */
 .bio-section,
 .edit-section {
-  padding: var(--sp-4) 0;
-  border-top: 1px solid var(--border-default);
+  padding: var(--sp-3) 0;
+  border-top: 1px solid var(--separator);
 }
 
-.bio-section p {
+.bio-text {
   margin-bottom: var(--sp-2);
-  color: var(--text-secondary);
+  color: var(--text-color-muted);
+  font-size: var(--text-sm);
 }
 
+.edit-actions {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+/* --- Stats --- */
 .profile-stats {
   display: flex;
-  gap: var(--sp-6);
-  padding-top: var(--sp-4);
-  border-top: 1px solid var(--border-default);
+  gap: var(--sp-4);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--separator);
 }
 
 .stat-item {
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 
 .stat-label {
-  font-size: var(--text-sm);
-  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+  color: var(--text-color-muted);
 }
 
 .stat-value {
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   font-weight: var(--weight-medium);
+  color: var(--text-color);
 }
 
+/* --- Settings --- */
 .settings-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
+.settings-header-title {
+  font-weight: var(--weight-semibold);
+  color: var(--text-color-strong);
+}
+
 .settings-list {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-3);
+  gap: var(--sp-1);
 }
 
 .setting-item {
@@ -346,14 +372,31 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: var(--sp-2) 0;
+  border-bottom: 1px solid var(--separator);
+}
+
+.setting-item:last-child {
+  border-bottom: none;
 }
 
 .setting-label {
-  color: var(--text-secondary);
+  color: var(--text-color-muted);
+  font-size: var(--text-sm);
 }
 
 .setting-value {
   font-weight: var(--weight-medium);
+  font-size: var(--text-sm);
+  color: var(--text-color);
+}
+
+.switch-label {
+  font-size: var(--text-sm);
+  color: var(--text-color-muted);
+}
+
+.full-width {
+  width: 100%;
 }
 
 @media (max-width: 768px) {

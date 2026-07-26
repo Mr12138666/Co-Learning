@@ -14,7 +14,6 @@ const _emit = defineEmits<{
 
 const sortedMembers = computed(() => {
   return [...props.members].sort((a, b) => {
-    // Online first, then by role, then by name
     const aOnline = props.onlineUserIds.has(a.userId) ? 0 : 1
     const bOnline = props.onlineUserIds.has(b.userId) ? 0 : 1
     if (aOnline !== bOnline) return aOnline - bOnline
@@ -44,58 +43,53 @@ function getRoleTag(role: string) {
 <template>
   <div class="member-list">
     <div class="member-list-header">
-      <n-space align="center">
-        <span class="header-title">成员</span>
-        <n-badge :value="onlineUserIds.size" :max="999" type="success" show-zero />
-      </n-space>
+      <span class="header-title">成员</span>
+      <span class="online-count">{{ onlineUserIds.size }} 在线</span>
     </div>
 
-    <n-scrollbar style="max-height: 500px">
-      <div class="member-items">
-        <div
-          v-for="member in sortedMembers"
-          :key="member.userId"
-          class="member-item"
-          :class="{ offline: !onlineUserIds.has(member.userId) }"
-        >
-          <div class="member-avatar">
-            <n-avatar round size="medium" :src="member.avatarUrl || undefined">
-              {{ member.displayName?.charAt(0) }}
-            </n-avatar>
-            <span
-              class="online-dot"
-              :class="{
-                online: onlineUserIds.has(member.userId),
-                studying: member.focusStatus === 'STUDYING',
-                paused: member.focusStatus === 'PAUSED',
-              }"
-            />
-          </div>
+    <div class="member-scroll">
+      <div
+        v-for="member in sortedMembers"
+        :key="member.userId"
+        class="member-item"
+        :class="{ offline: !onlineUserIds.has(member.userId) }"
+      >
+        <div class="member-avatar">
+          <n-avatar round size="small" :src="member.avatarUrl || undefined">
+            {{ member.displayName?.charAt(0) }}
+          </n-avatar>
+          <span
+            class="online-dot"
+            :class="{
+              online: onlineUserIds.has(member.userId),
+              studying: member.focusStatus === 'STUDYING',
+              paused: member.focusStatus === 'PAUSED',
+            }"
+          />
+        </div>
 
-          <div class="member-info">
-            <n-space align="center" size="small">
-              <span class="member-name">{{ member.displayName }}</span>
-              <n-tag v-if="getRoleTag(member.role)" :type="getRoleTag(member.role)!.type" size="tiny" round>
-                {{ getRoleTag(member.role)!.label }}
-              </n-tag>
-              <n-tag v-if="member.isMuted" type="error" size="tiny" round>已禁言</n-tag>
-            </n-space>
-            <div class="member-status">
-              <n-tag
-                v-if="getFocusTag(member.focusStatus)"
-                :type="getFocusTag(member.focusStatus)!.type"
-                size="tiny"
-                round
-              >
-                {{ getFocusTag(member.focusStatus)!.label }}
-              </n-tag>
-              <span v-else-if="onlineUserIds.has(member.userId)" class="status-text online">在线</span>
-              <span v-else class="status-text offline">离线</span>
-            </div>
+        <div class="member-info">
+          <div class="member-name-row">
+            <span class="member-name">{{ member.displayName }}</span>
+            <span v-if="getRoleTag(member.role)" class="role-tag" :class="getRoleTag(member.role)!.type">
+              {{ getRoleTag(member.role)!.label }}
+            </span>
+            <span v-if="member.isMuted" class="role-tag error">已禁言</span>
+          </div>
+          <div class="member-status">
+            <span
+              v-if="getFocusTag(member.focusStatus)"
+              class="status-tag"
+              :class="getFocusTag(member.focusStatus)!.type"
+            >
+              {{ getFocusTag(member.focusStatus)!.label }}
+            </span>
+            <span v-else-if="onlineUserIds.has(member.userId)" class="status-text online">在线</span>
+            <span v-else class="status-text offline">离线</span>
           </div>
         </div>
       </div>
-    </n-scrollbar>
+    </div>
   </div>
 </template>
 
@@ -107,33 +101,44 @@ function getRoleTag(role: string) {
 }
 
 .member-list-header {
-  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--sp-2) var(--sp-3);
   border-bottom: 1px solid var(--separator);
 }
 
 .header-title {
-  font-weight: 600;
-  font-size: 14px;
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-sm);
+  color: var(--text-color-strong);
 }
 
-.member-items {
-  padding: 4px 0;
+.online-count {
+  font-size: var(--text-xs);
+  color: var(--text-color-muted);
+}
+
+.member-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--sp-1) 0;
 }
 
 .member-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  transition: background-color 0.2s;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  transition: background-color var(--transition-fast);
 }
 
 .member-item:hover {
-  background-color: var(--bg-hover);
+  background: var(--state-hover);
 }
 
 .member-item.offline {
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 .member-avatar {
@@ -143,26 +148,26 @@ function getRoleTag(role: string) {
 
 .online-dot {
   position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 10px;
-  height: 10px;
+  bottom: -1px;
+  right: -1px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  border: 2px solid var(--card-color);
-  background-color: #909399;
+  border: 2px solid var(--bg-card);
+  background-color: var(--text-color-muted);
 }
 
 .online-dot.online {
-  background-color: #67C23A;
+  background-color: var(--success);
 }
 
 .online-dot.studying {
-  background-color: #F56C6C;
+  background-color: var(--danger);
   animation: pulse 2s infinite;
 }
 
 .online-dot.paused {
-  background-color: #E6A23C;
+  background-color: var(--warning);
 }
 
 @keyframes pulse {
@@ -175,24 +180,70 @@ function getRoleTag(role: string) {
   min-width: 0;
 }
 
+.member-name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  flex-wrap: wrap;
+}
+
 .member-name {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.role-tag {
+  font-size: var(--text-xs);
+  padding: 0 var(--sp-1);
+  border-radius: var(--radius-xs);
+  line-height: 1.5;
+  flex-shrink: 0;
+}
+
+.role-tag.error {
+  background: var(--danger-muted);
+  color: var(--danger);
+}
+
+.role-tag.warning {
+  background: var(--warning-muted);
+  color: var(--warning);
 }
 
 .member-status {
   margin-top: 2px;
 }
 
+.status-tag {
+  font-size: var(--text-xs);
+  padding: 0 var(--sp-1);
+  border-radius: var(--radius-xs);
+  line-height: 1.5;
+}
+
+.status-tag.success {
+  background: var(--success-muted);
+  color: var(--success);
+}
+
+.status-tag.warning {
+  background: var(--warning-muted);
+  color: var(--warning);
+}
+
 .status-text {
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .status-text.online {
-  color: #67C23A;
+  color: var(--success);
 }
 
 .status-text.offline {
-  color: #909399;
+  color: var(--text-color-muted);
 }
 </style>

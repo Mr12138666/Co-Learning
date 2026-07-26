@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import {
-  NCard,
   NButton,
   NSpace,
   NModal,
@@ -10,8 +9,6 @@ import {
   NInput,
   NSelect,
   NDatePicker,
-  NTabs,
-  NTabPane,
   useMessage,
 } from 'naive-ui'
 import { useStudyStore } from '@/stores/studyStore'
@@ -39,6 +36,14 @@ function updateSubjectOptions() {
     value: s.id,
   }))
 }
+
+const activeTab = ref('all')
+const tabOptions = [
+  { key: 'all', label: '全部', filter: 'ALL' as const },
+  { key: 'todo', label: '待办', filter: 'TODO' as const },
+  { key: 'in_progress', label: '进行中', filter: 'IN_PROGRESS' as const },
+  { key: 'done', label: '已完成', filter: 'DONE' as const },
+]
 
 function openCreate() {
   editingTask.value = null
@@ -90,37 +95,39 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
-    <NCard :bordered="false">
-      <template #header>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span>任务清单</span>
-          <NButton type="primary" @click="openCreate">+ 新增任务</NButton>
-        </div>
-      </template>
+  <div class="page-container">
+    <!-- Page Header -->
+    <div class="page-header">
+      <h3 class="page-title">任务清单</h3>
+      <NButton type="primary" size="small" @click="openCreate">+ 新增任务</NButton>
+    </div>
 
-      <NTabs type="line" animated>
-        <NTabPane name="all" tab="全部">
-          <TaskList filter-status="ALL" @edit="openEdit" />
-        </NTabPane>
-        <NTabPane name="todo" tab="待办">
-          <TaskList filter-status="TODO" @edit="openEdit" />
-        </NTabPane>
-        <NTabPane name="in_progress" tab="进行中">
-          <TaskList filter-status="IN_PROGRESS" @edit="openEdit" />
-        </NTabPane>
-        <NTabPane name="done" tab="已完成">
-          <TaskList filter-status="DONE" @edit="openEdit" />
-        </NTabPane>
-      </NTabs>
-    </NCard>
+    <!-- Tab bar (segmented) -->
+    <div class="tab-bar">
+      <button
+        v-for="tab in tabOptions"
+        :key="tab.key"
+        class="tab-bar__item"
+        :class="{ 'tab-bar__item--active': activeTab === tab.key }"
+        @click="activeTab = tab.key"
+      >
+        {{ tab.label }}
+      </button>
+    </div>
 
+    <div class="page-divider" />
+
+    <!-- Task Lists (only render active tab) -->
+    <div v-for="tab in tabOptions" :key="tab.key">
+      <TaskList v-if="activeTab === tab.key" :filter-status="tab.filter" @edit="openEdit" />
+    </div>
+
+    <!-- Create/Edit Modal -->
     <NModal
       v-model:show="showModal"
       preset="card"
       :title="editingTask ? '编辑任务' : '新增任务'"
       class="task-modal"
-      style="max-width: 480px; width: 90vw;"
     >
       <NForm label-placement="top">
         <NFormItem label="任务标题">
@@ -134,32 +141,110 @@ onMounted(() => {
             :autosize="{ minRows: 2, maxRows: 4 }"
           />
         </NFormItem>
-        <NSpace>
-          <NFormItem label="科目">
+        <div class="form-row">
+          <NFormItem label="科目" class="form-row__item">
             <NSelect
               v-model:value="formData.subjectId"
               :options="subjectOptions"
               placeholder="选择科目"
               clearable
-              style="width: 200px;"
             />
           </NFormItem>
-          <NFormItem label="截止日期">
+          <NFormItem label="截止日期" class="form-row__item">
             <NDatePicker
               v-model:value="formData.dueDate"
               type="date"
               clearable
-              style="width: 200px;"
+              class="full-width"
             />
           </NFormItem>
-        </NSpace>
+        </div>
       </NForm>
       <template #footer>
         <NSpace justify="end">
-          <NButton @click="showModal = false">取消</NButton>
-          <NButton type="primary" @click="handleSave">保存</NButton>
+          <NButton size="small" @click="showModal = false">取消</NButton>
+          <NButton type="primary" size="small" @click="handleSave">保存</NButton>
         </NSpace>
       </template>
     </NModal>
   </div>
 </template>
+
+<style scoped>
+.page-container {
+  max-width: var(--content-max-width);
+  padding-bottom: var(--sp-4);
+}
+
+.full-width {
+  width: 100%;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-3) 0;
+}
+
+.page-title {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color-strong);
+}
+
+/* Segmented tab bar */
+.tab-bar {
+  display: inline-flex;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: var(--sp-3);
+}
+
+.tab-bar__item {
+  padding: var(--sp-1) var(--sp-3);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-color-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+  font-family: inherit;
+  line-height: var(--leading-snug);
+}
+
+.tab-bar__item:hover {
+  background: var(--state-hover);
+  color: var(--text-color);
+}
+
+.tab-bar__item--active {
+  background: var(--state-selected);
+  color: var(--text-color-strong);
+}
+
+.tab-bar__item + .tab-bar__item {
+  border-left: 1px solid var(--border-color);
+}
+
+.page-divider {
+  border-bottom: 1px solid var(--separator);
+  margin-bottom: var(--sp-3);
+}
+
+.form-row {
+  display: flex;
+  gap: var(--sp-3);
+}
+
+.form-row__item {
+  flex: 1;
+}
+
+.task-modal {
+  max-width: 480px;
+  width: 90vw;
+}
+</style>

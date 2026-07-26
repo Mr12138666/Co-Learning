@@ -34,21 +34,18 @@ const moodCountdown = computed(() => formatCountdown(Math.floor(moodDecaySeconds
 
 function startCountdown() {
   if (countdownTimer) clearInterval(countdownTimer)
-  // Convert minutes to seconds for countdown
   hungerDecaySeconds.value = (store.pet?.nextHungerDecayInMinutes || 0) * 60
   moodDecaySeconds.value = (store.pet?.nextMoodDecayInMinutes || 0) * 60
   countdownTimer = window.setInterval(async () => {
     if (hungerDecaySeconds.value > 0) hungerDecaySeconds.value--
     if (moodDecaySeconds.value > 0) moodDecaySeconds.value--
-    
-    // Refresh pet data when either countdown reaches 0
+
     if (hungerDecaySeconds.value <= 0 || moodDecaySeconds.value <= 0) {
       await store.loadPet()
-      // Reset countdowns with new data
       hungerDecaySeconds.value = (store.pet?.nextHungerDecayInMinutes || 0) * 60
       moodDecaySeconds.value = (store.pet?.nextMoodDecayInMinutes || 0) * 60
     }
-  }, 1000) // Update every second for smoother countdown
+  }, 1000)
 }
 
 function _stopCountdown() {
@@ -58,11 +55,11 @@ function _stopCountdown() {
   }
 }
 
-const speciesEmoji: Record<string, string> = {
-  CAT: '🐱',
-  DOG: '🐶',
-  RABBIT: '🐰',
-  OWL: '🦉',
+const speciesLabel: Record<string, string> = {
+  CAT: '猫',
+  DOG: '犬',
+  RABBIT: '兔',
+  OWL: '枭',
 }
 
 const itemTypeLabel: Record<string, string> = {
@@ -133,15 +130,14 @@ async function handleInteract(itemId: number) {
 }
 
 function moodColor(mood: number): string {
-  if (mood >= 70) return '#67C23A'
-  if (mood >= 30) return '#E6A23C'
-  return '#F56C6C'
+  if (mood >= 70) return 'var(--success)'
+  if (mood >= 30) return 'var(--warning)'
+  return 'var(--error)'
 }
 
-// Pet EXP calculation (same formula as backend)
 const petExpToNext = computed(() => {
   const level = store.pet?.level || 1
-  return level * 100 // expForLevel(level + 1) - expForLevel(level)
+  return level * 100
 })
 
 const petExpPercent = computed(() => {
@@ -162,56 +158,52 @@ const petExpPercent = computed(() => {
       <n-card v-if="store.pet" class="pet-card" :bordered="false">
         <div class="pet-display">
           <div class="pet-avatar">
-            <span class="pet-emoji">{{ speciesEmoji[store.pet.species] || '🐱' }}</span>
+            <span class="pet-species-text">{{ speciesLabel[store.pet.species] || '猫' }}</span>
           </div>
           <div class="pet-info">
-            <n-space align="center" size="small">
+            <div class="pet-name-row">
               <h3 class="pet-name">{{ store.pet.name }}</h3>
               <n-tag type="info" size="small" round>Lv.{{ store.pet.level }}</n-tag>
               <n-button quaternary size="tiny" @click="openRename">改名</n-button>
-            </n-space>
+            </div>
             <div class="pet-stats">
-              <!-- Pet EXP bar -->
-              <div class="stat-block">
-                <div class="stat-block-header">
-                  <span class="stat-label">EXP</span>
-                  <span class="stat-text">{{ store.pet.exp }}/{{ petExpToNext }}</span>
-                </div>
+              <div class="stat-row">
+                <span class="stat-label">EXP</span>
                 <n-progress
                   type="line"
                   :percentage="petExpPercent"
-                  color="#722ED1"
+                  color="var(--brand)"
                   :show-indicator="false"
-                  :height="6"
+                  :height="4"
+                  class="stat-bar"
                 />
+                <span class="stat-value">{{ store.pet.exp }}/{{ petExpToNext }}</span>
               </div>
-              <div class="stat-block">
-                <div class="stat-block-header">
-                  <span class="stat-label">心情</span>
-                  <span class="stat-text">{{ store.pet.mood }}</span>
-                </div>
+              <div class="stat-row">
+                <span class="stat-label">心情</span>
                 <n-progress
                   type="line"
                   :percentage="store.pet.mood"
                   :color="moodColor(store.pet.mood)"
                   :show-indicator="false"
-                  :height="6"
+                  :height="4"
+                  class="stat-bar"
                 />
-                <div class="stat-hint">{{ moodCountdown }}</div>
+                <span class="stat-value">{{ store.pet.mood }}</span>
+                <span class="stat-hint">{{ moodCountdown }}</span>
               </div>
-              <div class="stat-block">
-                <div class="stat-block-header">
-                  <span class="stat-label">饱食</span>
-                  <span class="stat-text">{{ store.pet.hunger }}</span>
-                </div>
+              <div class="stat-row">
+                <span class="stat-label">饱食</span>
                 <n-progress
                   type="line"
                   :percentage="store.pet.hunger"
                   :color="moodColor(store.pet.hunger)"
                   :show-indicator="false"
-                  :height="6"
+                  :height="4"
+                  class="stat-bar"
                 />
-                <div class="stat-hint">{{ hungerCountdown }}</div>
+                <span class="stat-value">{{ store.pet.hunger }}</span>
+                <span class="stat-hint">{{ hungerCountdown }}</span>
               </div>
             </div>
           </div>
@@ -221,7 +213,7 @@ const petExpPercent = computed(() => {
       <!-- Token Balance -->
       <n-card v-if="store.profile" class="token-card" :bordered="false">
         <div class="token-display">
-          <span class="token-emoji">🪙</span>
+          <span class="token-icon-badge">T</span>
           <span class="token-amount">{{ store.profile.tokens }}</span>
           <span class="token-label">代币</span>
         </div>
@@ -229,62 +221,49 @@ const petExpPercent = computed(() => {
 
       <!-- How to Earn -->
       <n-card class="earn-guide-card" :bordered="false">
-        <div class="guide-header">
-          <span class="guide-icon">📈</span>
-          <h3 class="guide-title">代币与经验获取</h3>
+        <h3 class="guide-title">代币与经验获取</h3>
+        <div class="earn-list">
+          <div class="earn-item">
+            <span class="earn-badge">FO</span>
+            <div class="earn-info">
+              <div class="earn-name">专注学习</div>
+              <div class="earn-desc">每专注10分钟获得 1代币 + 宠物经验</div>
+            </div>
+            <span class="earn-value">+1 T / 10min</span>
+          </div>
+          <div class="earn-item">
+            <span class="earn-badge">CK</span>
+            <div class="earn-info">
+              <div class="earn-name">每日打卡</div>
+              <div class="earn-desc">完成每日复盘获得5代币+连续打卡奖励</div>
+            </div>
+            <span class="earn-value">+5 T / 天</span>
+          </div>
+          <div class="earn-item">
+            <span class="earn-badge">WP</span>
+            <div class="earn-info">
+              <div class="earn-name">新手礼包</div>
+              <div class="earn-desc">首次注册赠送50代币</div>
+            </div>
+            <span class="earn-value">+50 T</span>
+          </div>
+          <div class="earn-item">
+            <span class="earn-badge">AC</span>
+            <div class="earn-info">
+              <div class="earn-name">成就奖励</div>
+              <div class="earn-desc">解锁成就获得5-200代币</div>
+            </div>
+            <span class="earn-value">+5~200 T</span>
+          </div>
+          <div class="earn-item">
+            <span class="earn-badge">FD</span>
+            <div class="earn-info">
+              <div class="earn-name">喂食/互动</div>
+              <div class="earn-desc">使用经验药水道具提升宠物经验</div>
+            </div>
+            <span class="earn-value">宠物 EXP</span>
+          </div>
         </div>
-        <n-grid :cols="2" :x-gap="12" :y-gap="8">
-          <n-grid-item span="2">
-            <div class="earn-item">
-              <span class="earn-icon">📚</span>
-              <div class="earn-info">
-                <div class="earn-title">专注学习</div>
-                <div class="earn-desc">每专注10分钟获得 1代币 + 宠物经验</div>
-              </div>
-              <span class="earn-value">+1🪙/10min</span>
-            </div>
-          </n-grid-item>
-          <n-grid-item span="2">
-            <div class="earn-item">
-              <span class="earn-icon">✅</span>
-              <div class="earn-info">
-                <div class="earn-title">每日打卡</div>
-                <div class="earn-desc">完成每日复盘获得5代币+连续打卡奖励</div>
-              </div>
-              <span class="earn-value">+5🪙/天</span>
-            </div>
-          </n-grid-item>
-          <n-grid-item span="2">
-            <div class="earn-item">
-              <span class="earn-icon">🎁</span>
-              <div class="earn-info">
-                <div class="earn-title">新手礼包</div>
-                <div class="earn-desc">首次注册赠送50代币</div>
-              </div>
-              <span class="earn-value">+50🪙</span>
-            </div>
-          </n-grid-item>
-          <n-grid-item span="2">
-            <div class="earn-item">
-              <span class="earn-icon">🏆</span>
-              <div class="earn-info">
-                <div class="earn-title">成就奖励</div>
-                <div class="earn-desc">解锁成就获得5-200代币</div>
-              </div>
-              <span class="earn-value">+5~200🪙</span>
-            </div>
-          </n-grid-item>
-          <n-grid-item span="2">
-            <div class="earn-item">
-              <span class="earn-icon">🐱</span>
-              <div class="earn-info">
-                <div class="earn-title">喂食/互动</div>
-                <div class="earn-desc">使用经验药水道具提升宠物经验</div>
-              </div>
-              <span class="earn-value">宠物EXP</span>
-            </div>
-          </n-grid-item>
-        </n-grid>
       </n-card>
     </n-spin>
 
@@ -294,7 +273,7 @@ const petExpPercent = computed(() => {
       <n-grid-item v-for="item in store.inventory" :key="item.id" span="4 m:2 l:1">
         <n-card hoverable size="small" class="inventory-item">
           <div class="item-header">
-            <span class="item-icon">🎁</span>
+            <span class="item-type-badge">{{ itemTypeLabel[item.itemType]?.[0] || '?' }}</span>
             <n-tag size="tiny" round>{{ itemTypeLabel[item.itemType] || item.itemType }}</n-tag>
             <n-tag size="tiny" type="warning" round>x{{ item.quantity }}</n-tag>
           </div>
@@ -319,26 +298,26 @@ const petExpPercent = computed(() => {
         </n-card>
       </n-grid-item>
     </n-grid>
-    <n-empty v-else description="还没有道具，去商店购买吧" style="padding: 40px 0" />
+    <n-empty v-else description="还没有道具，去商店购买吧" class="section-empty" />
 
     <!-- Shop Section -->
     <h3 class="section-title">道具商店</h3>
     <n-grid v-if="store.shopItems.length > 0" :cols="4" :x-gap="12" :y-gap="12" responsive="screen" item-responsive>
       <n-grid-item v-for="item in store.shopItems" :key="item.id" span="4 m:2 l:1">
         <n-card hoverable size="small" class="shop-item">
-          <div class="shop-item-header">
-            <span class="shop-item-icon">🎁</span>
+          <div class="item-header">
+            <span class="item-type-badge">{{ itemTypeLabel[item.itemType]?.[0] || '?' }}</span>
             <n-tag size="tiny" round>{{ itemTypeLabel[item.itemType] || item.itemType }}</n-tag>
           </div>
-          <h4 class="shop-item-name">{{ item.name }}</h4>
-          <p class="shop-item-desc">{{ item.description }}</p>
-          <div class="shop-item-effect">
+          <h4 class="item-name">{{ item.name }}</h4>
+          <p class="item-desc">{{ item.description }}</p>
+          <div class="item-effect">
             <n-tag size="tiny" :bordered="false">
               {{ effectLabel[item.effectType] }} +{{ item.effectValue }}
             </n-tag>
           </div>
           <div class="shop-item-footer">
-            <span class="shop-item-price">{{ item.price }} 🪙</span>
+            <span class="shop-price">{{ item.price }} T</span>
             <n-popconfirm @positive-click="handleBuy(item.id)">
               <template #trigger>
                 <n-button size="small" type="primary" :disabled="(store.profile?.tokens || 0) < item.price">
@@ -351,10 +330,10 @@ const petExpPercent = computed(() => {
         </n-card>
       </n-grid-item>
     </n-grid>
-    <n-empty v-else description="商店加载中..." style="padding: 40px 0" />
+    <n-empty v-else description="商店加载中..." class="section-empty" />
 
     <!-- Rename Modal -->
-    <n-modal v-model:show="showRenameModal" preset="card" title="给宠物改名" style="max-width: 400px; width: 90vw;">
+    <n-modal v-model:show="showRenameModal" preset="card" title="给宠物改名" class="rename-modal">
       <n-input v-model:value="renameValue" placeholder="输入新名字" maxlength="50" />
       <template #footer>
         <n-space justify="end">
@@ -368,16 +347,20 @@ const petExpPercent = computed(() => {
 
 <style scoped>
 .pet-view {
-  padding: 0 var(--sp-1);
+  padding: var(--sp-4);
 }
 
 .page-title {
-  margin: 0 0 var(--sp-5) 0;
-  font-size: var(--text-2xl);
+  margin: 0 0 var(--sp-4) 0;
+  font-size: var(--text-xl);
 }
 
+/* --- Pet Card --- */
 .pet-card {
-  margin-bottom: 16px;
+  margin-bottom: var(--sp-3);
+  background: var(--surface-2);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-md);
 }
 
 .pet-display {
@@ -387,201 +370,281 @@ const petExpPercent = computed(() => {
 }
 
 .pet-avatar {
-  width: 80px;
-  height: 80px;
+  width: 72px;
+  height: 72px;
   border-radius: var(--radius-full);
-  background: linear-gradient(135deg, var(--info-subtle) 0%, var(--accent-subtle) 100%);
+  background: var(--bg-page);
+  border: 2px solid var(--separator);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.pet-emoji {
-  font-size: 40px;
+.pet-species-text {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  color: var(--brand);
+  letter-spacing: 0.05em;
 }
 
 .pet-info {
   flex: 1;
+  min-width: 0;
+}
+
+.pet-name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
 }
 
 .pet-name {
   margin: 0;
-  font-size: 18px;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color-strong);
 }
 
 .pet-stats {
-  margin-top: 12px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  max-width: 400px;
+  gap: var(--sp-2);
+  max-width: 360px;
 }
 
-.stat-block {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.stat-block-header {
-  display: flex;
-  justify-content: space-between;
+.stat-row {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
   align-items: center;
+  gap: var(--sp-2);
 }
 
 .stat-label {
-  font-size: var(--text-sm);
-  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+  color: var(--text-color-muted);
   font-weight: var(--weight-medium);
 }
 
-.stat-text {
-  font-size: var(--text-sm);
+.stat-bar {
+  min-width: 0;
+}
+
+.stat-value {
+  font-size: var(--text-xs);
   font-weight: var(--weight-semibold);
+  color: var(--text-color);
+  min-width: 36px;
+  text-align: right;
 }
 
 .stat-hint {
-  font-size: var(--text-xs);
-  color: var(--text-tertiary);
-  margin-top: 2px;
+  grid-column: 2 / -1;
+  font-size: 11px;
+  color: var(--text-color-muted);
+  padding-left: 2px;
 }
 
+/* --- Token Card --- */
 .token-card {
-  margin-bottom: 16px;
+  margin-bottom: var(--sp-3);
+  background: var(--surface-2);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-md);
 }
 
 .token-display {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
-.token-emoji {
-  font-size: 28px;
+.token-icon-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: var(--brand);
+  color: #fff;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .token-amount {
-  font-size: 32px;
+  font-size: 24px;
   font-weight: var(--weight-bold);
-  color: var(--accent);
+  color: var(--text-color-strong);
 }
 
 .token-label {
-  font-size: var(--text-base);
-  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  color: var(--text-color-muted);
 }
 
+/* --- Earn Guide --- */
 .earn-guide-card {
-  margin-bottom: 24px;
-  background-color: var(--bg-card);
-}
-
-.guide-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.guide-icon {
-  font-size: 20px;
+  margin-bottom: var(--sp-4);
+  background: var(--surface-2);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-md);
 }
 
 .guide-title {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
+  margin: 0 0 var(--sp-3) 0;
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color-strong);
+}
+
+.earn-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
 }
 
 .earn-item {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
-  padding: var(--sp-3);
-  background-color: var(--bg-page);
-  border-radius: var(--radius-md);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--bg-page);
+  border-radius: var(--radius-sm);
 }
 
-.earn-icon {
-  font-size: 18px;
+.earn-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--brand);
+  color: #fff;
+  font-size: 11px;
+  font-weight: var(--weight-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
 }
 
 .earn-info {
   flex: 1;
+  min-width: 0;
 }
 
-.earn-title {
-  font-size: 14px;
-  font-weight: 500;
+.earn-name {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-color);
 }
 
 .earn-desc {
   font-size: 12px;
-  color: var(--text-secondary);
-  margin-top: 2px;
+  color: var(--text-color-muted);
+  margin-top: 1px;
 }
 
 .earn-value {
-  font-size: var(--text-md);
+  font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
-  color: var(--accent);
+  color: var(--brand);
+  flex-shrink: 0;
 }
 
+/* --- Section Titles --- */
 .section-title {
-  margin: 0 0 var(--sp-4) 0;
-  font-size: var(--text-xl);
+  margin: 0 0 var(--sp-2) 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color-strong);
 }
 
-.inventory-item, .shop-item {
+.section-empty {
+  padding: var(--sp-8) 0;
+}
+
+/* --- Inventory & Shop Items --- */
+.inventory-item,
+.shop-item {
   display: flex;
   flex-direction: column;
+  background: var(--surface-2);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast);
 }
 
-.item-header, .shop-item-header {
+.inventory-item:hover,
+.shop-item:hover {
+  border-color: var(--separator);
+}
+
+.item-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
 }
 
-.item-icon, .shop-item-icon {
-  font-size: 24px;
+.item-type-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-page);
+  border: 1px solid var(--separator);
+  font-size: 11px;
+  font-weight: var(--weight-bold);
+  color: var(--text-color-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.item-name, .shop-item-name {
-  margin: 0 0 4px 0;
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.item-desc, .shop-item-desc {
-  margin: 0 0 var(--sp-2) 0;
+.item-name {
+  margin: 0 0 2px 0;
   font-size: var(--text-sm);
-  color: var(--text-tertiary);
-  line-height: var(--leading-snug);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color);
 }
 
-.item-effect, .shop-item-effect {
-  margin-bottom: 8px;
+.item-desc {
+  margin: 0 0 var(--sp-2) 0;
+  font-size: 12px;
+  color: var(--text-color-muted);
+  line-height: 1.4;
+}
+
+.item-effect {
+  margin-bottom: var(--sp-2);
 }
 
 .item-actions {
   display: flex;
-  gap: 4px;
+  gap: var(--sp-1);
+  margin-top: auto;
 }
 
 .shop-item-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-top: auto;
 }
 
-.shop-item-price {
+.shop-price {
   font-size: var(--text-base);
   font-weight: var(--weight-semibold);
-  color: var(--accent);
+  color: var(--brand);
+}
+
+/* --- Rename Modal --- */
+.rename-modal {
+  max-width: 400px;
+  width: 90vw;
 }
 
 @media (max-width: 768px) {
@@ -589,6 +652,10 @@ const petExpPercent = computed(() => {
     flex-direction: column;
     align-items: center;
     text-align: center;
+  }
+
+  .pet-name-row {
+    justify-content: center;
   }
 
   .pet-stats {

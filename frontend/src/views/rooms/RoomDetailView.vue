@@ -25,24 +25,17 @@ const showMembers = ref(true)
 
 onMounted(async () => {
   try {
-    // Load room details
     await roomStore.loadRoom(roomId.value)
 
-    // If not a member, try to join
     if (!roomStore.currentRoom?.isMember) {
       await roomStore.joinRoom(roomId.value)
     }
 
-    // Load members
     await roomStore.loadMembers(roomId.value)
+    await roomStore.loadMessages(roomId.value)
 
-    // Load initial messages (last 50)
-    await roomStore.loadMessages(roomId.value, 0, 50)
-
-    // Connect WebSocket and join real-time channel
     roomStore.connectRoom(roomId.value)
 
-    // Broadcast initial focus status
     if (focusStore.isActive) {
       roomStore.broadcastFocusStatus(roomId.value, 'STUDYING')
     } else if (focusStore.isPaused) {
@@ -179,44 +172,50 @@ function goBack() {
   <div class="room-detail-view" v-if="roomStore.currentRoom">
     <!-- Room Header -->
     <div class="room-header">
-      <n-space align="center" justify="space-between">
-        <n-space align="center">
-          <n-button quaternary circle @click="goBack">
-            <template #icon><span>←</span></template>
-          </n-button>
-          <div>
-            <n-space align="center" size="small">
-              <h3 class="room-title">{{ roomStore.currentRoom.name }}</h3>
-              <n-tag v-if="roomStore.currentRoom.visibility === 'PRIVATE'" type="warning" size="small" round>
-                私密
-              </n-tag>
-              <n-tag v-if="roomStore.currentRoom.topic" size="small">{{ roomStore.currentRoom.topic }}</n-tag>
-            </n-space>
-            <p class="room-subtitle" v-if="roomStore.currentRoom.description">
-              {{ roomStore.currentRoom.description }}
-            </p>
+      <div class="header-left">
+        <button class="back-btn" @click="goBack">←</button>
+        <div class="room-info">
+          <div class="room-name-row">
+            <h3 class="room-title">{{ roomStore.currentRoom.name }}</h3>
+            <n-tag v-if="roomStore.currentRoom.visibility === 'PRIVATE'" type="warning" size="small" :bordered="false">
+              私密
+            </n-tag>
+            <n-tag v-if="roomStore.currentRoom.topic" size="small" :bordered="false">{{ roomStore.currentRoom.topic }}</n-tag>
           </div>
-        </n-space>
+          <p class="room-subtitle" v-if="roomStore.currentRoom.description">
+            {{ roomStore.currentRoom.description }}
+          </p>
+        </div>
+      </div>
 
-        <n-space align="center" size="small">
-          <!-- Online stats -->
-          <n-statistic label="在线" :value="roomStore.onlineCount" />
-          <n-divider vertical />
-          <n-statistic label="学习中" :value="roomStore.studyingCount" />
-          <n-divider vertical />
-          <n-statistic label="总人数" :value="roomStore.currentRoom.memberCount" />
+      <div class="header-right">
+        <div class="header-stats">
+          <div class="stat-chip">
+            <span class="stat-num">{{ roomStore.onlineCount }}</span>
+            <span class="stat-lbl">在线</span>
+          </div>
+          <div class="stat-chip">
+            <span class="stat-num studying">{{ roomStore.studyingCount }}</span>
+            <span class="stat-lbl">学习中</span>
+          </div>
+          <div class="stat-chip">
+            <span class="stat-num">{{ roomStore.currentRoom.memberCount }}</span>
+            <span class="stat-lbl">总人数</span>
+          </div>
+        </div>
 
-          <n-button quaternary @click="showMembers = !showMembers">
+        <div class="header-actions">
+          <n-button quaternary size="small" @click="showMembers = !showMembers">
             {{ showMembers ? '隐藏成员' : '显示成员' }}
           </n-button>
-          <n-button quaternary type="error" @click="handleDelete" v-if="isOwner">
+          <n-button quaternary size="small" type="error" @click="handleDelete" v-if="isOwner">
             删除房间
           </n-button>
-          <n-button quaternary type="error" @click="handleLeave" v-if="!isOwner">
+          <n-button quaternary size="small" type="error" @click="handleLeave" v-if="!isOwner">
             离开房间
           </n-button>
-        </n-space>
-      </n-space>
+        </div>
+      </div>
     </div>
 
     <!-- Room Body -->
@@ -251,25 +250,112 @@ function goBack() {
 .room-detail-view {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 56px - 48px);
+  height: calc(100vh - var(--header-height) - var(--bottom-nav-height));
   min-height: 400px;
+  background: var(--bg-page);
 }
 
 .room-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--sp-4);
   padding: var(--sp-3) var(--sp-4);
   border-bottom: 1px solid var(--separator);
+  background: var(--bg-card);
   flex-shrink: 0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+  flex: 1;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--text-lg);
+  color: var(--text-color-muted);
+  padding: var(--sp-1) var(--sp-2);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.back-btn:hover {
+  background: var(--state-hover);
+}
+
+.room-info {
+  min-width: 0;
+}
+
+.room-name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
 }
 
 .room-title {
   margin: 0;
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color-strong);
 }
 
 .room-subtitle {
   margin: var(--sp-1) 0 0 0;
-  font-size: var(--text-md);
-  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  color: var(--text-color-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  flex-shrink: 0;
+}
+
+.header-stats {
+  display: flex;
+  gap: var(--sp-4);
+}
+
+.stat-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.stat-num {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color-strong);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.stat-num.studying {
+  color: var(--success);
+}
+
+.stat-lbl {
+  font-size: var(--text-xs);
+  color: var(--text-color-muted);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
 }
 
 .room-body {
@@ -285,14 +371,14 @@ function goBack() {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--separator);
   overflow: hidden;
 }
 
 .member-sidebar {
-  width: 280px;
+  width: 260px;
   flex-shrink: 0;
   border-left: 1px solid var(--separator);
+  background: var(--bg-card);
   overflow: hidden;
 }
 
@@ -305,8 +391,14 @@ function goBack() {
 }
 
 @media (max-width: 768px) {
-  .room-detail-view {
-    height: calc(100vh - var(--header-height) - var(--bottom-nav-height));
+  .room-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-right {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .room-body {
