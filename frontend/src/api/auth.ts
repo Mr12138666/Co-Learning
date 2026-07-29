@@ -26,6 +26,7 @@ export interface TokenResponse {
 
 export const authApi = {
   register: (data: RegisterRequest) => http.post<ApiResponse<void>>('/auth/register', data),
+  resendVerification: (email: string) => http.post<ApiResponse<void>>('/auth/resend-verification', { email }),
   verifyEmail: (token: string) => http.post<ApiResponse<void>>('/auth/verify-email', { token }),
   login: (data: LoginRequest) => http.post<ApiResponse<TokenResponse>>('/auth/login', data),
   refresh: () => http.post<ApiResponse<TokenResponse>>('/auth/refresh'),

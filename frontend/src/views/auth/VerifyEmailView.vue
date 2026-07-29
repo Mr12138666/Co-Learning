@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { NCard, NInput, NButton, NSpace, NAlert, useMessage } from 'naive-ui'
 import { authApi } from '@/api/auth'
@@ -8,9 +8,28 @@ const route = useRoute()
 const router = useRouter()
 const message = useMessage()
 
+const email = ref((route.query.email as string) || '')
 const code = ref((route.query.token as string) || '')
 const loading = ref(false)
 const verified = ref(false)
+const resending = ref(false)
+const resendCountdown = ref(0)
+let countdownTimer: ReturnType<typeof setInterval> | null = null
+
+function startCountdown() {
+  resendCountdown.value = 60
+  countdownTimer = setInterval(() => {
+    resendCountdown.value--
+    if (resendCountdown.value <= 0) {
+      if (countdownTimer) clearInterval(countdownTimer)
+      countdownTimer = null
+    }
+  }, 1000)
+}
+
+onUnmounted(() => {
+  if (countdownTimer) clearInterval(countdownTimer)
+})
 
 async function handleVerify() {
   if (!code.value || code.value.length !== 6) {
@@ -24,9 +43,27 @@ async function handleVerify() {
     message.success('邮箱验证成功！')
     setTimeout(() => router.push({ name: 'login' }), 2000)
   } catch (error: any) {
-    message.error(error.response?.data?.message || '验证失败，请检查验证码或重新注册')
+    message.error(error.response?.data?.message || '验证失败，请检查验证码')
   } finally {
     loading.value = false
+  }
+}
+
+async function handleResend() {
+  if (!email.value) {
+    message.error('请先填写注册邮箱')
+    return
+  }
+  if (resendCountdown.value > 0) return
+  resending.value = true
+  try {
+    await authApi.resendVerification(email.value)
+    message.success('验证码已重新发送，请查收邮箱')
+    startCountdown()
+  } catch (error: any) {
+    message.error(error.response?.data?.message || '发送失败，请稍后重试')
+  } finally {
+    resending.value = false
   }
 }
 </script>
@@ -42,10 +79,22 @@ async function handleVerify() {
         </NAlert>
       </template>
       <template v-else>
-        <p class="form-description">请输入您收到的6位邮箱验证码。</p>
+        <p class="form-description">
+          验证码已发送至 <strong>{{ email || '您的邮箱' }}</strong>，请输入6位验证码完成验证。
+        </p>
         <NSpace vertical class="auth-actions">
           <NInput v-model:value="code" placeholder="输入6位验证码" maxlength="6" />
           <NButton type="primary" block :loading="loading" @click="handleVerify">验证</NButton>
+          <div class="resend-row">
+            <NButton
+              text
+              :disabled="resendCountdown > 0 || resending"
+              :loading="resending"
+              @click="handleResend"
+            >
+              {{ resendCountdown > 0 ? `${resendCountdown}s 后可重新发送` : '重新发送验证码' }}
+            </NButton>
+          </div>
           <NButton text block @click="router.push({ name: 'login' })">返回登录</NButton>
         </NSpace>
       </template>
@@ -90,5 +139,9 @@ async function handleVerify() {
   margin-bottom: var(--sp-4);
   color: var(--text-color-muted);
   font-size: var(--text-sm);
+}
+
+.resend-row {
+  text-align: center;
 }
 </style>

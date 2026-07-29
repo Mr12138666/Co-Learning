@@ -15,6 +15,8 @@ public interface AuthService {
 
     void register(RegisterRequest request);
 
+    void resendVerificationEmail(String email);
+
     void verifyEmail(VerifyEmailRequest request);
 
     TokenResponse login(LoginRequest request, HttpServletResponse response);

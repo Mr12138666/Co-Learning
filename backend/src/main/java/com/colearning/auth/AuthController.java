@@ -3,6 +3,7 @@ package com.colearning.auth;
 import com.colearning.auth.dto.request.ForgotPasswordRequest;
 import com.colearning.auth.dto.request.LoginRequest;
 import com.colearning.auth.dto.request.RegisterRequest;
+import com.colearning.auth.dto.request.ResendVerificationRequest;
 import com.colearning.auth.dto.request.ResetPasswordRequest;
 import com.colearning.auth.dto.request.VerifyEmailRequest;
 import com.colearning.auth.dto.response.TokenResponse;
@@ -37,7 +38,14 @@ public class AuthController {
     @RateLimit(key = "register", limit = 5, window = 60)
     public ResponseEntity<ApiResponse<Void>> register(@Valid @RequestBody RegisterRequest request) {
         authService.register(request);
-        return ResponseEntity.ok(ApiResponse.ok());
+        return ResponseEntity.ok(ApiResponse.message("注册申请已提交，请查收邮箱完成验证"));
+    }
+
+    @PostMapping("/resend-verification")
+    @RateLimit(key = "resend-verification", limit = 3, window = 300)
+    public ResponseEntity<ApiResponse<Void>> resendVerification(@RequestBody ResendVerificationRequest request) {
+        authService.resendVerificationEmail(request.email());
+        return ResponseEntity.ok(ApiResponse.message("验证码已重新发送，请查收邮箱"));
     }
 
     @PostMapping("/verify-email")

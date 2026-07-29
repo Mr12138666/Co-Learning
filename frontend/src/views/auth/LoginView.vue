@@ -2,7 +2,7 @@
 import { ref, reactive } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
-import { NCard, NForm, NFormItem, NInput, NButton, NSpace, useMessage } from 'naive-ui'
+import { NCard, NForm, NFormItem, NInput, NButton, NSpace, NAlert, useMessage } from 'naive-ui'
 import type { FormInst, FormRules } from 'naive-ui'
 
 const router = useRouter()
@@ -12,6 +12,7 @@ const message = useMessage()
 
 const formRef = ref<FormInst | null>(null)
 const loading = ref(false)
+const unverifiedEmail = ref('')
 
 const formData = reactive({
   email: '',
@@ -38,8 +39,14 @@ async function handleLogin() {
       const redirect = route.query.redirect as string
       router.push(redirect || '/dashboard')
     } catch (error: any) {
-      const msg = error.response?.data?.message || '登录失败，请检查邮箱和密码'
-      message.error(msg)
+      const errorCode = error.response?.data?.code
+      if (errorCode === 'AUTH-002') {
+        unverifiedEmail.value = formData.email
+        message.warning('邮箱未验证，请先完成验证')
+      } else {
+        const msg = error.response?.data?.message || '登录失败，请检查邮箱和密码'
+        message.error(msg)
+      }
     } finally {
       loading.value = false
     }
@@ -52,6 +59,21 @@ async function handleLogin() {
     <div class="auth-brand">CL</div>
     <NCard :bordered="false" class="auth-card">
       <h1 class="auth-title">登录</h1>
+      <NAlert
+        v-if="unverifiedEmail"
+        type="warning"
+        class="unverified-alert"
+        :show-icon="true"
+      >
+        邮箱未验证，请先完成验证。
+        <NButton
+          text
+          type="primary"
+          @click="router.push({ name: 'verify-email', query: { email: unverifiedEmail } })"
+        >
+          去验证
+        </NButton>
+      </NAlert>
       <NForm ref="formRef" :model="formData" :rules="rules" size="large">
         <NFormItem path="email" label="邮箱">
           <NInput v-model:value="formData.email" placeholder="请输入邮箱" @keyup.enter="handleLogin" />
@@ -112,6 +134,10 @@ const isDev = import.meta.env.DEV
   font-size: var(--text-xl);
   font-weight: var(--weight-semibold);
   color: var(--text-color-strong);
+}
+
+.unverified-alert {
+  margin-bottom: var(--sp-4);
 }
 
 .auth-actions {

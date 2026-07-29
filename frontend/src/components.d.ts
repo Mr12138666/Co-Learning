@@ -26,6 +26,8 @@ declare module 'vue' {
     NSpin: typeof import('naive-ui')['NSpin']
     NTag: typeof import('naive-ui')['NTag']
     NTooltip: typeof import('naive-ui')['NTooltip']
+    PremiumButton: typeof import('./components/common/PremiumButton.vue')['default']
+    PremiumCard: typeof import('./components/common/PremiumCard.vue')['default']
     QuickAddTask: typeof import('./components/task/QuickAddTask.vue')['default']
     RoomCard: typeof import('./components/room/RoomCard.vue')['default']
     RoomChatBox: typeof import('./components/room/RoomChatBox.vue')['default']

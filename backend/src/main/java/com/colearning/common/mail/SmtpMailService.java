@@ -1,13 +1,15 @@
 package com.colearning.common.mail;
 
+import com.colearning.common.exception.BusinessException;
+import com.colearning.common.exception.ErrorCode;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 /**
@@ -28,7 +30,6 @@ public class SmtpMailService implements MailService {
     private String fromAddress;
 
     @Override
-    @Async
     public void sendVerificationEmail(String to, String verificationLink) {
         String subject = "[Co-Learning] 邮箱验证码";
         String html = """
@@ -48,7 +49,6 @@ public class SmtpMailService implements MailService {
     }
 
     @Override
-    @Async
     public void sendPasswordResetEmail(String to, String resetLink) {
         String subject = "[Co-Learning] 重置密码验证码";
         String html = """
@@ -68,7 +68,6 @@ public class SmtpMailService implements MailService {
     }
 
     @Override
-    @Async
     public void sendWelcomeEmail(String to, String displayName) {
         String subject = "[Co-Learning] 欢迎加入伴学社区！";
         String html = """
@@ -99,8 +98,9 @@ public class SmtpMailService implements MailService {
             helper.setText(html, true);
             mailSender.send(message);
             log.info("Email sent to: {} subject: {}", to, subject);
-        } catch (MessagingException e) {
+        } catch (MessagingException | MailException e) {
             log.error("Failed to send email to {}: {}", to, e.getMessage());
+            throw BusinessException.of(ErrorCode.AUTH_EMAIL_SEND_FAILED);
         }
     }
 }

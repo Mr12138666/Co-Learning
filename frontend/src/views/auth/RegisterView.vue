@@ -51,8 +51,8 @@ async function handleRegister() {
         password: formData.password,
         displayName: formData.displayName,
       })
-      message.success('注册成功！请检查邮箱完成验证')
-      router.push({ name: 'verify-email' })
+      message.success('注册申请已提交，请查收邮箱完成验证')
+      router.push({ name: 'verify-email', query: { email: formData.email } })
     } catch (error: any) {
       const msg = error.response?.data?.message || '注册失败'
       message.error(msg)

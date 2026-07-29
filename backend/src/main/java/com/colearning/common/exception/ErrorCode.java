@@ -32,6 +32,8 @@ public enum ErrorCode {
     AUTH_ACCOUNT_LOCKED("AUTH-008", "Account temporarily locked", HttpStatus.LOCKED),
     AUTH_ACCOUNT_SUSPENDED("AUTH-009", "Account suspended", HttpStatus.FORBIDDEN),
     AUTH_PASSWORD_TOO_WEAK("AUTH-010", "Password does not meet security requirements", HttpStatus.BAD_REQUEST),
+    AUTH_EMAIL_SEND_FAILED("AUTH-011", "Failed to send verification email, please try again later", HttpStatus.SERVICE_UNAVAILABLE),
+    AUTH_USER_ALREADY_VERIFIED("AUTH-012", "Email already verified", HttpStatus.CONFLICT),
 
     // ===== User (2xx) =====
     USER_NOT_FOUND("USER-001", "User not found", HttpStatus.NOT_FOUND),

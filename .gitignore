@@ -25,7 +25,7 @@ e2e/test-results/
 e2e/playwright-report/
 e2e/playwright/.cache/
 
-# ===== IDE =====
+# ===== IDE / Editor =====
 .idea/
 .vscode/
 *.iml
@@ -36,6 +36,10 @@ e2e/playwright/.cache/
 *~
 .DS_Store
 Thumbs.db
+
+# ===== Tool / Agent Memory =====
+.workbuddy/
+.trae/
 
 # ===== Env =====
 .env
@@ -59,6 +63,5 @@ ehthumbs.db
 Desktop.ini
 
 # ===== Debug / Temp =====
-*.png
-dy
-expressions.txt
+*.tmp
+*.bak

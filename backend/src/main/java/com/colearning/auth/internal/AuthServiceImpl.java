@@ -91,14 +91,29 @@ public class AuthServiceImpl implements AuthService {
                 .build();
         userProfileRepository.save(profile);
 
-        // Generate and send verification email
+        // Generate and send verification email (synchronous — fails the registration if SMTP is down)
         String rawToken = generateAndStoreVerificationToken(user.getId(), "REGISTER");
         mailService.sendVerificationEmail(user.getEmail(), rawToken);
 
-        // Welcome bonus: 50 tokens for new users
+        // Welcome bonus: 50 tokens for new users (only after email is successfully sent)
         gamificationService.addTokens(user.getId(), 50);
 
         log.info("User registered: email={}", user.getEmail());
+    }
+
+    @Override
+    public void resendVerificationEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> BusinessException.of(ErrorCode.USER_NOT_FOUND));
+
+        if (user.getEmailVerified()) {
+            throw BusinessException.of(ErrorCode.AUTH_USER_ALREADY_VERIFIED);
+        }
+
+        String rawToken = generateAndStoreVerificationToken(user.getId(), "REGISTER");
+        mailService.sendVerificationEmail(user.getEmail(), rawToken);
+
+        log.info("Verification email resent: email={}", email);
     }
 
     // ===== Email Verification =====
