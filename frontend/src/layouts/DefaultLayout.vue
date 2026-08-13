@@ -13,6 +13,7 @@ import { useThemeStore } from '@/stores/themeStore'
 import { useStudyStore } from '@/stores/studyStore'
 import { useTaskStore } from '@/stores/taskStore'
 import { getErrorMessage } from '@/utils/http-error'
+import { userApi } from '@/api/user'
 import FocusMiniPlayer from '@/components/focus/FocusMiniPlayer.vue'
 import QuickAddTask from '@/components/task/QuickAddTask.vue'
 import CommandPalette from '@/components/common/CommandPalette.vue'
@@ -147,10 +148,28 @@ const displayName = computed(
   () => authStore.user?.displayName || authStore.user?.email?.split('@')[0] || '用户',
 )
 
+// Ensure avatar URL is absolute (relative URLs may not work in embedded/proxy contexts)
+const avatarSrc = computed(() => {
+  const url = authStore.user?.avatarUrl
+  if (!url) return undefined
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
+  return window.location.origin + url
+})
+
 onMounted(() => {
   window.addEventListener('resize', handleResize)
   window.addEventListener('keydown', onGlobalKeydown)
   loadSidebarData()
+  // Sync avatar from server
+  if (authStore.isAuthenticated) {
+    userApi.getMyProfile().then((res) => {
+      const p = res.data.data
+      if (p && authStore.user) {
+        authStore.user.avatarUrl = p.avatarUrl
+        authStore.user.displayName = p.displayName
+      }
+    }).catch(() => {})
+  }
 })
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
@@ -283,15 +302,16 @@ defineExpose({ refreshInboxCount })
       </nav>
 
       <div class="sidebar__footer">
-        <button class="icon-btn footer-theme" type="button" :aria-label="themeStore.theme === 'dark' ? '切换浅色模式' : '切换深色模式'" @click="themeStore.toggleTheme()">
-          <component :is="themeStore.theme === 'dark' ? Sun : Moon" :size="17" />
-          <span v-if="!collapsed" class="footer-theme__label">{{ themeStore.theme === 'dark' ? '浅色模式' : '深色模式' }}</span>
+        <button class="icon-btn footer-theme" type="button" :aria-label="themeStore.themeName === 'dark' ? '切换浅色模式' : '切换深色模式'" @click="themeStore.toggleDarkMode()">
+          <component :is="themeStore.themeName === 'dark' ? Sun : Moon" :size="17" />
+          <span v-if="!collapsed" class="footer-theme__label">{{ themeStore.themeName === 'dark' ? '浅色模式' : '深色模式' }}</span>
         </button>
         <NDropdown :options="userOptions" placement="top-start" @select="handleUserAction">
           <button class="footer-user" :class="{ 'footer-user--collapsed': collapsed }" type="button">
-            <NAvatar round :size="collapsed ? 26 : 30" :src="authStore.user?.avatarUrl || undefined">
-              {{ displayName.charAt(0) }}
-            </NAvatar>
+            <div style="width:30px;height:30px;border-radius:50%;overflow:hidden;background:#eee;flex-shrink:0;">
+              <img v-if="avatarSrc" :src="avatarSrc" style="width:100%;height:100%;object-fit:cover;" @error="($event.target as HTMLImageElement).style.display='none'" />
+              <span v-else style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:14px;font-weight:600;">{{ displayName.charAt(0) }}</span>
+            </div>
             <div v-if="!collapsed" class="footer-user__info">
               <div class="footer-user__name">{{ displayName }}</div>
               <div class="footer-user__email">{{ authStore.user?.email }}</div>
@@ -324,15 +344,18 @@ defineExpose({ refreshInboxCount })
         <QuickAddTask @created="refreshInboxCount" />
         <NTooltip v-if="!isMobile" placement="bottom">
           <template #trigger>
-            <button class="topbar-icon-btn" type="button" :aria-label="themeStore.theme === 'dark' ? '切换浅色模式' : '切换深色模式'" @click="themeStore.toggleTheme()">
-              <component :is="themeStore.theme === 'dark' ? Sun : Moon" :size="18" />
+            <button class="topbar-icon-btn" type="button" :aria-label="themeStore.themeName === 'dark' ? '切换浅色模式' : '切换深色模式'" @click="themeStore.toggleDarkMode()">
+              <component :is="themeStore.themeName === 'dark' ? Sun : Moon" :size="18" />
             </button>
           </template>
-          {{ themeStore.theme === 'dark' ? '切换浅色模式' : '切换深色模式' }}
+          {{ themeStore.themeName === 'dark' ? '切换浅色模式' : '切换深色模式' }}
         </NTooltip>
         <NDropdown :options="userOptions" placement="bottom-end" @select="handleUserAction">
           <button class="topbar-avatar" type="button" aria-label="用户菜单">
-            <NAvatar round :size="30" :src="authStore.user?.avatarUrl || undefined">{{ displayName.charAt(0) }}</NAvatar>
+            <div style="width:30px;height:30px;border-radius:50%;overflow:hidden;background:#eee;flex-shrink:0;">
+              <img v-if="avatarSrc" :src="avatarSrc" style="width:100%;height:100%;object-fit:cover;" @error="($event.target as HTMLImageElement).style.display='none'" />
+              <span v-else style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:14px;font-weight:600;">{{ displayName.charAt(0) }}</span>
+            </div>
           </button>
         </NDropdown>
       </header>
@@ -363,9 +386,9 @@ defineExpose({ refreshInboxCount })
           </RouterLink>
         </nav>
         <template #footer>
-          <button class="icon-btn footer-theme" type="button" @click="themeStore.toggleTheme()">
-            <component :is="themeStore.theme === 'dark' ? Sun : Moon" :size="17" />
-            <span class="footer-theme__label">{{ themeStore.theme === 'dark' ? '浅色模式' : '深色模式' }}</span>
+          <button class="icon-btn footer-theme" type="button" @click="themeStore.toggleDarkMode()">
+            <component :is="themeStore.themeName === 'dark' ? Sun : Moon" :size="17" />
+            <span class="footer-theme__label">{{ themeStore.themeName === 'dark' ? '浅色模式' : '深色模式' }}</span>
           </button>
         </template>
       </NDrawerContent>

@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import type { RoomResponse } from '@/api/room'
+import AppAvatar from '@/components/common/AppAvatar.vue'
 
 const props = defineProps<{
   room: RoomResponse
@@ -44,9 +45,9 @@ function enterRoom() {
 
     <div class="card-footer">
       <div class="card-owner">
-        <n-avatar round size="small" :src="room.ownerAvatar || undefined">
+        <AppAvatar :src="room.ownerAvatar" :size="28">
           {{ room.ownerName?.charAt(0) }}
-        </n-avatar>
+        </AppAvatar>
         <span class="owner-name">{{ room.ownerName }}</span>
       </div>
 

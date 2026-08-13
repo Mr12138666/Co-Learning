@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { NPopover } from 'naive-ui'
+import AppAvatar from '@/components/common/AppAvatar.vue'
 import type { RoomMemberResponse } from '@/api/room'
 import { userApi } from '@/api/user'
 import type { PublicUserProfileResponse } from '@/api/user'
@@ -119,9 +120,9 @@ function getRoleTag(role: string) {
             :class="{ offline: !onlineUserIds.has(member.userId) }"
           >
             <div class="member-avatar">
-              <n-avatar round size="small" :src="member.avatarUrl || undefined">
+              <AppAvatar :src="member.avatarUrl" :size="28">
                 {{ member.displayName?.charAt(0) }}
-              </n-avatar>
+              </AppAvatar>
               <span
                 class="online-dot"
                 :class="{
@@ -164,9 +165,9 @@ function getRoleTag(role: string) {
         <div class="profile-card">
           <template v-if="profileCache.has(member.userId)">
             <div class="profile-card-header">
-              <n-avatar round :size="40" :src="profileCache.get(member.userId)!.avatarUrl || undefined">
+              <AppAvatar :src="profileCache.get(member.userId)!.avatarUrl" :size="40">
                 {{ profileCache.get(member.userId)!.displayName?.charAt(0) }}
-              </n-avatar>
+              </AppAvatar>
               <div class="profile-card-info">
                 <div class="profile-card-name">{{ profileCache.get(member.userId)!.displayName }}</div>
               </div>

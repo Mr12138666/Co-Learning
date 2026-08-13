@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { onMounted, watch } from 'vue'
 import { useLeaderboardStore, type LeaderboardType } from '@/stores/leaderboardStore'
-import { NTabs, NTabPane, NAvatar, NSpin, NEmpty, NTag } from 'naive-ui'
+import { NTabs, NTabPane, NSpin, NEmpty, NTag } from 'naive-ui'
+import AppAvatar from '@/components/common/AppAvatar.vue'
 import { usePageLoad } from '@/composables/usePageLoad'
 import StateError from '@/components/common/StateError.vue'
 
@@ -68,9 +69,9 @@ const tabLabels: Record<LeaderboardType, string> = {
       <!-- My Rank -->
       <div v-if="store.myRank" class="my-rank-bar glass glow-warm">
         <div class="my-rank-left">
-          <NAvatar round size="small" :src="store.myRank.avatarUrl || undefined">
+          <AppAvatar :src="store.myRank.avatarUrl" :size="28">
             {{ store.myRank.displayName?.charAt(0) }}
-          </NAvatar>
+          </AppAvatar>
           <span class="my-name">{{ store.myRank.displayName }}</span>
           <NTag :type="store.myRank.rank > 0 ? 'info' : 'default'" size="tiny" round :bordered="false">
             {{ store.myRank.rank > 0 ? `第 ${store.myRank.rank} 名` : '未上榜' }}
@@ -111,9 +112,9 @@ const tabLabels: Record<LeaderboardType, string> = {
                   </span>
                 </div>
                 <div class="col-user">
-                  <NAvatar round size="small" :src="entry.avatarUrl || undefined">
+                  <AppAvatar :src="entry.avatarUrl" :size="28">
                     {{ entry.displayName?.charAt(0) }}
-                  </NAvatar>
+                  </AppAvatar>
                   <span class="rank-name">{{ entry.displayName }}</span>
                 </div>
                 <div class="col-score">

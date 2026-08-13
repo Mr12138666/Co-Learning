@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { NText, NButton, NAvatar } from 'naive-ui'
+import { NText, NButton } from 'naive-ui'
+import AppAvatar from '@/components/common/AppAvatar.vue'
 import { journalApi, type Journal } from '@/api/journal'
 import { userApi } from '@/api/user'
 import { sanitizeHtml } from '@/utils/markdown'
@@ -67,9 +68,9 @@ onMounted(() => {
         <h1 class="article-title">{{ journal.title }}</h1>
 
         <div class="article-meta">
-          <NAvatar round size="small" :src="authorInfo?.avatarUrl || undefined">
+          <AppAvatar :src="authorInfo?.avatarUrl" :size="28">
             {{ authorInfo?.nickname?.charAt(0) || '?' }}
-          </NAvatar>
+          </AppAvatar>
           <span class="meta-author">{{ authorInfo?.nickname || '未知用户' }}</span>
           <span class="meta-dot">·</span>
           <span class="meta-date">{{ formatDate(journal.publishedAt || journal.createdAt) }}</span>

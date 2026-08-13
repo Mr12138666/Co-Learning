@@ -147,6 +147,18 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/user/ProfileView.vue'),
         meta: { title: '个人资料', requiresAuth: true },
       },
+      {
+        path: 'settings',
+        name: 'settings',
+        component: () => import('@/views/user/SettingsView.vue'),
+        meta: { title: '设置', requiresAuth: true },
+      },
+      {
+        path: 'notifications',
+        name: 'notifications',
+        component: () => import('@/views/user/NotificationsView.vue'),
+        meta: { title: '通知中心', requiresAuth: true },
+      },
     ],
   },
   {

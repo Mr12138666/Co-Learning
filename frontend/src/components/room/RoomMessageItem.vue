@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
 import dayjs from 'dayjs'
 import type { RoomMessageResponse } from '@/api/room'
+import AppAvatar from '@/components/common/AppAvatar.vue'
 
 const props = defineProps<{
   message: RoomMessageResponse
@@ -56,9 +57,9 @@ const imageUrl = computed(() => {
 
   <div v-else class="message-item" :class="{ own: isOwn }">
     <!-- Avatar -->
-    <n-avatar round size="small" :src="message.avatarUrl || undefined" class="message-avatar">
+    <AppAvatar :src="message.avatarUrl" :size="28" class="message-avatar">
       {{ message.displayName?.charAt(0) }}
-    </n-avatar>
+    </AppAvatar>
 
     <!-- Content -->
     <div class="message-content-wrapper">

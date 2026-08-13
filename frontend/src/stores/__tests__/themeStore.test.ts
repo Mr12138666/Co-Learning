@@ -53,18 +53,18 @@ describe('themeStore', () => {
 
   it('defaults to light theme', () => {
     const store = useThemeStore()
-    expect(store.theme).toBe('light')
+    expect(store.themeName).toBe('light')
   })
 
   it('toggleTheme switches between light and dark', () => {
     const store = useThemeStore()
-    expect(store.theme).toBe('light')
+    expect(store.themeName).toBe('light')
 
-    store.toggleTheme()
-    expect(store.theme).toBe('dark')
+    store.toggleDarkMode()
+    expect(store.themeName).toBe('dark')
 
-    store.toggleTheme()
-    expect(store.theme).toBe('light')
+    store.toggleDarkMode()
+    expect(store.themeName).toBe('light')
   })
 
   it('setTheme saves to localStorage', () => {
@@ -79,7 +79,7 @@ describe('themeStore', () => {
     const store = useThemeStore()
     store.initTheme()
 
-    expect(store.theme).toBe('dark')
+    expect(store.themeName).toBe('dark')
   })
 
   it('initTheme falls back to system preference when no stored value', () => {
@@ -87,7 +87,7 @@ describe('themeStore', () => {
     store.initTheme()
 
     // matchMedia mock returns false for dark, so theme stays light
-    expect(store.theme).toBe('light')
+    expect(store.themeName).toBe('light')
   })
 
   it('initTheme sets dark when system prefers dark', () => {
@@ -95,6 +95,6 @@ describe('themeStore', () => {
     const store = useThemeStore()
     store.initTheme()
 
-    expect(store.theme).toBe('dark')
+    expect(store.themeName).toBe('dark')
   })
 })
