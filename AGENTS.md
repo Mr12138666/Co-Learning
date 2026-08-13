@@ -117,15 +117,16 @@ module/
 
 ### Theme System
 
-The frontend supports 5 themes with dynamic switching:
+The frontend supports 6 themes with dynamic switching:
 
 | Theme | Description | Type |
 |-------|-------------|------|
 | `light` | Default light theme | Light |
-| `dark` | Dark theme for eye comfort | Dark |
-| `blue` | Blue theme for focus | Light |
-| `green` | Green theme for growth | Light |
-| `purple` | Purple theme for creativity | Light |
+| `dark` | Default dark theme | Dark |
+| `cyberpunk` | Neon colors, glowing effects | Dark |
+| `newspaper` | Retro newspaper style, black & white | Light |
+| `pixel` | 8-bit pixel art style, no rounded corners | Light |
+| `ocean` | Deep blue ocean theme | Dark |
 
 **Theme Files:**
 - `frontend/src/config/theme.ts` - Theme configuration with CSS variable mappings

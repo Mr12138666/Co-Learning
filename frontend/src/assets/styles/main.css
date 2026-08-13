@@ -1265,3 +1265,167 @@ body {
   .skeleton-glass { animation: none !important; }
 }
 
+
+/* ============================================
+   特色主题样式
+   ============================================ */
+
+/* 赛博朋克主题 */
+html.cyberpunk {
+  --surface-0: #0a0015;
+  --surface-1: #0d0221;
+  --surface-2: #150734;
+  --surface-3: #1a0a3e;
+  --surface-4: #2d1b69;
+  --ink-strong: #05d9e8;
+  --ink: #d1f7ff;
+  --ink-muted: rgba(209, 247, 255, 0.6);
+  --separator: rgba(5, 217, 232, 0.3);
+  --divider: rgba(255, 42, 109, 0.2);
+  --border-color: rgba(5, 217, 232, 0.4);
+  --success: #39ff14;
+  --warning: #ffae00;
+  --danger: #ff2a6d;
+  --info: #05d9e8;
+  --state-hover: rgba(5, 217, 232, 0.1);
+  --state-selected: rgba(123, 47, 247, 0.2);
+}
+
+html.cyberpunk .brand__mark {
+  background: linear-gradient(135deg, #ff2a6d, #05d9e8);
+  box-shadow: 0 0 10px rgba(5, 217, 232, 0.5);
+}
+
+html.cyberpunk .nav-item.is-active {
+  color: #05d9e8;
+  text-shadow: 0 0 10px rgba(5, 217, 232, 0.5);
+}
+
+html.cyberpunk .nav-item.is-active::before {
+  background: linear-gradient(180deg, #ff2a6d, #05d9e8);
+  box-shadow: 0 0 8px rgba(5, 217, 232, 0.6);
+}
+
+/* 复古报纸主题 */
+html.newspaper {
+  --surface-0: #f5f0e8;
+  --surface-1: #faf6ee;
+  --surface-2: #ffffff;
+  --surface-3: #f5f0e8;
+  --surface-4: #e8dfd0;
+  --ink-strong: #1a0f09;
+  --ink: #2c1810;
+  --ink-muted: rgba(44, 24, 16, 0.6);
+  --separator: #d4c8b0;
+  --divider: rgba(44, 24, 16, 0.15);
+  --border-color: #8b7355;
+  --success: #2d5a27;
+  --warning: #8b6914;
+  --danger: #8b0000;
+  --info: #2c3e50;
+}
+
+html.newspaper .brand__mark {
+  background: #1a0f09;
+  color: #f5f0e8;
+  border: 2px solid #1a0f09;
+}
+
+html.newspaper .sidebar {
+  border-right: 3px double #8b7355;
+}
+
+html.newspaper .nav-item.is-active {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* 像素艺术主题 */
+html.pixel {
+  --surface-0: #f0f0f0;
+  --surface-1: #ffffff;
+  --surface-2: #ffffff;
+  --surface-3: #f0f0f0;
+  --surface-4: #e0e0e0;
+  --ink-strong: #1a1a2e;
+  --ink: #16213e;
+  --ink-muted: rgba(22, 33, 62, 0.6);
+  --separator: #4a4a6a;
+  --divider: rgba(26, 26, 46, 0.2);
+  --border-color: #4a4a6a;
+  --success: #00c853;
+  --warning: #ffd600;
+  --danger: #ff1744;
+  --info: #2979ff;
+}
+
+html.pixel * {
+  border-radius: 0 !important;
+  image-rendering: pixelated;
+}
+
+html.pixel .brand__mark {
+  background: linear-gradient(135deg, #ff6e40, #ff3d00);
+  border: 3px solid #1a1a2e;
+  box-shadow: 4px 4px 0 #1a1a2e;
+}
+
+html.pixel .nav-item.is-active {
+  background: #fff9c4;
+  border: 2px solid #ff6e40;
+}
+
+html.pixel .nav-item.is-active::before {
+  background: #ff3d00;
+  width: 4px;
+}
+
+html.pixel button, html.pixel .n-button {
+  border: 3px solid #1a1a2e !important;
+  box-shadow: 4px 4px 0 #1a1a2e !important;
+}
+
+html.pixel button:active, html.pixel .n-button:active {
+  box-shadow: 2px 2px 0 #1a1a2e !important;
+  transform: translate(2px, 2px);
+}
+
+/* 海洋深蓝主题 */
+html.ocean {
+  --surface-0: #000a14;
+  --surface-1: #001220;
+  --surface-2: #001f3f;
+  --surface-3: #002d56;
+  --surface-4: #003d6d;
+  --ink-strong: #caf0f8;
+  --ink: #ade8f4;
+  --ink-muted: rgba(173, 232, 244, 0.6);
+  --separator: rgba(0, 180, 216, 0.3);
+  --divider: rgba(0, 180, 216, 0.15);
+  --border-color: rgba(0, 180, 216, 0.4);
+  --success: #48cae4;
+  --warning: #f9c74f;
+  --danger: #f94144;
+  --info: #00b4d8;
+  --state-hover: rgba(0, 180, 216, 0.1);
+  --state-selected: rgba(0, 80, 158, 0.3);
+}
+
+html.ocean .brand__mark {
+  background: linear-gradient(135deg, #0077b6, #00b4d8);
+  box-shadow: 0 0 15px rgba(0, 180, 216, 0.3);
+}
+
+html.ocean .sidebar {
+  background: linear-gradient(180deg, #001220, #001f3f);
+}
+
+html.ocean .nav-item.is-active {
+  color: #00b4d8;
+}
+
+html.ocean .nav-item.is-active::before {
+  background: linear-gradient(180deg, #0077b6, #00b4d8);
+  box-shadow: 0 0 8px rgba(0, 180, 216, 0.5);
+}

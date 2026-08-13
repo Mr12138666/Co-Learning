@@ -1,7 +1,15 @@
 <script setup lang="ts">
-import { computed, h } from 'vue'
+import { computed, h, type Component } from 'vue'
 import { NDropdown, NButton, NIcon } from 'naive-ui'
-import { SunnyOutline, MoonOutline, ColorPaletteOutline } from '@vicons/ionicons5'
+import { 
+  SunnyOutline, 
+  MoonOutline, 
+  ColorPaletteOutline,
+  FlashOutline,
+  NewspaperOutline,
+  GameControllerOutline,
+  WaterOutline
+} from '@vicons/ionicons5'
 import { useThemeStore } from '@/stores/themeStore'
 import { getThemeList } from '@/config/theme'
 import type { ThemeName } from '@/config/theme'
@@ -11,10 +19,18 @@ const themeStore = useThemeStore()
 // 获取主题列表并转换为下拉选项
 const themeOptions = computed(() => {
   const themes = getThemeList()
+  const iconMap: Record<string, Component> = {
+    light: SunnyOutline,
+    dark: MoonOutline,
+    cyberpunk: FlashOutline,
+    newspaper: NewspaperOutline,
+    pixel: GameControllerOutline,
+    ocean: WaterOutline,
+  }
   return themes.map(theme => ({
     label: theme.label,
     key: theme.name,
-    icon: () => h(theme.isDark ? MoonOutline : SunnyOutline),
+    icon: () => h(iconMap[theme.name] || ColorPaletteOutline),
   }))
 })
 

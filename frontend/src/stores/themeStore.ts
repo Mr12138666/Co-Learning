@@ -27,16 +27,21 @@ export const useThemeStore = defineStore('theme', () => {
     const theme = getTheme(name)
     const root = document.documentElement
     
-    // 1. 处理深色/浅色模式切换
+    // 1. 移除所有主题类
+    const allThemeNames: ThemeName[] = ['light', 'dark', 'cyberpunk', 'newspaper', 'pixel', 'ocean']
+    allThemeNames.forEach(t => root.classList.remove(t))
+    
+    // 2. 添加当前主题类
+    root.classList.add(name)
+    
+    // 3. 处理深色/浅色模式切换
     if (theme.isDark) {
       root.classList.add('dark')
-      root.classList.remove('light')
     } else {
       root.classList.add('light')
-      root.classList.remove('dark')
     }
     
-    // 2. 应用主题颜色（修改 accent 变量）
+    // 4. 应用主题颜色（修改 accent 变量）
     const { colors } = theme
     root.style.setProperty('--accent-50', colors.accent50)
     root.style.setProperty('--accent-100', colors.accent100)
