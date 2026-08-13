@@ -1267,10 +1267,10 @@ body {
 
 
 /* ============================================
-   特色主题样式
+   特色主题样式 - 彻底改造版
    ============================================ */
 
-/* 赛博朋克主题 */
+/* 赛博朋克主题 - 霓虹故障风 */
 html.cyberpunk {
   --surface-0: #0a0015;
   --surface-1: #0d0221;
@@ -1287,26 +1287,76 @@ html.cyberpunk {
   --warning: #ffae00;
   --danger: #ff2a6d;
   --info: #05d9e8;
-  --state-hover: rgba(5, 217, 232, 0.1);
-  --state-selected: rgba(123, 47, 247, 0.2);
+  --state-hover: rgba(5, 217, 232, 0.15);
+  --state-selected: rgba(123, 47, 247, 0.3);
+  --radius-sm: 0;
+  --radius-md: 2px;
+  --radius-lg: 4px;
+}
+
+html.cyberpunk body {
+  background: #0a0015;
+  background-image: 
+    linear-gradient(rgba(5, 217, 232, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(5, 217, 232, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+html.cyberpunk .sidebar {
+  background: linear-gradient(180deg, #0d0221 0%, #150734 100%);
+  border-right: 2px solid rgba(5, 217, 232, 0.5);
+  box-shadow: 4px 0 20px rgba(5, 217, 232, 0.2);
 }
 
 html.cyberpunk .brand__mark {
   background: linear-gradient(135deg, #ff2a6d, #05d9e8);
-  box-shadow: 0 0 10px rgba(5, 217, 232, 0.5);
+  box-shadow: 0 0 15px rgba(5, 217, 232, 0.6), 0 0 30px rgba(255, 42, 109, 0.3);
+  animation: cyberpunk-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes cyberpunk-glow {
+  from { box-shadow: 0 0 15px rgba(5, 217, 232, 0.6), 0 0 30px rgba(255, 42, 109, 0.3); }
+  to { box-shadow: 0 0 20px rgba(5, 217, 232, 0.8), 0 0 40px rgba(255, 42, 109, 0.5); }
+}
+
+html.cyberpunk .nav-item {
+  border-left: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+html.cyberpunk .nav-item:hover {
+  background: rgba(5, 217, 232, 0.1);
+  border-left-color: rgba(5, 217, 232, 0.5);
 }
 
 html.cyberpunk .nav-item.is-active {
   color: #05d9e8;
-  text-shadow: 0 0 10px rgba(5, 217, 232, 0.5);
+  background: rgba(5, 217, 232, 0.15);
+  border-left-color: #05d9e8;
+  text-shadow: 0 0 10px rgba(5, 217, 232, 0.8);
 }
 
 html.cyberpunk .nav-item.is-active::before {
   background: linear-gradient(180deg, #ff2a6d, #05d9e8);
-  box-shadow: 0 0 8px rgba(5, 217, 232, 0.6);
+  box-shadow: 0 0 10px rgba(5, 217, 232, 0.8);
 }
 
-/* 复古报纸主题 */
+html.cyberpunk .topbar {
+  background: rgba(13, 2, 33, 0.9);
+  border-bottom: 1px solid rgba(5, 217, 232, 0.4);
+  backdrop-filter: blur(10px);
+}
+
+html.cyberpunk button, html.cyberpunk .n-button {
+  border: 1px solid rgba(5, 217, 232, 0.4) !important;
+  text-shadow: 0 0 5px rgba(5, 217, 232, 0.5);
+}
+
+html.cyberpunk button:hover, html.cyberpunk .n-button:hover {
+  box-shadow: 0 0 15px rgba(5, 217, 232, 0.4);
+}
+
+/* 复古报纸主题 - 1920年代报纸风 */
 html.newspaper {
   --surface-0: #f5f0e8;
   --surface-1: #faf6ee;
@@ -1316,32 +1366,87 @@ html.newspaper {
   --ink-strong: #1a0f09;
   --ink: #2c1810;
   --ink-muted: rgba(44, 24, 16, 0.6);
-  --separator: #d4c8b0;
-  --divider: rgba(44, 24, 16, 0.15);
-  --border-color: #8b7355;
+  --separator: #8b7355;
+  --divider: rgba(44, 24, 16, 0.2);
+  --border-color: #5c4a32;
   --success: #2d5a27;
   --warning: #8b6914;
   --danger: #8b0000;
   --info: #2c3e50;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+}
+
+html.newspaper * {
+  font-family: 'Georgia', 'Times New Roman', 'Songti SC', serif !important;
+}
+
+html.newspaper body {
+  background: #f5f0e8;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4c8b0' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+html.newspaper .sidebar {
+  background: #faf6ee;
+  border-right: 3px double #5c4a32;
+  box-shadow: 2px 0 0 #8b7355;
 }
 
 html.newspaper .brand__mark {
   background: #1a0f09;
   color: #f5f0e8;
   border: 2px solid #1a0f09;
+  font-family: 'Georgia', serif;
+  font-weight: bold;
+  letter-spacing: 2px;
 }
 
-html.newspaper .sidebar {
-  border-right: 3px double #8b7355;
+html.newspaper .brand__name {
+  font-family: 'Georgia', serif;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+html.newspaper .nav-section__title {
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 10px;
+  border-bottom: 1px solid #8b7355;
+  padding-bottom: 4px;
+}
+
+html.newspaper .nav-item {
+  border-bottom: 1px dotted #d4c8b0;
 }
 
 html.newspaper .nav-item.is-active {
-  font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 4px;
+  font-weight: bold;
+  font-style: italic;
 }
 
-/* 像素艺术主题 */
+html.newspaper .nav-item.is-active::before {
+  background: #1a0f09;
+  width: 4px;
+}
+
+html.newspaper .topbar {
+  background: #faf6ee;
+  border-bottom: 2px solid #5c4a32;
+}
+
+html.newspaper .page-content {
+  border-left: 1px solid #d4c8b0;
+  padding: 20px;
+}
+
+html.newspaper .n-card {
+  border: 2px solid #5c4a32 !important;
+  box-shadow: 4px 4px 0 #8b7355 !important;
+}
+
+/* 像素艺术主题 - 8-bit游戏风 */
 html.pixel {
   --surface-0: #f0f0f0;
   --surface-1: #ffffff;
@@ -1353,37 +1458,80 @@ html.pixel {
   --ink-muted: rgba(22, 33, 62, 0.6);
   --separator: #4a4a6a;
   --divider: rgba(26, 26, 46, 0.2);
-  --border-color: #4a4a6a;
+  --border-color: #1a1a2e;
   --success: #00c853;
   --warning: #ffd600;
   --danger: #ff1744;
   --info: #2979ff;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
 }
 
 html.pixel * {
-  border-radius: 0 !important;
   image-rendering: pixelated;
+  font-family: 'Courier New', 'Consolas', monospace !important;
+}
+
+html.pixel body {
+  background: #e0e0e0;
+  background-image: 
+    linear-gradient(45deg, #d0d0d0 25%, transparent 25%),
+    linear-gradient(-45deg, #d0d0d0 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #d0d0d0 75%),
+    linear-gradient(-45deg, transparent 75%, #d0d0d0 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+html.pixel .sidebar {
+  background: #1a1a2e;
+  border-right: 4px solid #1a1a2e;
+  box-shadow: 8px 0 0 #4a4a6a;
 }
 
 html.pixel .brand__mark {
   background: linear-gradient(135deg, #ff6e40, #ff3d00);
-  border: 3px solid #1a1a2e;
+  border: 4px solid #1a1a2e;
   box-shadow: 4px 4px 0 #1a1a2e;
+  font-size: 10px;
+}
+
+html.pixel .nav-item {
+  color: #ffffff;
+  border: 2px solid transparent;
+  margin-bottom: 2px;
+}
+
+html.pixel .nav-item:hover {
+  background: rgba(255, 110, 64, 0.3);
+  border-color: #ff6e40;
 }
 
 html.pixel .nav-item.is-active {
-  background: #fff9c4;
-  border: 2px solid #ff6e40;
+  background: #ff6e40;
+  color: #1a1a2e;
+  border: 2px solid #1a1a2e;
+  box-shadow: 4px 4px 0 #1a1a2e;
+  font-weight: bold;
 }
 
 html.pixel .nav-item.is-active::before {
-  background: #ff3d00;
-  width: 4px;
+  display: none;
+}
+
+html.pixel .topbar {
+  background: #1a1a2e;
+  border-bottom: 4px solid #1a1a2e;
+  color: #ffffff;
 }
 
 html.pixel button, html.pixel .n-button {
-  border: 3px solid #1a1a2e !important;
+  border: 4px solid #1a1a2e !important;
   box-shadow: 4px 4px 0 #1a1a2e !important;
+  background: #ffffff !important;
+  font-weight: bold !important;
+  transition: none !important;
 }
 
 html.pixel button:active, html.pixel .n-button:active {
@@ -1391,7 +1539,12 @@ html.pixel button:active, html.pixel .n-button:active {
   transform: translate(2px, 2px);
 }
 
-/* 海洋深蓝主题 */
+html.pixel .n-card {
+  border: 4px solid #1a1a2e !important;
+  box-shadow: 8px 8px 0 #4a4a6a !important;
+}
+
+/* 海洋深蓝主题 - 深海探险风 */
 html.ocean {
   --surface-0: #000a14;
   --surface-1: #001220;
@@ -1408,24 +1561,79 @@ html.ocean {
   --warning: #f9c74f;
   --danger: #f94144;
   --info: #00b4d8;
-  --state-hover: rgba(0, 180, 216, 0.1);
-  --state-selected: rgba(0, 80, 158, 0.3);
+  --state-hover: rgba(0, 180, 216, 0.15);
+  --state-selected: rgba(0, 80, 158, 0.4);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
 }
 
-html.ocean .brand__mark {
-  background: linear-gradient(135deg, #0077b6, #00b4d8);
-  box-shadow: 0 0 15px rgba(0, 180, 216, 0.3);
+html.ocean body {
+  background: #000a14;
+  background-image: 
+    radial-gradient(ellipse at 20% 50%, rgba(0, 119, 182, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(0, 180, 216, 0.1) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 80%, rgba(0, 80, 158, 0.1) 0%, transparent 40%);
 }
 
 html.ocean .sidebar {
-  background: linear-gradient(180deg, #001220, #001f3f);
+  background: linear-gradient(180deg, #001220 0%, #001f3f 50%, #001220 100%);
+  border-right: 1px solid rgba(0, 180, 216, 0.3);
+}
+
+html.ocean .brand__mark {
+  background: linear-gradient(135deg, #0077b6, #00b4d8, #90e0ef);
+  box-shadow: 0 0 20px rgba(0, 180, 216, 0.5), 0 0 40px rgba(0, 119, 182, 0.3);
+  animation: ocean-pulse 3s ease-in-out infinite;
+}
+
+@keyframes ocean-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(0, 180, 216, 0.5); }
+  50% { box-shadow: 0 0 30px rgba(0, 180, 216, 0.8), 0 0 60px rgba(0, 119, 182, 0.4); }
+}
+
+html.ocean .nav-item {
+  border-radius: 8px;
+  margin-bottom: 4px;
+}
+
+html.ocean .nav-item:hover {
+  background: rgba(0, 180, 216, 0.1);
 }
 
 html.ocean .nav-item.is-active {
   color: #00b4d8;
+  background: rgba(0, 180, 216, 0.15);
+  box-shadow: inset 0 0 20px rgba(0, 180, 216, 0.1);
 }
 
 html.ocean .nav-item.is-active::before {
-  background: linear-gradient(180deg, #0077b6, #00b4d8);
-  box-shadow: 0 0 8px rgba(0, 180, 216, 0.5);
+  background: linear-gradient(180deg, #0077b6, #00b4d8, #90e0ef);
+  box-shadow: 0 0 10px rgba(0, 180, 216, 0.8);
+  border-radius: 4px;
+}
+
+html.ocean .topbar {
+  background: rgba(0, 18, 32, 0.9);
+  border-bottom: 1px solid rgba(0, 180, 216, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+html.ocean .page-content {
+  background: radial-gradient(ellipse at center, rgba(0, 180, 216, 0.05) 0%, transparent 70%);
+}
+
+html.ocean .n-card {
+  border: 1px solid rgba(0, 180, 216, 0.3) !important;
+  box-shadow: 0 0 20px rgba(0, 180, 216, 0.1) !important;
+  background: rgba(0, 31, 63, 0.8) !important;
+}
+
+html.ocean button, html.ocean .n-button {
+  border-radius: 12px !important;
+  border: 1px solid rgba(0, 180, 216, 0.4) !important;
+}
+
+html.ocean button:hover, html.ocean .n-button:hover {
+  box-shadow: 0 0 15px rgba(0, 180, 216, 0.4);
 }
