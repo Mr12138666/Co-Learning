@@ -1448,21 +1448,21 @@ html.newspaper .n-card {
 
 /* 像素艺术主题 - 8-bit游戏风 */
 html.pixel {
-  --surface-0: #f0f0f0;
-  --surface-1: #ffffff;
-  --surface-2: #ffffff;
-  --surface-3: #f0f0f0;
-  --surface-4: #e0e0e0;
+  --surface-0: #e8e0d0;
+  --surface-1: #f0e8d8;
+  --surface-2: #f5edd8;
+  --surface-3: #e8e0d0;
+  --surface-4: #d8d0c0;
   --ink-strong: #1a1a2e;
-  --ink: #16213e;
-  --ink-muted: rgba(22, 33, 62, 0.6);
-  --separator: #4a4a6a;
-  --divider: rgba(26, 26, 46, 0.2);
-  --border-color: #1a1a2e;
-  --success: #00c853;
-  --warning: #ffd600;
-  --danger: #ff1744;
-  --info: #2979ff;
+  --ink: #2d2d44;
+  --ink-muted: rgba(45, 45, 68, 0.7);
+  --separator: #8b8b6a;
+  --divider: rgba(45, 45, 68, 0.25);
+  --border-color: #4a4a6a;
+  --success: #00a844;
+  --warning: #e6b800;
+  --danger: #d40020;
+  --info: #1e64ff;
   --radius-sm: 0;
   --radius-md: 0;
   --radius-lg: 0;
@@ -1474,18 +1474,19 @@ html.pixel * {
 }
 
 html.pixel body {
-  background: #e0e0e0;
+  background: #d8d0c0;
   background-image: 
-    linear-gradient(45deg, #d0d0d0 25%, transparent 25%),
-    linear-gradient(-45deg, #d0d0d0 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #d0d0d0 75%),
-    linear-gradient(-45deg, transparent 75%, #d0d0d0 75%);
+    linear-gradient(45deg, #c8c0b0 25%, transparent 25%),
+    linear-gradient(-45deg, #c8c0b0 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #c8c0b0 75%),
+    linear-gradient(-45deg, transparent 75%, #c8c0b0 75%);
   background-size: 20px 20px;
   background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+  color: #2d2d44;
 }
 
 html.pixel .sidebar {
-  background: #1a1a2e;
+  background: #2d2d44;
   border-right: 4px solid #1a1a2e;
   box-shadow: 8px 0 0 #4a4a6a;
 }
@@ -1498,7 +1499,7 @@ html.pixel .brand__mark {
 }
 
 html.pixel .nav-item {
-  color: #ffffff;
+  color: #e8e0d0;
   border: 2px solid transparent;
   margin-bottom: 2px;
 }
@@ -1521,29 +1522,53 @@ html.pixel .nav-item.is-active::before {
 }
 
 html.pixel .topbar {
-  background: #1a1a2e;
+  background: #2d2d44;
   border-bottom: 4px solid #1a1a2e;
-  color: #ffffff;
+  color: #e8e0d0;
+}
+
+html.pixel .topbar__title {
+  color: #e8e0d0;
 }
 
 html.pixel button, html.pixel .n-button {
   border: 4px solid #1a1a2e !important;
-  box-shadow: 4px 4px 0 #1a1a2e !important;
-  background: #ffffff !important;
+  box-shadow: 4px 4px 0 #4a4a6a !important;
+  background: #f0e8d8 !important;
   font-weight: bold !important;
   transition: none !important;
+  color: #1a1a2e !important;
 }
 
 html.pixel button:active, html.pixel .n-button:active {
-  box-shadow: 2px 2px 0 #1a1a2e !important;
+  box-shadow: 2px 2px 0 #4a4a6a !important;
   transform: translate(2px, 2px);
 }
 
 html.pixel .n-card {
-  border: 4px solid #1a1a2e !important;
-  box-shadow: 8px 8px 0 #4a4a6a !important;
+  border: 4px solid #4a4a6a !important;
+  box-shadow: 8px 8px 0 #8b8b6a !important;
+  background: #f0e8d8 !important;
+  color: #2d2d44 !important;
 }
 
+html.pixel .page-content {
+  background: #e8e0d0;
+  color: #2d2d44;
+}
+
+html.pixel .nav-section__title {
+  color: #8b8b6a;
+}
+
+html.pixel .footer-theme__label,
+html.pixel .footer-user__name {
+  color: #e8e0d0;
+}
+
+html.pixel .footer-user__email {
+  color: #8b8b6a;
+}
 /* 海洋深蓝主题 - 深海探险风 */
 html.ocean {
   --surface-0: #000a14;
