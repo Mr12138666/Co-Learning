@@ -85,9 +85,9 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="journal-edit-view">
+  <div class="journal-edit-view gradient-mesh">
     <!-- Toolbar -->
-    <div class="edit-toolbar">
+    <div class="edit-toolbar glass">
       <h3 class="toolbar-title">{{ isEdit ? '编辑日志' : '写日志' }}</h3>
       <NButton quaternary size="small" @click="router.push('/journals')">
         ← 返回列表
@@ -95,7 +95,7 @@ onMounted(async () => {
     </div>
 
     <!-- Editor -->
-    <div class="editor-container">
+    <div class="editor-container glass">
       <JournalEditor
         :model-value="loadedJournal ?? undefined"
         :mode="isEdit ? 'edit' : 'create'"
@@ -118,6 +118,8 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius-md);
 }
 
 .toolbar-title {
@@ -128,9 +130,7 @@ onMounted(async () => {
 }
 
 .editor-container {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   padding: var(--sp-4);
 }
 </style>

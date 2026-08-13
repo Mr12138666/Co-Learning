@@ -52,9 +52,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="journal-square-view">
+  <div class="journal-square-view gradient-mesh">
     <!-- Page Header -->
-    <div class="page-header">
+    <div class="page-header glass">
       <h3 class="page-title">日志广场</h3>
       <NButton type="primary" size="small" @click="router.push('/journals/new')">
         + 写日志
@@ -75,7 +75,7 @@ onMounted(() => {
       <div
         v-for="journal in journals"
         :key="journal.id"
-        class="journal-row"
+        class="journal-row glass-list-item"
         @click="router.push(`/journals/${journal.id}`)"
       >
         <div class="journal-row-main">
@@ -103,6 +103,8 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius-md);
 }
 
 .page-title {
@@ -119,29 +121,12 @@ onMounted(() => {
 .journal-list {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  background: var(--bg-card);
+  gap: var(--sp-2);
 }
 
 .journal-row {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  padding: var(--sp-3) var(--sp-4);
   min-height: 44px;
   cursor: pointer;
-  transition: background-color var(--transition-fast);
-  border-bottom: 1px solid var(--divider);
-}
-
-.journal-row:last-child {
-  border-bottom: none;
-}
-
-.journal-row:hover {
-  background: var(--state-hover);
 }
 
 .journal-row-main {

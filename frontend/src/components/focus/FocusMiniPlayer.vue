@@ -80,7 +80,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div v-if="focusStore.hasSession" class="mini-player" :class="{ 'is-paused': focusStore.isPaused }" role="timer" aria-live="off">
+  <div v-if="focusStore.hasSession" class="mini-player glass--subtle" :class="{ 'is-paused': focusStore.isPaused, 'glow-brand': focusStore.isActive }" role="timer" aria-live="off">
     <button class="mini-player__toggle" type="button" :aria-label="focusStore.isActive ? '暂停专注' : '继续专注'" @click="togglePause">
       <Pause v-if="focusStore.isActive" :size="14" />
       <Play v-else :size="14" />
@@ -107,12 +107,10 @@ onUnmounted(() => {
   height: 32px;
   padding: 0 4px 0 2px;
   border-radius: var(--radius-pill);
-  background: var(--success-muted);
-  border: 1px solid var(--success);
 }
 .mini-player.is-paused {
-  background: var(--warning-muted);
   border-color: var(--warning);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.12);
 }
 .mini-player__toggle,
 .mini-player__expand {

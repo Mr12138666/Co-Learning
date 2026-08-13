@@ -13,7 +13,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="state-error">
+  <div class="state-error glass glass--subtle glow-danger">
     <div class="state-error__icon">
       <TriangleAlert :size="18" />
     </div>
@@ -32,6 +32,7 @@ const emit = defineEmits<{
   gap: var(--sp-2);
   padding: var(--sp-8) var(--sp-4);
   min-height: 160px;
+  border-radius: var(--radius-lg);
   animation: fadeIn var(--duration-md) var(--ease-enter);
 }
 

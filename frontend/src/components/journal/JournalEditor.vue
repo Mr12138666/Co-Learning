@@ -197,7 +197,7 @@ async function insertImage(e: Event) {
 </script>
 
 <template>
-  <div class="journal-editor">
+  <div class="journal-editor glass">
     <!-- Title & Visibility -->
     <NSpace vertical :size="12">
       <NInput
@@ -229,7 +229,7 @@ async function insertImage(e: Event) {
       <!-- Editor -->
       <div v-if="previewMode !== 'preview'" class="editor-pane">
         <!-- Toolbar -->
-        <div class="editor-toolbar">
+        <div class="editor-toolbar glass glass--subtle">
           <NButton size="tiny" quaternary @click="insertHeading">标题</NButton>
           <NButton size="tiny" quaternary @click="insertBold">加粗</NButton>
           <NButton size="tiny" quaternary @click="insertItalic">斜体</NButton>
@@ -250,7 +250,7 @@ async function insertImage(e: Event) {
       </div>
 
       <!-- Preview -->
-      <div v-if="previewMode !== 'edit'" class="preview-pane">
+      <div v-if="previewMode !== 'edit'" class="preview-pane glass glass--subtle">
         <div class="preview-content" v-html="previewHtml" />
       </div>
     </div>
@@ -272,6 +272,8 @@ async function insertImage(e: Event) {
 <style scoped>
 .journal-editor {
   width: 100%;
+  padding: var(--sp-5);
+  border-radius: var(--radius-lg);
 }
 
 .editor-area {
@@ -300,7 +302,8 @@ async function insertImage(e: Event) {
 .editor-toolbar {
   display: flex;
   gap: 4px;
-  padding: 4px 0;
+  padding: var(--sp-1) var(--sp-2);
+  border-radius: var(--radius-md);
 }
 
 .image-upload-btn {
@@ -312,8 +315,6 @@ async function insertImage(e: Event) {
 }
 
 .preview-pane {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   padding: var(--sp-4);
   overflow-y: auto;

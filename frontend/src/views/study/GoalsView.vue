@@ -94,7 +94,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="page-container">
+  <div class="page-container gradient-mesh">
     <!-- Page Header -->
     <div class="page-header">
       <h3 class="page-title">考试目标</h3>
@@ -113,8 +113,8 @@ onMounted(() => {
     </div>
 
     <!-- Goal List -->
-    <div v-else class="goal-list">
-      <div v-for="goal in studyStore.goals" :key="goal.id" class="goal-row">
+    <div v-else class="goal-list glass section-card">
+      <div v-for="goal in studyStore.goals" :key="goal.id" class="goal-row glass-list-item stagger-in">
         <div class="goal-row__main">
           <div class="goal-row__title">
             <span class="goal-row__name">{{ goal.examName }}</span>
@@ -225,25 +225,15 @@ onMounted(() => {
 .goal-list {
   display: flex;
   flex-direction: column;
+  gap: var(--sp-2);
 }
 
 .goal-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--sp-3) var(--sp-4);
   min-height: 52px;
-  border-bottom: 1px solid var(--separator);
-  transition: background-color var(--transition-fast);
   gap: var(--sp-3);
-}
-
-.goal-row:last-child {
-  border-bottom: none;
-}
-
-.goal-row:hover {
-  background: var(--state-hover);
 }
 
 .goal-row__main {

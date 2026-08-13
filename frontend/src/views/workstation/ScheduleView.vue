@@ -127,10 +127,10 @@ onMounted(reload)
 </script>
 
 <template>
-  <div class="schedule-view">
+  <div class="schedule-view gradient-mesh">
     <StateLoading v-if="loading" text="加载日程…" />
     <StateError v-else-if="error" :description="error" @retry="reload" />
-    <div v-else class="schedule-calendar">
+    <div v-else class="schedule-calendar glass">
       <FullCalendar :options="calendarOptions" />
     </div>
     <TaskEditorDrawer v-model:show="editorShow" :task="editingTask" @saved="reload" @deleted="reload" />
@@ -139,7 +139,7 @@ onMounted(reload)
 
 <style scoped>
 .schedule-view { height: 100%; padding: var(--sp-4); display: flex; flex-direction: column; overflow: hidden; }
-.schedule-calendar { flex: 1; min-height: 0; }
+.schedule-calendar { flex: 1; min-height: 0; padding: var(--sp-3); border-radius: var(--radius-lg); overflow: hidden; }
 
 /* Map FullCalendar to the design system */
 .schedule-calendar :deep(.fc) {

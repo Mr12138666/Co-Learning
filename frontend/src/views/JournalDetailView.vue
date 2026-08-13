@@ -47,7 +47,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="journal-detail-view">
+  <div class="journal-detail-view gradient-mesh">
     <!-- Loading -->
     <div v-if="loading" class="loading-center">
       <NText depth="3">加载中...</NText>
@@ -56,14 +56,14 @@ onMounted(() => {
     <!-- Content -->
     <template v-else-if="journal">
       <!-- Toolbar -->
-      <div class="detail-toolbar">
+      <div class="detail-toolbar glass">
         <NButton quaternary size="small" @click="router.push('/journals/square')">
           ← 返回广场
         </NButton>
       </div>
 
       <!-- Article -->
-      <article class="article">
+      <article class="article glass">
         <h1 class="article-title">{{ journal.title }}</h1>
 
         <div class="article-meta">
@@ -96,12 +96,14 @@ onMounted(() => {
 
 .detail-toolbar {
   margin-bottom: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
 }
 
 .article {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   padding: var(--sp-6);
 }
 

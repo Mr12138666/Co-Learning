@@ -169,9 +169,9 @@ function goBack() {
 </script>
 
 <template>
-  <div class="room-detail-view" v-if="roomStore.currentRoom">
+  <div class="room-detail-view gradient-mesh" v-if="roomStore.currentRoom">
     <!-- Room Header -->
-    <div class="room-header">
+    <div class="room-header glass">
       <div class="header-left">
         <button class="back-btn" @click="goBack">←</button>
         <div class="room-info">
@@ -221,7 +221,7 @@ function goBack() {
     <!-- Room Body -->
     <div class="room-body">
       <!-- Chat Area -->
-      <div class="chat-area">
+      <div class="chat-area glass">
         <RoomChatBox
           :messages="roomStore.messages"
           @send="handleSend"
@@ -230,7 +230,7 @@ function goBack() {
       </div>
 
       <!-- Member Sidebar -->
-      <div class="member-sidebar" v-if="showMembers">
+      <div class="member-sidebar glass" v-if="showMembers">
         <RoomMemberList
           :members="roomStore.members"
           :online-user-ids="roomStore.onlineUserIds"
@@ -252,7 +252,6 @@ function goBack() {
   flex-direction: column;
   height: calc(100vh - var(--header-height) - var(--bottom-nav-height));
   min-height: 400px;
-  background: var(--bg-page);
 }
 
 .room-header {
@@ -261,8 +260,8 @@ function goBack() {
   align-items: center;
   gap: var(--sp-4);
   padding: var(--sp-3) var(--sp-4);
-  border-bottom: 1px solid var(--separator);
-  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  margin: var(--sp-2);
   flex-shrink: 0;
 }
 
@@ -363,6 +362,8 @@ function goBack() {
   flex: 1;
   min-height: 0;
   overflow: hidden;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-2) var(--sp-2);
 }
 
 .chat-area {
@@ -372,14 +373,14 @@ function goBack() {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  border-radius: var(--radius-lg);
 }
 
 .member-sidebar {
   width: 260px;
   flex-shrink: 0;
-  border-left: 1px solid var(--separator);
-  background: var(--bg-card);
   overflow: hidden;
+  border-radius: var(--radius-lg);
 }
 
 .loading-state {
@@ -407,7 +408,6 @@ function goBack() {
 
   .chat-area {
     border-right: none;
-    border-bottom: 1px solid var(--separator);
   }
 
   .member-sidebar {

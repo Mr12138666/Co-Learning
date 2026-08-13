@@ -63,6 +63,7 @@ async function handleStart() {
 async function handleFinish() {
   const result = await finishFocus()
   emit('finished', result)
+  triggerConfetti()
 
   if (result && (result as any).effectiveSeconds) {
     const effectiveSeconds = (result as any).effectiveSeconds
@@ -70,6 +71,35 @@ async function handleFinish() {
     const tokens = Math.max(1, Math.floor(effectiveSeconds / 600))
     message.success(`专注完成！获得 ${exp} 经验 + ${tokens} 代币`)
   }
+}
+
+// 炫酷: confetti burst on focus completion
+function triggerConfetti() {
+  const colors = ['#60a5fa', '#3b82f6', '#93c5fd', '#f472b6', '#fbbf24', '#34d399']
+  const count = 90
+  const frag = document.createDocumentFragment()
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('div')
+    el.style.cssText = `
+      position: fixed;
+      z-index: 9999;
+      left: ${Math.random() * 100}vw;
+      top: -20px;
+      width: ${Math.random() * 10 + 6}px;
+      height: ${Math.random() * 10 + 6}px;
+      background: ${colors[Math.floor(Math.random() * colors.length)]};
+      border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+      opacity: ${Math.random() * 0.6 + 0.4};
+      pointer-events: none;
+      animation: confetti-fall ${Math.random() * 2.5 + 2}s ease-in forwards;
+      animation-delay: ${Math.random() * 0.8}s;
+    `
+    frag.appendChild(el)
+  }
+  document.body.appendChild(frag)
+  setTimeout(() => {
+    document.querySelectorAll('[style*="confetti-fall"]').forEach((n) => n.remove())
+  }, 6000)
 }
 
 // Ring
@@ -117,7 +147,7 @@ const statusType = computed(() => {
 </script>
 
 <template>
-  <div class="focus-timer" :class="{ compact }">
+  <div class="focus-timer glass" :class="{ compact }">
     <!-- Mode Selector (only when no active session) -->
     <div v-if="!hasSession && !compact" class="mode-selector">
       <NRadioGroup v-model:value="timerMode" size="small">
@@ -197,6 +227,18 @@ const statusType = computed(() => {
           <NText depth="3" style="font-size: 13px;">准备开始</NText>
         </div>
       </div>
+    </div>
+
+    <!-- Session progress bar -->
+    <div
+      v-if="hasSession"
+      class="session-progress progress-glow"
+      role="progressbar"
+      :aria-valuenow="progressPercent"
+      aria-valuemin="0"
+      aria-valuemax="100"
+    >
+      <div class="progress-glow__fill" :style="{ width: progressPercent + '%' }" />
     </div>
 
     <!-- Pomodoro cycle indicator -->
@@ -311,6 +353,16 @@ const statusType = computed(() => {
   flex-direction: column;
   align-items: center;
   gap: var(--sp-4);
+  padding: var(--sp-5);
+  border-radius: var(--radius-lg);
+}
+
+.focus-timer.compact {
+  padding: var(--sp-3);
+}
+
+.session-progress {
+  width: min(360px, 100%);
 }
 
 .mode-selector {

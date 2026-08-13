@@ -14,7 +14,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="state-empty">
+  <div class="state-empty glass glass--subtle mesh-accent">
     <div class="state-empty__icon">
       <Inbox :size="18" />
     </div>
@@ -35,6 +35,7 @@ const emit = defineEmits<{
   gap: var(--sp-2);
   padding: var(--sp-8) var(--sp-4);
   min-height: 160px;
+  border-radius: var(--radius-lg);
   animation: fadeIn var(--duration-md) var(--ease-enter);
 }
 

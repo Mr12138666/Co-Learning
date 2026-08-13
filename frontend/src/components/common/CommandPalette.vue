@@ -88,7 +88,7 @@ watch(query, () => (activeIndex.value = 0))
 <template>
   <Teleport to="body">
     <div v-if="show" class="cmdk" role="dialog" aria-label="命令面板" @click.self="close">
-      <div class="cmdk__panel">
+      <div class="cmdk__panel glass--strong glow-brand">
         <div class="cmdk__search">
           <Search :size="17" class="cmdk__search-icon" />
           <input
@@ -131,10 +131,7 @@ watch(query, () => (activeIndex.value = 0))
 }
 .cmdk__panel {
   width: min(560px, 92vw);
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-4);
   overflow: hidden;
   animation: scaleIn var(--duration-sm) var(--ease-enter);
 }

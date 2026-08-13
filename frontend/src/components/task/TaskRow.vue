@@ -53,7 +53,7 @@ const hasMeta = computed(
 </script>
 
 <template>
-  <div class="task-row" :class="{ 'task-row--done': done, 'task-row--card': card }">
+  <div class="task-row glass-list-item" :class="{ 'task-row--done': done, 'task-row--card': card }">
     <span v-if="draggable" class="task-row__handle" aria-hidden="true">
       <GripVertical :size="15" />
     </span>
@@ -116,18 +116,7 @@ const hasMeta = computed(
   gap: var(--sp-2);
   min-height: 40px;
   padding: var(--sp-1) var(--sp-2);
-  border-radius: var(--radius-sm);
-  background: var(--bg-card);
-  border: 1px solid var(--divider);
-  transition: background-color var(--transition-fast), border-color var(--transition-fast),
-    opacity var(--transition-standard);
-}
-.task-row:hover {
-  background: var(--state-hover);
-  border-color: var(--border-color);
-}
-.task-row--card {
-  background: var(--surface-3);
+  transition: opacity var(--transition-standard);
 }
 .task-row--done {
   opacity: 0.6;

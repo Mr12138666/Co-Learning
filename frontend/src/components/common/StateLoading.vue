@@ -10,7 +10,7 @@ const rowCount = computed(() => (props.size === 'small' ? 2 : props.size === 'la
 </script>
 
 <template>
-  <div class="state-loading" role="status" :aria-label="text || '加载中'">
+  <div class="state-loading glass glass--subtle ambient-pulse" role="status" :aria-label="text || '加载中'">
     <div v-for="i in rowCount" :key="i" class="state-loading__row">
       <span class="state-loading__circle skeleton" />
       <span class="state-loading__lines">
@@ -29,6 +29,7 @@ const rowCount = computed(() => (props.size === 'small' ? 2 : props.size === 'la
   gap: var(--sp-3);
   padding: var(--sp-6) var(--sp-4);
   min-height: 160px;
+  border-radius: var(--radius-lg);
 }
 
 .state-loading__row {

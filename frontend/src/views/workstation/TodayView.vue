@@ -117,17 +117,17 @@ onMounted(reload)
 </script>
 
 <template>
-  <div class="today-view">
-    <header class="today-head">
+  <div class="today-view gradient-mesh">
+    <header class="today-head glass section-card">
       <div>
-        <h2 class="today-head__title"><Sun :size="16" /> Today</h2>
+        <h2 class="today-head__title section-card-title"><Sun :size="16" /> Today</h2>
         <p class="today-head__date">{{ dateLabel }}</p>
       </div>
     </header>
 
     <!-- Compact summary bar -->
     <div class="summary-bar">
-      <div v-for="item in summary" :key="item.label" class="summary-bar__item">
+      <div v-for="item in summary" :key="item.label" class="summary-bar__item glass interactive stagger-in">
         <span class="summary-bar__label">{{ item.label }}</span>
         <span class="summary-bar__value tabular-nums">{{ item.value }}</span>
       </div>
@@ -138,14 +138,14 @@ onMounted(reload)
 
     <template v-else>
       <!-- Quick add -->
-      <div class="quick-line">
+      <div class="quick-line glass--subtle">
         <NInput v-model:value="quickTitle" placeholder="添加今日任务，回车创建…" @keyup.enter="addQuick">
           <template #prefix><span class="quick-line__plus">+</span></template>
         </NInput>
       </div>
 
       <!-- Today's tasks -->
-      <section class="task-group">
+      <section class="task-group glass--subtle stagger-in">
         <TransitionGroup v-if="todayTasks.length" tag="div" name="task-fade" class="task-list">
           <TaskRow
             v-for="task in todayTasks"
@@ -162,11 +162,11 @@ onMounted(reload)
       </section>
 
       <!-- Overdue -->
-      <section v-if="overdueTasks.length" class="task-group">
+      <section v-if="overdueTasks.length" class="task-group glass--subtle stagger-in">
         <div class="group-head">
           <button class="group-head__toggle" type="button" @click="overdueOpen = !overdueOpen">
             <ChevronRight :size="15" class="group-head__chev" :class="{ 'is-open': overdueOpen }" />
-            <span class="group-head__title">逾期 ({{ overdueTasks.length }})</span>
+            <span class="group-head__title section-card-title">逾期 ({{ overdueTasks.length }})</span>
           </button>
           <NTooltip>
             <template #trigger>
@@ -221,20 +221,18 @@ onMounted(reload)
 .today-head__date { color: var(--text-color-muted); font-size: var(--text-sm); margin: 2px 0 0; }
 
 .summary-bar {
-  display: flex; gap: var(--sp-1); flex-wrap: wrap;
-  padding: var(--sp-1) var(--sp-2);
-  background: var(--surface-2);
-  border: 1px solid var(--divider);
-  border-radius: var(--radius-sm);
+  display: flex; gap: var(--sp-2); flex-wrap: wrap;
 }
-.summary-bar__item { display: flex; flex-direction: column; gap: 1px; padding: var(--sp-1) var(--sp-2); flex: 1; min-width: 90px; }
-.summary-bar__item + .summary-bar__item { border-left: 1px solid var(--divider); }
+.summary-bar__item { display: flex; flex-direction: column; gap: 1px; padding: var(--sp-2) var(--sp-3); flex: 1; min-width: 90px; border-radius: var(--radius-md); }
 .summary-bar__label { font-size: var(--text-xs); color: var(--text-color-muted); }
 .summary-bar__value { font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--text-color-strong); }
 
+.quick-line { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); border-radius: var(--radius-lg); }
+.quick-line :deep(.n-input) { background: transparent; }
+.quick-line :deep(.n-input__border) { border-color: transparent; }
 .quick-line__plus { color: var(--text-color-muted); font-size: var(--text-lg); }
 
-.task-group { display: flex; flex-direction: column; gap: var(--sp-1); }
+.task-group { display: flex; flex-direction: column; gap: var(--sp-1); padding: var(--sp-3); border-radius: var(--radius-lg); }
 .task-list { display: flex; flex-direction: column; gap: 2px; }
 
 /* List enter/leave transitions (restrained) */
@@ -257,6 +255,5 @@ onMounted(reload)
 @media (max-width: 768px) {
   .today-view { padding: var(--sp-3); }
   .summary-bar__item { min-width: calc(50% - var(--sp-2)); }
-  .summary-bar__item + .summary-bar__item { border-left: none; }
 }
 </style>

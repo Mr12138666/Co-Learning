@@ -167,7 +167,7 @@ onMounted(() => load(loadData))
 </script>
 
 <template>
-  <div class="checkin-view">
+  <div class="checkin-view gradient-mesh">
     <!-- Loading -->
     <div v-if="loading" class="loading-center">
       <NSpin size="large" />
@@ -201,7 +201,7 @@ onMounted(() => load(loadData))
         <!-- Today Tab -->
         <NTabPane name="today" tab="今日">
           <!-- Plan Section -->
-          <div class="section-card">
+          <div class="section-card glass">
             <div class="section-header">
               <span class="section-label">今日计划</span>
               <NTag size="tiny" :bordered="false" type="info">步骤 1</NTag>
@@ -215,7 +215,7 @@ onMounted(() => load(loadData))
           </div>
 
           <!-- Reflection Section -->
-          <div class="section-card">
+          <div class="section-card glass">
             <div class="section-header">
               <span class="section-label">学习复盘</span>
               <NTag size="tiny" :bordered="false" type="info">步骤 2</NTag>
@@ -230,7 +230,7 @@ onMounted(() => load(loadData))
             <div class="mood-section">
               <span class="mood-label">今日心情</span>
               <NRadioGroup v-model:value="mood">
-                <div class="mood-options">
+                <div class="mood-options glass glass--subtle">
                   <NRadio v-for="opt in moodOptions" :key="opt.value" :value="opt.value">
                     {{ opt.emoji }} {{ opt.label }}
                   </NRadio>
@@ -303,7 +303,7 @@ onMounted(() => load(loadData))
               <div
                 v-for="record in historyRecords"
                 :key="record.id"
-                class="history-card"
+                class="history-card glass glass--subtle stagger-in"
               >
                 <div class="history-card-header">
                   <span class="history-date">{{ record.checkinDate }}</span>
@@ -414,8 +414,6 @@ onMounted(() => load(loadData))
 }
 
 .section-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: var(--sp-4);
   margin-bottom: var(--sp-3);
@@ -453,6 +451,8 @@ onMounted(() => load(loadData))
   display: flex;
   gap: var(--sp-4);
   flex-wrap: wrap;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-md);
 }
 
 .image-section {
@@ -496,8 +496,6 @@ onMounted(() => load(loadData))
 }
 
 .history-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: var(--sp-4);
   margin-bottom: var(--sp-3);

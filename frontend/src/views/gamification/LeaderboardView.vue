@@ -44,7 +44,7 @@ const tabLabels: Record<LeaderboardType, string> = {
 </script>
 
 <template>
-  <div class="leaderboard-view">
+  <div class="leaderboard-view gradient-mesh">
     <!-- Loading -->
     <div v-if="loading" class="loading-center">
       <NSpin size="large" />
@@ -61,12 +61,12 @@ const tabLabels: Record<LeaderboardType, string> = {
 
     <template v-else>
       <!-- Page Header -->
-      <div class="page-header">
+      <div class="page-header glass page-hero">
         <h3 class="page-title">排行榜</h3>
       </div>
 
       <!-- My Rank -->
-      <div v-if="store.myRank" class="my-rank-bar">
+      <div v-if="store.myRank" class="my-rank-bar glass glow-warm">
         <div class="my-rank-left">
           <NAvatar round size="small" :src="store.myRank.avatarUrl || undefined">
             {{ store.myRank.displayName?.charAt(0) }}
@@ -86,8 +86,8 @@ const tabLabels: Record<LeaderboardType, string> = {
       <n-tabs type="line" animated :value="store.currentType" @update:value="switchTab">
         <n-tab-pane v-for="(label, key) in tabLabels" :key="key" :name="key" :tab="label">
           <n-spin :show="store.loading">
-            <div v-if="store.entries.length > 0" class="rank-table">
-              <div class="rank-table-header">
+            <div v-if="store.entries.length > 0" class="rank-table glass">
+              <div class="rank-table-header glass--subtle">
                 <span class="col-rank">排名</span>
                 <span class="col-user">用户</span>
                 <span class="col-score">专注时长</span>
@@ -95,11 +95,18 @@ const tabLabels: Record<LeaderboardType, string> = {
               <div
                 v-for="entry in store.entries"
                 :key="entry.userId"
-                class="rank-row"
-                :class="{ 'rank-top': entry.rank <= 3, 'rank-current': store.myRank?.userId === entry.userId }"
+                class="rank-row glass-list-item stagger-in"
+                :class="{
+                  'rank-top': entry.rank <= 3,
+                  'rank-1': entry.rank === 1,
+                  'rank-2': entry.rank === 2,
+                  'rank-3': entry.rank === 3,
+                  'rank-current': store.myRank?.userId === entry.userId,
+                  'glow-brand': store.myRank?.userId === entry.userId,
+                }"
               >
                 <div class="col-rank">
-                  <span class="rank-num" :style="{ color: rankColor(entry.rank) }">
+                  <span class="rank-num badge glass--subtle" :style="{ color: rankColor(entry.rank) }">
                     {{ entry.rank <= 3 ? ['🥇', '🥈', '🥉'][entry.rank - 1] : entry.rank }}
                   </span>
                 </div>
@@ -142,6 +149,8 @@ const tabLabels: Record<LeaderboardType, string> = {
 }
 
 .page-title {
+  position: relative;
+  z-index: 1;
   margin: 0;
   font-size: var(--text-xl);
   font-weight: var(--weight-semibold);
@@ -154,14 +163,24 @@ const tabLabels: Record<LeaderboardType, string> = {
 
 /* My Rank Bar */
 .my-rank-bar {
+  position: relative;
+  overflow: hidden;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: var(--sp-3) var(--sp-4);
-  background: var(--surface-2);
-  border: 1px solid var(--divider);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   margin-bottom: var(--sp-3);
+}
+
+.my-rank-bar::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--brand), var(--urgent));
 }
 
 .my-rank-left {
@@ -196,9 +215,11 @@ const tabLabels: Record<LeaderboardType, string> = {
 
 /* Rank Table */
 .rank-table {
-  background: var(--surface-2);
-  border: 1px solid var(--divider);
-  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-2);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   margin-top: var(--sp-3);
 }
@@ -212,42 +233,56 @@ const tabLabels: Record<LeaderboardType, string> = {
   color: var(--text-color-muted);
   text-transform: uppercase;
   letter-spacing: var(--tracking-wide);
-  border-bottom: 1px solid var(--separator);
-  background: var(--bg-sunken);
+  border-radius: var(--radius-md);
 }
 
 .rank-row {
   display: grid;
   grid-template-columns: 60px 1fr 100px;
   align-items: center;
+  gap: 0;
   padding: var(--sp-2) var(--sp-4);
   min-height: 44px;
-  transition: background-color var(--transition-fast);
-  border-bottom: 1px solid var(--divider);
 }
 
-.rank-row:last-child {
-  border-bottom: none;
-}
-
-.rank-row:hover {
-  background: var(--state-hover);
-}
-
+/* Podium glow + gold/silver/bronze accents for top 3 */
 .rank-row.rank-top {
-  background: var(--brand-subtle);
+  box-shadow:
+    0 0 20px rgba(245, 158, 11, 0.12),
+    0 0 40px rgba(245, 158, 11, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.rank-row.rank-1 {
+  border-left: 3px solid var(--warning);
+}
+
+.rank-row.rank-2 {
+  border-left: 3px solid #c0c4c8;
+}
+
+.rank-row.rank-3 {
+  border-left: 3px solid #cd7f32;
 }
 
 .rank-row.rank-current {
   border-left: 3px solid var(--brand);
-  padding-left: calc(var(--sp-4) - 3px);
+  padding-left: calc(var(--sp-4) - 2px);
+  box-shadow:
+    0 0 20px rgba(59, 130, 246, 0.12),
+    0 0 40px rgba(59, 130, 246, 0.06),
+    0 0 0 1px rgba(59, 130, 246, 0.15);
 }
 
 .rank-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 24px;
   font-size: var(--text-base);
   font-weight: var(--weight-bold);
   text-align: center;
-  display: block;
 }
 
 .col-user {

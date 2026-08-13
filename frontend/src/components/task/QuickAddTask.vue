@@ -52,15 +52,16 @@ async function submit(planToday: boolean) {
 <template>
   <NPopover v-model:show="show" trigger="click" placement="bottom-end" :width="320" @update:show="(v) => v && ensureSubjects()">
     <template #trigger>
-      <button class="quick-add__trigger" type="button" aria-label="快速创建任务" title="快速创建 (Inbox)">
+      <button class="quick-add__trigger glass" type="button" aria-label="快速创建任务" title="快速创建 (Inbox)">
         <Plus :size="18" />
       </button>
     </template>
-    <div class="quick-add">
+    <div class="quick-add glass glass--subtle">
       <NInput
         v-model:value="title"
         placeholder="输入任务标题，回车加入收件箱…"
         autofocus
+        class="quick-add__input"
         @keyup.enter="submit(false)"
       />
       <NSelect
@@ -86,22 +87,26 @@ async function submit(planToday: boolean) {
   width: 34px;
   height: 34px;
   border: none;
-  background: transparent;
-  border-radius: var(--radius-sm);
-  color: var(--text-color-muted);
+  border-radius: var(--radius-full);
+  color: var(--text-color);
   cursor: pointer;
   transition: background-color var(--transition-fast), color var(--transition-fast);
-}
-.quick-add__trigger:hover {
-  background: var(--state-hover);
-  color: var(--text-color);
 }
 
 .quick-add {
   display: flex;
   flex-direction: column;
   gap: var(--sp-2);
-  padding: var(--sp-1) 0;
+  padding: var(--sp-3);
+  border-radius: var(--radius-md);
+}
+.quick-add__input :deep(.n-input) {
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.dark .quick-add__input :deep(.n-input) {
+  background: rgba(255, 255, 255, 0.06);
 }
 .quick-add__actions {
   display: flex;

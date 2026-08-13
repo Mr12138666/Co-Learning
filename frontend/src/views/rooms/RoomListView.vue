@@ -63,7 +63,7 @@ async function submitCreate() {
 </script>
 
 <template>
-  <div class="room-list-view">
+  <div class="room-list-view gradient-mesh">
     <!-- Loading -->
     <div v-if="loading" class="loading-center">
       <NSpin size="large" />
@@ -80,7 +80,7 @@ async function submitCreate() {
 
     <template v-else>
       <!-- Page Header -->
-      <div class="page-header">
+      <div class="page-header glass">
         <h3 class="page-title">陪伴房</h3>
         <n-button type="primary" size="small" @click="handleCreate">
           创建房间
@@ -102,7 +102,7 @@ async function submitCreate() {
     </template>
 
     <!-- Create Room Modal -->
-    <n-modal v-model:show="showCreateModal" preset="card" title="创建陪伴房" class="create-modal">
+    <n-modal v-model:show="showCreateModal" preset="card" title="创建陪伴房" class="create-modal glass--strong">
       <n-form label-placement="top">
         <n-form-item label="房间名称" required>
           <n-input v-model:value="createForm.name" placeholder="给房间起个名字" maxlength="100" />
@@ -160,6 +160,8 @@ async function submitCreate() {
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius-md);
 }
 
 .page-title {
@@ -179,8 +181,25 @@ async function submitCreate() {
   gap: var(--sp-3);
 }
 
+/* Glass surface re-declared here so it wins over Naive UI's injected
+   .n-card background (injected after main.css at equal specificity). */
 .create-modal {
   max-width: 500px;
   width: 90vw;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(28px) saturate(1.5);
+  -webkit-backdrop-filter: blur(28px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.dark .create-modal {
+  background: rgba(18, 18, 22, 0.82);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 48px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 </style>

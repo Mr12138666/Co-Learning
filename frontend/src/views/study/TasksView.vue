@@ -95,7 +95,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="page-container">
+  <div class="page-container gradient-mesh">
     <!-- Page Header -->
     <div class="page-header">
       <h3 class="page-title">任务清单</h3>
@@ -103,7 +103,7 @@ onMounted(() => {
     </div>
 
     <!-- Tab bar (segmented) -->
-    <div class="tab-bar">
+    <div class="tab-bar glass glass--subtle">
       <button
         v-for="tab in tabOptions"
         :key="tab.key"
@@ -118,7 +118,11 @@ onMounted(() => {
     <div class="page-divider" />
 
     <!-- Task Lists (only render active tab) -->
-    <div v-for="tab in tabOptions" :key="tab.key">
+    <div
+      v-for="tab in tabOptions"
+      :key="tab.key"
+      :class="{ 'glass section-card stagger-in': activeTab === tab.key }"
+    >
       <TaskList v-if="activeTab === tab.key" :filter-status="tab.filter" @edit="openEdit" />
     </div>
 
@@ -196,10 +200,10 @@ onMounted(() => {
 /* Segmented tab bar */
 .tab-bar {
   display: inline-flex;
-  border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   overflow: hidden;
   margin-bottom: var(--sp-3);
+  padding: 2px;
 }
 
 .tab-bar__item {
@@ -231,6 +235,10 @@ onMounted(() => {
 
 .page-divider {
   border-bottom: 1px solid var(--separator);
+  margin-bottom: var(--sp-3);
+}
+
+.section-card {
   margin-bottom: var(--sp-3);
 }
 

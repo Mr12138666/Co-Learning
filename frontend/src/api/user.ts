@@ -52,7 +52,7 @@ export const userApi = {
   uploadAvatar: (file: File) => {
     const formData = new FormData()
     formData.append('file', file)
-    return http.post<ApiResponse<UserProfileResponse>>('/me/avatar', formData)
+    return http.post<ApiResponse<string>>('/me/avatar', formData)
   },
 
   // Block management

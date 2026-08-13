@@ -88,16 +88,16 @@ onMounted(reload)
 </script>
 
 <template>
-  <div class="inbox-view">
-    <header class="inbox-head">
-      <h2 class="inbox-head__title"><Inbox :size="16" /> Inbox <span class="inbox-head__count">{{ tasks.length }}</span></h2>
+  <div class="inbox-view gradient-mesh">
+    <header class="inbox-head glass section-card">
+      <h2 class="inbox-head__title section-card-title"><Inbox :size="16" /> Inbox <span class="inbox-head__count badge badge--brand">{{ tasks.length }}</span></h2>
       <NButton v-if="tasks.length" size="small" @click="planAllToday">
         <template #icon><CalendarPlus :size="15" /></template>
         全部加入今天
       </NButton>
     </header>
 
-    <div class="quick-line">
+    <div class="quick-line glass--subtle">
       <NInput v-model:value="quickTitle" placeholder="快速添加任务，回车创建…" @keyup.enter="addQuick" />
       <NSelect v-model:value="quickSubject" :options="subjectOptions" placeholder="科目" clearable size="medium" style="width: 140px" />
     </div>
@@ -106,7 +106,7 @@ onMounted(reload)
     <StateError v-else-if="error" :description="error" @retry="reload" />
     <StateEmpty v-else-if="!tasks.length" title="收件箱为空" description="所有任务都已规划，或在上方快速添加新任务" />
     <TransitionGroup v-else tag="div" name="task-fade" class="task-list">
-      <div v-for="task in tasks" :key="task.id" class="inbox-row">
+      <div v-for="task in tasks" :key="task.id" class="inbox-row glass-list-item stagger-in">
         <TaskRow
           :task="task"
           class="inbox-row__task"
@@ -117,7 +117,7 @@ onMounted(reload)
         />
         <NTooltip>
           <template #trigger>
-            <NButton class="inbox-row__plan" size="tiny" quaternary aria-label="加入今天" @click="planToday(task)">
+            <NButton class="inbox-row__plan pill" size="tiny" quaternary aria-label="加入今天" @click="planToday(task)">
               <template #icon><CalendarPlus :size="15" /></template>
             </NButton>
           </template>
@@ -134,12 +134,34 @@ onMounted(reload)
 .inbox-view { max-width: var(--content-max-width); margin: 0 auto; padding: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-2); }
 .inbox-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); flex-wrap: wrap; }
 .inbox-head__title { display: flex; align-items: center; gap: var(--sp-1); font-size: var(--text-lg); margin: 0; line-height: var(--leading-tight); }
-.inbox-head__count { font-size: var(--text-sm); color: var(--text-color-muted); font-weight: var(--weight-normal); }
-.quick-line { display: flex; gap: var(--sp-2); }
+
+.quick-line { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); border-radius: var(--radius-lg); }
+.quick-line :deep(.n-input),
+.quick-line :deep(.n-base-selection) { background: transparent; }
+.quick-line :deep(.n-input__border) { border-color: transparent; }
 .task-list { position: relative; display: flex; flex-direction: column; gap: 2px; }
 .inbox-row { display: flex; align-items: center; gap: var(--sp-1); }
 .inbox-row__task { flex: 1; min-width: 0; }
-.inbox-row__plan { flex-shrink: 0; }
+.inbox-row__plan {
+  flex-shrink: 0;
+  height: 28px;
+  min-width: 28px;
+  padding: 0 var(--sp-2);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.dark .inbox-row__plan {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.inbox-row__plan:hover {
+  transform: translateY(-1px);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.12);
+}
 
 .task-fade-enter-active { transition: opacity var(--duration-sm) var(--ease-enter), transform var(--duration-sm) var(--ease-enter); }
 .task-fade-leave-active { transition: opacity var(--duration-sm) var(--ease-leave), transform var(--duration-sm) var(--ease-leave); position: absolute; width: 100%; }

@@ -41,11 +41,11 @@ const progressPercent = computed(() => {
 </script>
 
 <template>
-  <div class="achievements-view">
+  <div class="achievements-view gradient-mesh">
     <h2 class="page-title">成就</h2>
 
     <!-- Progress Overview -->
-    <n-card class="progress-card" :bordered="false">
+    <n-card class="progress-card glass" :bordered="false">
       <div class="progress-content">
         <div class="progress-info">
           <span class="progress-label">已解锁成就</span>
@@ -60,7 +60,7 @@ const progressPercent = computed(() => {
           :percentage="progressPercent"
           :stroke-width="8"
           :show-indicator="true"
-          class="progress-circle"
+          class="progress-circle glow-brand"
         >
           {{ progressPercent }}%
         </n-progress>
@@ -68,7 +68,7 @@ const progressPercent = computed(() => {
     </n-card>
 
     <n-spin :show="store.loading">
-      <div v-for="(achList, category) in groupedAchievements" :key="category" class="ach-group">
+      <div v-for="(achList, category) in groupedAchievements" :key="category" class="ach-group glass section-card">
         <h3 class="group-title">
           <n-tag :type="categoryColor[category] || 'default'" size="small" round>
             {{ categoryLabel[category] || category }}
@@ -78,8 +78,13 @@ const progressPercent = computed(() => {
           <div
             v-for="ach in achList"
             :key="ach.id"
-            class="ach-card"
-            :class="{ 'ach-card--unlocked': ach.unlocked, 'ach-card--locked': !ach.unlocked }"
+            class="ach-card glass stagger-in interactive"
+            :class="{
+              'ach-card--unlocked': ach.unlocked,
+              'ach-card--locked': !ach.unlocked,
+              'glow-warm': ach.unlocked,
+              'glass--subtle': !ach.unlocked,
+            }"
           >
             <div class="ach-icon-wrapper">
               <span v-if="ach.unlocked" class="ach-icon ach-icon--unlocked">*</span>
@@ -122,10 +127,20 @@ const progressPercent = computed(() => {
 
 /* --- Progress Card --- */
 .progress-card {
+  position: relative;
+  overflow: hidden;
   margin-bottom: var(--sp-4);
-  background: var(--surface-2);
-  border: 1px solid var(--divider);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
+}
+
+.progress-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--brand), var(--urgent));
 }
 
 .progress-content {
@@ -189,14 +204,28 @@ const progressPercent = computed(() => {
   align-items: flex-start;
   gap: var(--sp-3);
   padding: var(--sp-3);
-  background: var(--surface-2);
-  border: 1px solid var(--divider);
   border-radius: var(--radius-md);
-  transition: opacity var(--transition-fast), border-color var(--transition-fast);
 }
 
+/* Unlocked: warm glow accent + gradient border bar */
 .ach-card--unlocked {
-  border-color: var(--brand);
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(245, 158, 11, 0.35);
+  box-shadow:
+    0 0 20px rgba(245, 158, 11, 0.12),
+    0 0 40px rgba(245, 158, 11, 0.06),
+    0 0 0 1px rgba(245, 158, 11, 0.15);
+}
+
+.ach-card--unlocked::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--brand), var(--urgent));
 }
 
 .ach-card--locked {
@@ -215,16 +244,21 @@ const progressPercent = computed(() => {
   font-weight: var(--weight-bold);
 }
 
+.ach-card--unlocked .ach-icon-wrapper {
+  background: linear-gradient(135deg, var(--brand), var(--urgent));
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.35);
+}
+
 .ach-icon--unlocked {
-  color: var(--brand);
-  background: var(--bg-page);
-  border: 1px solid var(--brand);
+  color: #fff;
   width: 36px;
   height: 36px;
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
+  background: transparent;
+  border: none;
 }
 
 .ach-icon--locked {

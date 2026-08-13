@@ -29,7 +29,7 @@ function enterRoom() {
 </script>
 
 <template>
-  <div class="room-card" @click="enterRoom">
+  <div class="room-card glass interactive stagger-in" @click="enterRoom">
     <div class="card-header">
       <span class="card-name">{{ room.name }}</span>
       <div class="card-tags">
@@ -63,17 +63,19 @@ function enterRoom() {
 
 <style scoped>
 .room-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   padding: var(--sp-3) var(--sp-4);
   cursor: pointer;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
+/* Hover lift + brand glow (scoped wins over .glass:hover / .interactive:hover) */
 .room-card:hover {
-  border-color: var(--brand);
-  box-shadow: var(--shadow-1);
+  transform: translateY(-3px);
+  border-color: rgba(59, 130, 246, 0.22);
+  box-shadow:
+    0 8px 32px rgba(59, 130, 246, 0.06),
+    0 0 0 1px rgba(59, 130, 246, 0.1),
+    0 0 24px rgba(59, 130, 246, 0.08);
 }
 
 .card-header {

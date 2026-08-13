@@ -117,7 +117,7 @@ function handleAvatarUpload(e: Event) {
   loading.value = true
   userApi.uploadAvatar(file)
     .then((res) => {
-      const newAvatarUrl = res.data.data.avatarUrl
+      const newAvatarUrl = res.data.data
       message.success('头像上传成功')
       authStore.updateAvatar(newAvatarUrl)
       loadProfile()
@@ -137,12 +137,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="profile-view">
+  <div class="profile-view gradient-mesh">
     <h2 class="page-title">个人资料</h2>
 
     <!-- Profile Card -->
-    <NCard :bordered="false" class="profile-card" :loading="loading">
-      <div class="profile-header">
+    <NCard :bordered="false" class="profile-card glass stagger-in" :loading="loading">
+      <div class="profile-header glass--subtle">
         <div class="avatar-section">
           <NAvatar round size="large" :src="profile?.avatarUrl || undefined" />
           <NButton text size="small" @click="triggerAvatarUpload">更换头像</NButton>
@@ -167,7 +167,7 @@ onMounted(() => {
       </div>
 
       <!-- Bio -->
-      <div v-if="editingProfile" class="edit-section">
+      <div v-if="editingProfile" class="edit-section glass--subtle">
         <NForm :model="profileForm">
           <NFormItem label="昵称">
             <NInput v-model:value="profileForm.displayName" placeholder="请输入昵称" />
@@ -182,13 +182,13 @@ onMounted(() => {
         </NForm>
       </div>
 
-      <div v-else class="bio-section">
+      <div v-else class="bio-section glass--subtle">
         <p class="bio-text">{{ profile?.bio || '暂无简介' }}</p>
         <NButton text size="small" @click="editingProfile = true">编辑资料</NButton>
       </div>
 
       <!-- Stats -->
-      <div class="profile-stats">
+      <div class="profile-stats glass--subtle">
         <div class="stat-item">
           <span class="stat-label">注册时间</span>
           <span class="stat-value">{{ formattedCreatedAt }}</span>
@@ -197,7 +197,7 @@ onMounted(() => {
     </NCard>
 
     <!-- Settings Card -->
-    <NCard :bordered="false" class="settings-card" :loading="loading">
+    <NCard :bordered="false" class="settings-card glass stagger-in" :loading="loading">
       <template #header>
         <div class="settings-header">
           <span class="settings-header-title">账户设置</span>
@@ -274,12 +274,38 @@ onMounted(() => {
 }
 
 /* --- Cards --- */
+/* Re-declare the glass surface here so it wins over Naive UI's injected
+   .n-card background (injected after main.css at equal specificity). */
 .profile-card,
 .settings-card {
   margin-bottom: var(--sp-3);
-  background: var(--surface-2);
-  border: 1px solid var(--divider);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-2);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.dark .profile-card,
+.dark .settings-card {
+  background: rgba(18, 18, 22, 0.62);
+  border-color: rgba(255, 255, 255, 0.07);
+  box-shadow:
+    0 4px 32px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.profile-card:hover,
+.settings-card:hover {
+  border-color: rgba(59, 130, 246, 0.22);
+  box-shadow:
+    0 8px 32px rgba(59, 130, 246, 0.06),
+    0 0 0 1px rgba(59, 130, 246, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 /* --- Profile Header --- */
@@ -288,6 +314,8 @@ onMounted(() => {
   align-items: center;
   gap: var(--sp-4);
   margin-bottom: var(--sp-4);
+  padding: var(--sp-4);
+  border-radius: var(--radius-md);
 }
 
 .avatar-section {
@@ -313,8 +341,9 @@ onMounted(() => {
 /* --- Bio / Edit --- */
 .bio-section,
 .edit-section {
-  padding: var(--sp-3) 0;
-  border-top: 1px solid var(--separator);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-3);
+  border-radius: var(--radius-md);
 }
 
 .bio-text {
@@ -332,8 +361,8 @@ onMounted(() => {
 .profile-stats {
   display: flex;
   gap: var(--sp-4);
-  padding-top: var(--sp-3);
-  border-top: 1px solid var(--separator);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius-md);
 }
 
 .stat-item {

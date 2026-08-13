@@ -82,7 +82,8 @@ const imageUrl = computed(() => {
 .system-text {
   font-size: var(--text-xs);
   color: var(--text-color-muted);
-  background: var(--bg-sunken);
+  background: var(--brand-subtle);
+  border: 1px solid var(--brand-subtle);
   padding: var(--sp-1) var(--sp-3);
   border-radius: var(--radius-pill);
 }
@@ -106,6 +107,18 @@ const imageUrl = computed(() => {
   gap: var(--sp-2);
   margin: var(--sp-3) 0;
   align-items: flex-start;
+  animation: msg-pop 0.3s var(--ease-enter);
+}
+
+@keyframes msg-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .message-item.own {
@@ -144,8 +157,9 @@ const imageUrl = computed(() => {
 
 .message-bubble.own {
   border-radius: var(--radius-md) var(--radius-sm) var(--radius-md) var(--radius-md);
-  background: var(--brand);
-  border-color: var(--brand);
+  background: linear-gradient(135deg, var(--brand), var(--accent-600));
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(79, 140, 255, 0.25);
 }
 
 .message-text {

@@ -122,20 +122,20 @@ onMounted(reload)
 </script>
 
 <template>
-  <div class="planner-view">
-    <header class="planner-head">
-      <h2 class="planner-head__title"><CalendarDays :size="16" /> Planner</h2>
+  <div class="planner-view gradient-mesh">
+    <header class="planner-head glass section-card">
+      <h2 class="planner-head__title section-card-title gradient-brand-text"><CalendarDays :size="16" /> Planner</h2>
       <div class="planner-head__nav">
         <NTooltip placement="top">
           <template #trigger>
-            <NButton size="small" quaternary @click="shift(-1)"><template #icon><ChevronLeft :size="16" /></template></NButton>
+            <NButton size="small" quaternary class="pill" @click="shift(-1)"><template #icon><ChevronLeft :size="16" /></template></NButton>
           </template>
           上一周
         </NTooltip>
-        <NButton size="small" @click="goToday">今天</NButton>
+        <NButton size="small" class="pill" @click="goToday">今天</NButton>
         <NTooltip placement="top">
           <template #trigger>
-            <NButton size="small" quaternary @click="shift(1)"><template #icon><ChevronRight :size="16" /></template></NButton>
+            <NButton size="small" quaternary class="pill" @click="shift(1)"><template #icon><ChevronRight :size="16" /></template></NButton>
           </template>
           下一周
         </NTooltip>
@@ -148,7 +148,7 @@ onMounted(reload)
 
     <div v-else class="planner-board">
       <!-- Overdue column (drag out only) -->
-      <section class="planner-col planner-col--overdue">
+      <section class="planner-col planner-col--overdue glass stagger-in">
         <div class="planner-col__head">
           <span class="planner-col__title">逾期</span>
           <span class="planner-col__cap">{{ overdue.length }} 项</span>
@@ -168,9 +168,9 @@ onMounted(reload)
       </section>
 
       <!-- Day columns -->
-      <section v-for="day in days" :key="day.key" class="planner-col" :class="{ 'planner-col--today': day.isToday }">
+      <section v-for="day in days" :key="day.key" class="planner-col glass stagger-in" :class="{ 'planner-col--today': day.isToday, 'glow-brand': day.isToday }">
         <div class="planner-col__head">
-          <div class="planner-col__daylabel">
+          <div class="planner-col__daylabel badge badge--brand">
             <span class="planner-col__weekday">{{ day.date.format('ddd') }}</span>
             <span class="planner-col__date">{{ day.date.format('M/D') }}</span>
           </div>
@@ -205,23 +205,41 @@ onMounted(reload)
 
 <style scoped>
 .planner-view { display: flex; flex-direction: column; gap: var(--sp-2); height: 100%; padding: var(--sp-4); }
-.planner-head { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.planner-head { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; padding: var(--sp-2) var(--sp-3); border-radius: var(--radius-lg); }
 .planner-head__title { display: flex; align-items: center; gap: var(--sp-1); font-size: var(--text-lg); margin: 0; }
 .planner-head__nav { display: flex; align-items: center; gap: var(--sp-1); }
+.planner-head__nav :deep(.n-button) {
+  height: 30px;
+  padding: 0 var(--sp-3);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--text-color);
+}
+.dark .planner-head__nav :deep(.n-button) {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.planner-head__nav :deep(.n-button:hover) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border-color: rgba(59, 130, 246, 0.3);
+}
 .planner-head__range { font-size: var(--text-sm); color: var(--text-color-muted); margin-left: var(--sp-1); }
 
 .planner-board { display: flex; gap: var(--sp-2); overflow-x: auto; flex: 1; min-height: 0; padding-bottom: var(--sp-1); }
 .planner-col {
   display: flex; flex-direction: column; gap: var(--sp-1);
   min-width: 240px; width: 240px; flex-shrink: 0;
-  border-left: 2px solid var(--divider);
-  border-radius: 0;
-  padding: var(--sp-1) var(--sp-2);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-2) var(--sp-3);
 }
-.planner-col--overdue { border-left-color: var(--danger); background: var(--danger-muted); }
-.planner-col--today { border-left-color: var(--brand); background: var(--state-selected); }
+.planner-col--overdue { border-color: rgba(244, 67, 54, 0.4); }
+.planner-col--today { border-color: rgba(59, 130, 246, 0.45); }
 .planner-col__head { display: flex; flex-direction: column; gap: 1px; padding: var(--sp-1) 0 var(--sp-1); border-bottom: 1px solid var(--divider); }
-.planner-col__daylabel { display: flex; align-items: baseline; gap: var(--sp-2); }
+.planner-col__daylabel { display: flex; align-items: center; gap: var(--sp-1); }
 .planner-col__weekday { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-color-strong); }
 .planner-col__date { font-size: var(--text-xs); color: var(--text-color-muted); }
 .planner-col__title { font-size: var(--text-sm); font-weight: var(--weight-semibold); }

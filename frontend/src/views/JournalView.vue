@@ -59,7 +59,7 @@ onMounted(() => load(async () => {
 </script>
 
 <template>
-  <div class="journal-view">
+  <div class="journal-view gradient-mesh">
     <!-- Loading -->
     <div v-if="loading" class="loading-center">
       <NSpin size="large" />
@@ -76,7 +76,7 @@ onMounted(() => load(async () => {
 
     <template v-else>
       <!-- Page Header -->
-      <div class="page-header">
+      <div class="page-header glass">
         <h3 class="page-title">学习日志</h3>
         <NButton type="primary" size="small" @click="router.push('/journals/new')">
           + 写日志
@@ -97,7 +97,7 @@ onMounted(() => load(async () => {
         <div
           v-for="journal in journalStore.journals"
           :key="journal.id"
-          class="journal-row"
+          class="journal-row glass-list-item"
           @click="router.push(`/journals/${journal.id}/edit`)"
         >
           <div class="journal-row-main">
@@ -163,6 +163,8 @@ onMounted(() => load(async () => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius-md);
 }
 
 .page-title {
@@ -179,29 +181,12 @@ onMounted(() => load(async () => {
 .journal-list {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  background: var(--bg-card);
+  gap: var(--sp-2);
 }
 
 .journal-row {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  padding: var(--sp-3) var(--sp-4);
   min-height: 44px;
   cursor: pointer;
-  transition: background-color var(--transition-fast);
-  border-bottom: 1px solid var(--divider);
-}
-
-.journal-row:last-child {
-  border-bottom: none;
-}
-
-.journal-row:hover {
-  background: var(--state-hover);
 }
 
 .journal-row-main {

@@ -29,9 +29,9 @@ async function handleSend() {
 </script>
 
 <template>
-  <div class="auth-page">
+  <div class="auth-page gradient-mesh">
     <div class="auth-brand">CL</div>
-    <NCard :bordered="false" class="auth-card">
+    <NCard :bordered="false" class="auth-card glass--strong">
       <h1 class="auth-title">忘记密码</h1>
       <template v-if="sent">
         <NAlert type="info" title="验证码已发送" show-icon>
@@ -75,11 +75,35 @@ async function handleSend() {
   margin-bottom: var(--sp-5);
 }
 
+/* Glass surface re-declared here so it wins over Naive UI's injected
+   .n-card background (injected after main.css at equal specificity). */
 .auth-card {
   width: 100%;
-  background: var(--bg-card);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(28px) saturate(1.5);
+  -webkit-backdrop-filter: blur(28px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.dark .auth-card {
+  background: rgba(18, 18, 22, 0.82);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 48px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* glow-brand focus state for inputs */
+.auth-card :deep(.n-input:focus-within) {
+  border-color: var(--brand);
+  box-shadow:
+    0 0 0 1px rgba(59, 130, 246, 0.15),
+    0 0 20px rgba(59, 130, 246, 0.12),
+    0 0 40px rgba(59, 130, 246, 0.06);
 }
 
 .auth-title {

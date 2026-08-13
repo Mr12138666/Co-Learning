@@ -73,7 +73,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="page-container">
+  <div class="page-container gradient-mesh">
     <!-- Page Header -->
     <div class="page-header">
       <h3 class="page-title">科目管理</h3>
@@ -93,8 +93,8 @@ onMounted(() => {
 
     <!-- Subject Grid -->
     <NGrid v-else :cols="4" :x-gap="8" :y-gap="8" responsive="screen" item-responsive>
-      <NGridItem v-for="subject in studyStore.subjects" :key="subject.id" span="4 s:2 m:1">
-        <div class="subject-card">
+      <NGridItem v-for="subject in studyStore.subjects" :key="subject.id" span="4 s:2 m:1" class="stagger-in">
+        <div class="subject-card glass stagger-in">
           <div class="subject-card__body">
             <span class="subject-card__dot" :style="{ background: subject.color }" />
             <span class="subject-card__name">{{ subject.name }}</span>
@@ -173,14 +173,7 @@ onMounted(() => {
   justify-content: space-between;
   padding: var(--sp-3) var(--sp-4);
   min-height: 48px;
-  border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
-  background: var(--bg-card);
-  transition: background-color var(--transition-fast);
-}
-
-.subject-card:hover {
-  background: var(--state-hover);
 }
 
 .subject-card__body {

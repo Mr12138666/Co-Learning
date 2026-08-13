@@ -55,13 +55,6 @@ function _stopCountdown() {
   }
 }
 
-const speciesLabel: Record<string, string> = {
-  CAT: '猫',
-  DOG: '犬',
-  RABBIT: '兔',
-  OWL: '枭',
-}
-
 const itemTypeLabel: Record<string, string> = {
   FOOD: '食物',
   TOY: '玩具',
@@ -147,18 +140,88 @@ const petExpPercent = computed(() => {
   if (next === 0) return 0
   return Math.min(100, Math.round((current / next) * 100))
 })
+
+// === 炫酷: interactive pet character ===
+const petBounce = ref(false)
+const petSparkles = ref<string[]>([])
+
+const petEmoji: Record<string, string> = {
+  CAT: '🐱',
+  DOG: '🐶',
+  RABBIT: '🐰',
+  OWL: '🦉',
+}
+
+const petMoodEmoji = computed(() => {
+  const mood = store.pet?.mood ?? 100
+  if (mood >= 70) return '😺'
+  if (mood >= 30) return '😿'
+  return '😾'
+})
+
+const petRingGlow = computed(() => {
+  const mood = store.pet?.mood ?? 100
+  if (mood >= 70) return 'rgba(52, 211, 153, 0.55)'
+  if (mood >= 30) return 'rgba(251, 191, 36, 0.55)'
+  return 'rgba(248, 113, 113, 0.55)'
+})
+
+let petRippleTimer: number | null = null
+
+function handlePetClick() {
+  if (!store.pet) return
+  petBounce.value = true
+  const ripple = Math.random().toString(36).slice(2)
+  petSparkles.value.push(ripple)
+  setTimeout(() => {
+    petSparkles.value = petSparkles.value.filter((id) => id !== ripple)
+  }, 900)
+
+  if (petRippleTimer) clearTimeout(petRippleTimer)
+  petRippleTimer = window.setTimeout(() => {
+    petBounce.value = false
+  }, 700)
+
+  // Interact using the first toy from inventory (real API call)
+  const toy = store.inventory.find((i) => i.itemType === 'TOY')
+  if (toy) {
+    void store.interactPet(toy.itemId)
+    message.success('互动成功，心情 +10 ！')
+  } else {
+    message.info('还没有玩具，点击宠物抚摸也能增加心情')
+  }
+}
 </script>
 
 <template>
-  <div class="pet-view">
-    <h2 class="page-title">我的宠物</h2>
+  <div class="pet-view gradient-mesh">
+    <h2 class="page-title gradient-brand-text">我的宠物</h2>
 
     <n-spin :show="store.loading">
       <!-- Pet Status Card -->
-      <n-card v-if="store.pet" class="pet-card" :bordered="false">
-        <div class="pet-display">
-          <div class="pet-avatar">
-            <span class="pet-species-text">{{ speciesLabel[store.pet.species] || '猫' }}</span>
+      <n-card v-if="store.pet" class="pet-card glass mesh-accent" :bordered="false">
+        <div class="pet-display float">
+          <div
+            class="pet-avatar pet-avatar--animated glow-brand"
+            :class="{ 'pet-bounce': petBounce }"
+            :style="{ '--pet-glow': petRingGlow }"
+            role="button"
+            aria-label="点击与宠物互动"
+            tabindex="0"
+            @click="handlePetClick"
+            @keydown.enter="handlePetClick"
+          >
+            <span class="pet-species-text">{{ petEmoji[store.pet.species] || '🐾' }}</span>
+            <span class="pet-mood-emoji">{{ petMoodEmoji }}</span>
+            <span
+              v-for="sparkle in petSparkles"
+              :key="sparkle"
+              class="pet-sparkle"
+              :style="{
+                '--fly-x': `${(Math.random() * 80 - 40).toFixed(0)}px`,
+                '--fly-y': `${(Math.random() * 60 + 20).toFixed(0)}px`,
+              }"
+            />
           </div>
           <div class="pet-info">
             <div class="pet-name-row">
@@ -166,7 +229,7 @@ const petExpPercent = computed(() => {
               <n-tag type="info" size="small" round>Lv.{{ store.pet.level }}</n-tag>
               <n-button quaternary size="tiny" @click="openRename">改名</n-button>
             </div>
-            <div class="pet-stats">
+            <div class="pet-stats glass--subtle">
               <div class="stat-row">
                 <span class="stat-label">EXP</span>
                 <n-progress
@@ -175,7 +238,7 @@ const petExpPercent = computed(() => {
                   color="var(--brand)"
                   :show-indicator="false"
                   :height="4"
-                  class="stat-bar"
+                  class="stat-bar progress-glow"
                 />
                 <span class="stat-value">{{ store.pet.exp }}/{{ petExpToNext }}</span>
               </div>
@@ -187,7 +250,7 @@ const petExpPercent = computed(() => {
                   :color="moodColor(store.pet.mood)"
                   :show-indicator="false"
                   :height="4"
-                  class="stat-bar"
+                  class="stat-bar progress-glow"
                 />
                 <span class="stat-value">{{ store.pet.mood }}</span>
                 <span class="stat-hint">{{ moodCountdown }}</span>
@@ -200,7 +263,7 @@ const petExpPercent = computed(() => {
                   :color="moodColor(store.pet.hunger)"
                   :show-indicator="false"
                   :height="4"
-                  class="stat-bar"
+                  class="stat-bar progress-glow"
                 />
                 <span class="stat-value">{{ store.pet.hunger }}</span>
                 <span class="stat-hint">{{ hungerCountdown }}</span>
@@ -211,7 +274,7 @@ const petExpPercent = computed(() => {
       </n-card>
 
       <!-- Token Balance -->
-      <n-card v-if="store.profile" class="token-card" :bordered="false">
+      <n-card v-if="store.profile" class="token-card glass glow-warm" :bordered="false">
         <div class="token-display">
           <span class="token-icon-badge">T</span>
           <span class="token-amount">{{ store.profile.tokens }}</span>
@@ -220,7 +283,7 @@ const petExpPercent = computed(() => {
       </n-card>
 
       <!-- How to Earn -->
-      <n-card class="earn-guide-card" :bordered="false">
+      <n-card class="earn-guide-card glass section-card" :bordered="false">
         <h3 class="guide-title">代币与经验获取</h3>
         <div class="earn-list">
           <div class="earn-item">
@@ -268,10 +331,10 @@ const petExpPercent = computed(() => {
     </n-spin>
 
     <!-- My Inventory -->
-    <h3 class="section-title">我的道具</h3>
+    <h3 class="section-title section-card-title">我的道具</h3>
     <n-grid v-if="store.inventory.length > 0" :cols="4" :x-gap="12" :y-gap="12" responsive="screen" item-responsive>
-      <n-grid-item v-for="item in store.inventory" :key="item.id" span="4 m:2 l:1">
-        <n-card hoverable size="small" class="inventory-item">
+      <n-grid-item v-for="item in store.inventory" :key="item.id" span="4 m:2 l:1" class="stagger-in">
+        <n-card hoverable size="small" class="inventory-item glass interactive stagger-in">
           <div class="item-header">
             <span class="item-type-badge">{{ itemTypeLabel[item.itemType]?.[0] || '?' }}</span>
             <n-tag size="tiny" round>{{ itemTypeLabel[item.itemType] || item.itemType }}</n-tag>
@@ -301,10 +364,10 @@ const petExpPercent = computed(() => {
     <n-empty v-else description="还没有道具，去商店购买吧" class="section-empty" />
 
     <!-- Shop Section -->
-    <h3 class="section-title">道具商店</h3>
+    <h3 class="section-title section-card-title">道具商店</h3>
     <n-grid v-if="store.shopItems.length > 0" :cols="4" :x-gap="12" :y-gap="12" responsive="screen" item-responsive>
-      <n-grid-item v-for="item in store.shopItems" :key="item.id" span="4 m:2 l:1">
-        <n-card hoverable size="small" class="shop-item">
+      <n-grid-item v-for="item in store.shopItems" :key="item.id" span="4 m:2 l:1" class="stagger-in">
+        <n-card hoverable size="small" class="shop-item glass interactive stagger-in">
           <div class="item-header">
             <span class="item-type-badge">{{ itemTypeLabel[item.itemType]?.[0] || '?' }}</span>
             <n-tag size="tiny" round>{{ itemTypeLabel[item.itemType] || item.itemType }}</n-tag>
@@ -358,9 +421,7 @@ const petExpPercent = computed(() => {
 /* --- Pet Card --- */
 .pet-card {
   margin-bottom: var(--sp-3);
-  background: var(--surface-2);
-  border: 1px solid var(--divider);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-xl);
 }
 
 .pet-display {
@@ -373,8 +434,6 @@ const petExpPercent = computed(() => {
   width: 72px;
   height: 72px;
   border-radius: var(--radius-full);
-  background: var(--bg-page);
-  border: 2px solid var(--separator);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -386,6 +445,77 @@ const petExpPercent = computed(() => {
   font-weight: var(--weight-bold);
   color: var(--brand);
   letter-spacing: 0.05em;
+}
+
+/* --- 炫酷: animated pet avatar --- */
+.pet-avatar--animated {
+  position: relative;
+  cursor: pointer;
+  overflow: visible;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease;
+  box-shadow:
+    0 0 0 3px var(--surface-2),
+    0 0 18px var(--pet-glow, rgba(52, 211, 153, 0.4)),
+    0 0 0 1px rgba(59, 130, 246, 0.18);
+}
+
+.pet-avatar--animated:hover {
+  transform: scale(1.06);
+  box-shadow:
+    0 0 0 3px var(--surface-2),
+    0 0 26px var(--pet-glow, rgba(52, 211, 153, 0.6)),
+    0 0 0 1px rgba(59, 130, 246, 0.25);
+}
+
+.pet-avatar--animated:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.pet-avatar--animated.pet-bounce {
+  animation: pet-bounce 0.7s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+@keyframes pet-bounce {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-14px) scale(1.08); }
+  60% { transform: translateY(-6px); }
+  80% { transform: translateY(-2px); }
+}
+
+.pet-mood-emoji {
+  position: absolute;
+  bottom: -6px;
+  right: -6px;
+  font-size: 22px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+  z-index: 2;
+}
+
+.pet-sparkle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-full);
+  background: radial-gradient(circle, #fff 0%, var(--brand) 60%, transparent 100%);
+  animation: pet-sparkle-fly 0.9s ease-out forwards;
+  z-index: 3;
+}
+
+.pet-sparkle:nth-child(3) { animation-delay: 0.05s; }
+.pet-sparkle:nth-child(4) { animation-delay: 0.1s; }
+
+@keyframes pet-sparkle-fly {
+  0% {
+    transform: translate(-50%, -50%) scale(0.4);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--fly-x, 40px)), calc(-50% - var(--fly-y, 30px))) scale(1.6);
+    opacity: 0;
+  }
 }
 
 .pet-info {
@@ -412,6 +542,8 @@ const petExpPercent = computed(() => {
   flex-direction: column;
   gap: var(--sp-2);
   max-width: 360px;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius-md);
 }
 
 .stat-row {
@@ -429,6 +561,17 @@ const petExpPercent = computed(() => {
 
 .stat-bar {
   min-width: 0;
+  overflow: visible;
+}
+
+.stat-bar :deep(.n-progress-graph-line-rail) {
+  background: transparent;
+  border-radius: var(--radius-pill);
+}
+
+.stat-bar :deep(.n-progress-graph-line-fill) {
+  border-radius: var(--radius-pill);
+  box-shadow: 0 0 8px var(--n-fill-color, rgba(96, 165, 250, 0.4));
 }
 
 .stat-value {
@@ -449,9 +592,7 @@ const petExpPercent = computed(() => {
 /* --- Token Card --- */
 .token-card {
   margin-bottom: var(--sp-3);
-  background: var(--surface-2);
-  border: 1px solid var(--divider);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
 }
 
 .token-display {
@@ -488,9 +629,7 @@ const petExpPercent = computed(() => {
 /* --- Earn Guide --- */
 .earn-guide-card {
   margin-bottom: var(--sp-4);
-  background: var(--surface-2);
-  border: 1px solid var(--divider);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
 }
 
 .guide-title {
@@ -571,15 +710,7 @@ const petExpPercent = computed(() => {
 .shop-item {
   display: flex;
   flex-direction: column;
-  background: var(--surface-2);
-  border: 1px solid var(--divider);
-  border-radius: var(--radius-md);
-  transition: border-color var(--transition-fast);
-}
-
-.inventory-item:hover,
-.shop-item:hover {
-  border-color: var(--separator);
+  border-radius: var(--radius-lg);
 }
 
 .item-header {

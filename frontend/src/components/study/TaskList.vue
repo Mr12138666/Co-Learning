@@ -74,7 +74,7 @@ async function handleDelete(task: StudyTask) {
 </script>
 
 <template>
-  <div class="task-list">
+  <div class="task-list glass glass--subtle">
     <!-- Filter bar -->
     <div v-if="studyStore.subjects.length > 0" class="filter-bar">
       <NSelect
@@ -150,6 +150,8 @@ async function handleDelete(task: StudyTask) {
 <style scoped>
 .task-list {
   width: 100%;
+  padding: var(--sp-2);
+  border-radius: var(--radius-md);
 }
 
 .filter-bar {
@@ -177,12 +179,8 @@ async function handleDelete(task: StudyTask) {
   gap: var(--sp-3);
   padding: var(--sp-2) var(--sp-3);
   min-height: 36px;
-  border-bottom: 1px solid var(--separator);
+  border-radius: var(--radius-sm);
   transition: background-color var(--transition-fast);
-}
-
-.task-row:last-child {
-  border-bottom: none;
 }
 
 .task-row:hover {

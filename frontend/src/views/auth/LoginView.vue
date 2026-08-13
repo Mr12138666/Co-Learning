@@ -55,10 +55,14 @@ async function handleLogin() {
 </script>
 
 <template>
-  <div class="auth-page">
-    <div class="auth-brand">CL</div>
-    <NCard :bordered="false" class="auth-card">
-      <h1 class="auth-title">登录</h1>
+  <div class="auth-page gradient-mesh">
+    <div class="auth-brand">
+      <span class="auth-brand__mark">CL</span>
+      <span class="auth-brand__name">Co-Learning 伴学</span>
+    </div>
+    <NCard :bordered="false" class="auth-card glass--strong">
+      <h1 class="auth-title">欢迎回来 👋</h1>
+      <p class="auth-subtitle">继续你的专注之旅</p>
       <NAlert
         v-if="unverifiedEmail"
         type="warning"
@@ -115,25 +119,75 @@ const isDev = import.meta.env.DEV
 }
 
 .auth-brand {
-  font-size: var(--text-2xl);
-  font-weight: var(--weight-bold);
-  color: var(--brand);
-  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
   margin-bottom: var(--sp-5);
 }
 
+.auth-brand__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  font-size: var(--text-base);
+  font-weight: var(--weight-bold);
+  color: #fff;
+  background: linear-gradient(135deg, #4f8cff, #7c5cff);
+  box-shadow: 0 4px 18px rgba(79, 140, 255, 0.4);
+}
+
+.auth-brand__name {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color-strong);
+  letter-spacing: 0.02em;
+}
+
+/* Glass surface re-declared here so it wins over Naive UI's injected
+   .n-card background (injected after main.css at equal specificity). */
 .auth-card {
   width: 100%;
-  background: var(--bg-card);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(28px) saturate(1.5);
+  -webkit-backdrop-filter: blur(28px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.dark .auth-card {
+  background: rgba(18, 18, 22, 0.82);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 48px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* glow-brand focus state for inputs */
+.auth-card :deep(.n-input:focus-within) {
+  border-color: var(--brand);
+  box-shadow:
+    0 0 0 1px rgba(59, 130, 246, 0.15),
+    0 0 20px rgba(59, 130, 246, 0.12),
+    0 0 40px rgba(59, 130, 246, 0.06);
 }
 
 .auth-title {
-  margin: 0 0 var(--sp-5) 0;
+  margin: 0 0 var(--sp-2) 0;
   font-size: var(--text-xl);
   font-weight: var(--weight-semibold);
   color: var(--text-color-strong);
+}
+
+.auth-subtitle {
+  margin: 0 0 var(--sp-5) 0;
+  font-size: var(--text-sm);
+  color: var(--text-color-muted);
 }
 
 .unverified-alert {

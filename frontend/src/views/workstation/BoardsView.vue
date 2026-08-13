@@ -120,8 +120,8 @@ onMounted(reload)
 </script>
 
 <template>
-  <div class="boards-view">
-    <NTabs v-model:value="tab" type="line" animated class="boards-tabs">
+  <div class="boards-view gradient-mesh">
+    <NTabs v-model:value="tab" type="line" animated class="boards-tabs glass">
       <NTabPane name="eisenhower" tab="艾森豪威尔矩阵" />
       <NTabPane name="kanban" tab="Kanban" />
     </NTabs>
@@ -131,7 +131,7 @@ onMounted(reload)
 
     <!-- Eisenhower -->
     <div v-else-if="tab === 'eisenhower'" class="eisenhower">
-      <section v-for="def in quadrantDefs" :key="def.key" class="quadrant" :style="{ '--accent': def.accent }">
+      <section v-for="def in quadrantDefs" :key="def.key" class="quadrant glass stagger-in" :style="{ '--accent': def.accent }">
         <div class="quadrant__head">
           <span class="quadrant__dot" />
           <span class="quadrant__title">{{ def.title }}</span>
@@ -155,9 +155,9 @@ onMounted(reload)
 
     <!-- Kanban -->
     <div v-else class="kanban">
-      <section v-for="def in kanbanDefs" :key="def.key" class="kanban-col">
+      <section v-for="def in kanbanDefs" :key="def.key" class="kanban-col glass interactive">
         <div class="kanban-col__head">
-          <span class="kanban-col__title">{{ def.title }}</span>
+          <span class="kanban-col__title section-card-title">{{ def.title }}</span>
           <span class="kanban-col__count">{{ kanban[def.key].length }}</span>
         </div>
         <draggable
@@ -182,7 +182,9 @@ onMounted(reload)
 
 <style scoped>
 .boards-view { display: flex; flex-direction: column; height: 100%; padding: var(--sp-4); gap: var(--sp-2); }
-.boards-tabs { flex-shrink: 0; }
+.boards-tabs { flex-shrink: 0; padding: var(--sp-1) var(--sp-2); border-radius: var(--radius-lg); }
+.boards-tabs :deep(.n-tabs-tab) { border-radius: var(--radius-pill); }
+.boards-tabs :deep(.n-tabs-tab.n-tabs-tab--active) { background: var(--state-selected); }
 
 .eisenhower {
   flex: 1; min-height: 0;
@@ -190,11 +192,15 @@ onMounted(reload)
 }
 .quadrant {
   display: flex; flex-direction: column; gap: var(--sp-1);
-  border-left: 2px solid var(--accent);
-  border-radius: 0; padding: var(--sp-1) var(--sp-2); min-height: 0;
+  border-radius: var(--radius-lg); padding: var(--sp-2) var(--sp-3); min-height: 0;
 }
 .quadrant__head { display: flex; align-items: center; gap: var(--sp-1); }
-.quadrant__dot { width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--accent); }
+.quadrant__dot {
+  width: 10px; height: 10px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 35%, var(--urgent)));
+  box-shadow: 0 0 8px var(--accent);
+}
 .quadrant__title { font-size: var(--text-sm); font-weight: var(--weight-semibold); flex: 1; }
 .quadrant__count { font-size: var(--text-xs); color: var(--text-color-muted); }
 .quadrant__list { flex: 1; min-height: 40px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
@@ -203,8 +209,7 @@ onMounted(reload)
 .kanban-col {
   display: flex; flex-direction: column; gap: var(--sp-1);
   min-width: 260px; width: 260px; flex-shrink: 0;
-  border-left: 2px solid var(--divider);
-  border-radius: 0; padding: var(--sp-1) var(--sp-2);
+  border-radius: var(--radius-lg); padding: var(--sp-2) var(--sp-3);
 }
 .kanban-col__head { display: flex; align-items: center; justify-content: space-between; padding: var(--sp-1) 0; border-bottom: 1px solid var(--divider); }
 .kanban-col__title { font-size: var(--text-sm); font-weight: var(--weight-semibold); }

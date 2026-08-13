@@ -51,17 +51,35 @@ const dailyChartOption = computed(() => {
   })
   const data = stats.value.dailyStats.map(d => Math.floor(d.focusSeconds / 60))
   
+  const dark = themeStore.theme === 'dark'
   return {
-    tooltip: { trigger: 'axis' },
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: dark ? '#1f1f1f' : '#ffffff',
+      borderColor: dark ? '#333' : '#e5e5e5',
+      textStyle: { color: dark ? '#eee' : '#333' },
+      borderWidth: 1,
+      extraCssText: 'box-shadow: 0 8px 24px rgba(0,0,0,0.12); border-radius: 12px;',
+    },
     grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-    xAxis: { type: 'category', data: dates, axisLabel: { color: themeStore.theme === 'dark' ? '#aaa' : '#666' } },
-    yAxis: { type: 'value', name: '分钟', axisLabel: { color: themeStore.theme === 'dark' ? '#aaa' : '#666' } },
+    xAxis: { type: 'category', data: dates, axisLabel: { color: dark ? '#aaa' : '#666' }, axisLine: { lineStyle: { color: dark ? '#333' : '#ddd' } } },
+    yAxis: { type: 'value', name: '分钟', axisLabel: { color: dark ? '#aaa' : '#666' }, splitLine: { lineStyle: { color: dark ? '#222' : '#f0f0f0' } } },
     series: [{
       type: 'bar',
       data,
       itemStyle: {
-        color: '#4f8cff',
-        borderRadius: [4, 4, 0, 0],
+        borderRadius: [6, 6, 0, 0],
+        color: {
+          type: 'linear',
+          x: 0, y: 0, x2: 0, y2: 1,
+          colorStops: [
+            { offset: 0, color: '#7aa7ff' },
+            { offset: 1, color: '#4f8cff' },
+          ],
+        },
+        shadowColor: 'rgba(79, 140, 255, 0.35)',
+        shadowBlur: 10,
+        shadowOffsetY: 4,
       },
     }],
     backgroundColor: 'transparent',
@@ -93,7 +111,7 @@ const weeklyChartOption = computed(() => {
       type: 'line',
       data: focusData,
       smooth: true,
-      lineStyle: { width: 3, color: '#4f8cff' },
+      lineStyle: { width: 3, color: '#4f8cff', shadowColor: 'rgba(79, 140, 255, 0.45)', shadowBlur: 12 },
       itemStyle: { color: '#4f8cff' },
       areaStyle: {
         color: {
@@ -196,7 +214,7 @@ onMounted(() => load(fetchStats))
   />
 
   <!-- Stats content -->
-  <div v-else-if="stats" class="stats-view">
+  <div v-else-if="stats" class="stats-view gradient-mesh">
     <!-- Header -->
     <div class="page-header">
       <h3 class="page-title">学习统计</h3>
@@ -207,8 +225,8 @@ onMounted(() => load(fetchStats))
 
     <!-- Summary stats grid -->
     <NGrid :cols="4" :x-gap="8" :y-gap="8" responsive="screen" item-responsive class="summary-grid">
-      <NGridItem span="4 s:2 m:1">
-        <div class="summary-card">
+      <NGridItem span="4 s:2 m:1" class="stagger-in">
+        <div class="summary-card glass--subtle">
           <NStatistic
             label="今日专注"
             :value="formatSeconds(stats.todayFocusSeconds)"
@@ -216,8 +234,8 @@ onMounted(() => load(fetchStats))
           />
         </div>
       </NGridItem>
-      <NGridItem span="4 s:2 m:1">
-        <div class="summary-card">
+      <NGridItem span="4 s:2 m:1" class="stagger-in">
+        <div class="summary-card glass--subtle">
           <NStatistic
             label="本周专注"
             :value="formatSeconds(stats.weekFocusSeconds)"
@@ -225,8 +243,8 @@ onMounted(() => load(fetchStats))
           />
         </div>
       </NGridItem>
-      <NGridItem span="4 s:2 m:1">
-        <div class="summary-card">
+      <NGridItem span="4 s:2 m:1" class="stagger-in">
+        <div class="summary-card glass--subtle">
           <NStatistic
             label="本月专注"
             :value="formatSeconds(stats.monthFocusSeconds)"
@@ -234,8 +252,8 @@ onMounted(() => load(fetchStats))
           />
         </div>
       </NGridItem>
-      <NGridItem span="4 s:2 m:1">
-        <div class="summary-card">
+      <NGridItem span="4 s:2 m:1" class="stagger-in">
+        <div class="summary-card glass--subtle">
           <NStatistic
             label="本年专注"
             :value="formatSeconds(stats.yearFocusSeconds)"
@@ -243,8 +261,8 @@ onMounted(() => load(fetchStats))
           />
         </div>
       </NGridItem>
-      <NGridItem span="4 s:2 m:1">
-        <div class="summary-card">
+      <NGridItem span="4 s:2 m:1" class="stagger-in">
+        <div class="summary-card glass--subtle">
           <NStatistic
             label="累计专注"
             :value="formatSeconds(stats.totalFocusSeconds)"
@@ -252,8 +270,8 @@ onMounted(() => load(fetchStats))
           />
         </div>
       </NGridItem>
-      <NGridItem span="4 s:2 m:1">
-        <div class="summary-card">
+      <NGridItem span="4 s:2 m:1" class="stagger-in">
+        <div class="summary-card glass--subtle">
           <NStatistic
             label="连续专注"
             :value="stats.streakDays"
@@ -262,8 +280,8 @@ onMounted(() => load(fetchStats))
           />
         </div>
       </NGridItem>
-      <NGridItem span="4 s:2 m:1">
-        <div class="summary-card">
+      <NGridItem span="4 s:2 m:1" class="stagger-in">
+        <div class="summary-card glass--subtle">
           <NStatistic
             label="专注天数"
             :value="stats.focusDays"
@@ -272,8 +290,8 @@ onMounted(() => load(fetchStats))
           />
         </div>
       </NGridItem>
-      <NGridItem span="4 s:2 m:1">
-        <div class="summary-card">
+      <NGridItem span="4 s:2 m:1" class="stagger-in">
+        <div class="summary-card glass--subtle">
           <NStatistic
             label="累计打卡"
             :value="stats.totalCheckins"
@@ -287,8 +305,8 @@ onMounted(() => load(fetchStats))
     <!-- Charts -->
     <NGrid :cols="2" :x-gap="12" :y-gap="12" responsive="screen" item-responsive class="charts-grid">
       <!-- Daily Bar Chart -->
-      <NGridItem span="2">
-        <div class="chart-panel">
+      <NGridItem span="2" class="stagger-in">
+        <div class="chart-panel glass">
           <div class="chart-panel__header">
             <span class="chart-panel__title">每日专注时长</span>
           </div>
@@ -299,8 +317,8 @@ onMounted(() => load(fetchStats))
       </NGridItem>
 
       <!-- Weekly Line Chart -->
-      <NGridItem span="2 m:1">
-        <div class="chart-panel">
+      <NGridItem span="2 m:1" class="stagger-in">
+        <div class="chart-panel glass">
           <div class="chart-panel__header">
             <span class="chart-panel__title">每周趋势</span>
           </div>
@@ -311,8 +329,8 @@ onMounted(() => load(fetchStats))
       </NGridItem>
 
       <!-- Monthly Bar Chart -->
-      <NGridItem span="2 m:1">
-        <div class="chart-panel">
+      <NGridItem span="2 m:1" class="stagger-in">
+        <div class="chart-panel glass">
           <div class="chart-panel__header">
             <span class="chart-panel__title">每月专注</span>
           </div>
@@ -323,8 +341,8 @@ onMounted(() => load(fetchStats))
       </NGridItem>
 
       <!-- Subject Pie Chart -->
-      <NGridItem span="2 m:1">
-        <div class="chart-panel">
+      <NGridItem span="2 m:1" class="stagger-in">
+        <div class="chart-panel glass">
           <div class="chart-panel__header">
             <span class="chart-panel__title">科目分布</span>
           </div>
@@ -338,8 +356,8 @@ onMounted(() => load(fetchStats))
       </NGridItem>
 
       <!-- Weekly Stats -->
-      <NGridItem span="2 m:1">
-        <div class="chart-panel">
+      <NGridItem span="2 m:1" class="stagger-in">
+        <div class="chart-panel glass">
           <div class="chart-panel__header">
             <span class="chart-panel__title">本周统计</span>
           </div>
@@ -407,9 +425,7 @@ onMounted(() => load(fetchStats))
 
 .summary-card {
   padding: var(--sp-3) var(--sp-4);
-  border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
-  background: var(--bg-card);
   min-height: 64px;
   display: flex;
   align-items: center;
@@ -428,9 +444,7 @@ onMounted(() => load(fetchStats))
 }
 
 .chart-panel {
-  border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
-  background: var(--bg-card);
   overflow: hidden;
 }
 
