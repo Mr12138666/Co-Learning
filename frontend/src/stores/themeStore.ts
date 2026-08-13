@@ -1,21 +1,19 @@
 import { defineStore } from 'pinia'
-import { ref, watch, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { themes, getTheme } from '@/config/theme'
 import type { ThemeName, Theme } from '@/config/theme'
 
 export const useThemeStore = defineStore('theme', () => {
   // State
   const themeName = ref<ThemeName>('light')
-  const isDark = ref(false)
   
   // Getters
   const currentTheme = computed<Theme>(() => getTheme(themeName.value))
-  const themeMode = computed(() => isDark.value ? 'dark' : 'light')
+  const isDark = computed(() => currentTheme.value.isDark)
   
   // Actions
   function setTheme(name: ThemeName) {
     themeName.value = name
-    isDark.value = name === 'dark'
     localStorage.setItem('theme', name)
     applyTheme(name)
   }
@@ -25,42 +23,43 @@ export const useThemeStore = defineStore('theme', () => {
     setTheme(newMode)
   }
   
-  function setDarkMode(dark: boolean) {
-    setTheme(dark ? 'dark' : 'light')
-  }
-  
   function applyTheme(name: ThemeName) {
     const theme = getTheme(name)
     const root = document.documentElement
     
-    // Apply CSS variables
-    Object.entries(theme.colors).forEach(([key, value]) => {
-      root.style.setProperty(`--${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`, value)
-    })
-    
-    // Apply dark mode class
-    if (isDark.value) {
+    // 1. 处理深色/浅色模式切换
+    if (theme.isDark) {
       root.classList.add('dark')
       root.classList.remove('light')
     } else {
       root.classList.add('light')
       root.classList.remove('dark')
     }
+    
+    // 2. 应用主题颜色（修改 accent 变量）
+    const { colors } = theme
+    root.style.setProperty('--accent-50', colors.accent50)
+    root.style.setProperty('--accent-100', colors.accent100)
+    root.style.setProperty('--accent-200', colors.accent200)
+    root.style.setProperty('--accent-300', colors.accent300)
+    root.style.setProperty('--accent-400', colors.accent400)
+    root.style.setProperty('--accent-500', colors.accent500)
+    root.style.setProperty('--accent-600', colors.accent600)
+    root.style.setProperty('--accent-700', colors.accent700)
   }
   
   function initTheme() {
     const stored = localStorage.getItem('theme') as ThemeName | null
-    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     
     if (stored && themes[stored]) {
       setTheme(stored)
-    } else if (systemDark) {
-      setTheme('dark')
     } else {
-      setTheme('light')
+      // 检查系统偏好
+      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      setTheme(systemDark ? 'dark' : 'light')
     }
     
-    // Watch for system theme changes
+    // 监听系统主题变化
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
       if (!localStorage.getItem('theme')) {
         setTheme(e.matches ? 'dark' : 'light')
@@ -68,20 +67,19 @@ export const useThemeStore = defineStore('theme', () => {
     })
   }
   
-  // Initialize theme
+  // 初始化主题
   initTheme()
   
   return {
     // State
     themeName,
-    isDark,
+    theme: themeName, // 向后兼容别名
     // Getters
     currentTheme,
-    themeMode,
+    isDark,
     // Actions
     setTheme,
     toggleDarkMode,
-    setDarkMode,
     initTheme,
   }
 })

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { NCard, NList, NListItem, NThing, NButton, NTag, NEmpty, NTabs, NTabPane, NBadge, NIcon, NPopconfirm } from 'naive-ui'
 import { NotificationsOutline, CheckmarkDoneOutline, TrashOutline } from '@vicons/ionicons5'
 
@@ -16,7 +17,10 @@ interface Notification {
   }
 }
 
-const notifications = ref<Notification[]>([
+const router = useRouter()
+
+// 默认通知数据
+const defaultNotifications: Notification[] = [
   {
     id: 1,
     type: 'success',
@@ -34,7 +38,7 @@ const notifications = ref<Notification[]>([
     read: false,
     action: {
       label: '查看',
-      handler: () => console.log('View message'),
+      handler: () => router.push('/rooms'),
     },
   },
   {
@@ -53,7 +57,27 @@ const notifications = ref<Notification[]>([
     time: '2小时前',
     read: true,
   },
-])
+]
+
+// 从localStorage加载通知状态
+function loadNotifications(): Notification[] {
+  const stored = localStorage.getItem('notifications')
+  if (stored) {
+    try {
+      return JSON.parse(stored)
+    } catch {
+      return [...defaultNotifications]
+    }
+  }
+  return [...defaultNotifications]
+}
+
+// 保存通知状态到localStorage
+function saveNotifications(notifs: Notification[]) {
+  localStorage.setItem('notifications', JSON.stringify(notifs))
+}
+
+const notifications = ref<Notification[]>(loadNotifications())
 
 const activeTab = ref('all')
 
@@ -70,6 +94,7 @@ function markAsRead(id: number) {
   const notification = notifications.value.find((n) => n.id === id)
   if (notification) {
     notification.read = true
+    saveNotifications(notifications.value)
   }
 }
 
@@ -77,18 +102,21 @@ function markAllAsRead() {
   notifications.value.forEach((n) => {
     n.read = true
   })
+  saveNotifications(notifications.value)
 }
 
 function deleteNotification(id: number) {
   notifications.value = notifications.value.filter((n) => n.id !== id)
+  saveNotifications(notifications.value)
 }
 
 function clearAll() {
   notifications.value = []
+  saveNotifications([])
 }
 
-function getTypeColor(type: string) {
-  const colors: Record<string, string> = {
+function getTypeColor(type: string): 'info' | 'success' | 'warning' | 'error' {
+  const colors: Record<string, 'info' | 'success' | 'warning' | 'error'> = {
     info: 'info',
     success: 'success',
     warning: 'warning',

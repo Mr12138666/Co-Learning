@@ -9,11 +9,6 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AppAvatar: typeof import('./components/common/AppAvatar.vue')['default']
-    BaseButton: typeof import('./components/common/BaseButton.vue')['default']
-    BaseCard: typeof import('./components/common/BaseCard.vue')['default']
-    BaseForm: typeof import('./components/common/BaseForm.vue')['default']
-    BaseModal: typeof import('./components/common/BaseModal.vue')['default']
-    BaseTable: typeof import('./components/common/BaseTable.vue')['default']
     CommandPalette: typeof import('./components/common/CommandPalette.vue')['default']
     FocusMiniPlayer: typeof import('./components/focus/FocusMiniPlayer.vue')['default']
     FocusTimer: typeof import('./components/focus/FocusTimer.vue')['default']

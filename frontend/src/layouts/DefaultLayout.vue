@@ -6,10 +6,11 @@ import {
   Sun, Moon, Inbox, CalendarRange, Clock, LayoutGrid, ClipboardCheck,
   BarChart3, Users, BookOpen, Trophy, PawPrint, Award, ListChecks,
   Plus, PanelLeftClose, PanelLeftOpen, Menu, ChevronRight, LogOut, User,
-  Hash, BookMarked, Search, X,
+  Hash, BookMarked, Search, X, Settings, Bell,
 } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/authStore'
 import { useThemeStore } from '@/stores/themeStore'
+import ThemeSwitcher from '@/components/common/ThemeSwitcher.vue'
 import { useStudyStore } from '@/stores/studyStore'
 import { useTaskStore } from '@/stores/taskStore'
 import { getErrorMessage } from '@/utils/http-error'
@@ -50,6 +51,8 @@ const secondaryNav: NavItem[] = [
   { key: 'pet', to: '/pet', label: '宠物', icon: PawPrint },
   { key: 'achievements', to: '/achievements', label: '成就', icon: Award },
   { key: 'daily-tasks', to: '/daily-tasks', label: '每日任务', icon: ListChecks },
+  { key: 'settings', to: '/settings', label: '设置', icon: Settings },
+  { key: 'notifications', to: '/notifications', label: '通知', icon: Bell },
 ]
 
 const pageTitle = computed(() => route.meta.title ?? '')
@@ -302,10 +305,10 @@ defineExpose({ refreshInboxCount })
       </nav>
 
       <div class="sidebar__footer">
-        <button class="icon-btn footer-theme" type="button" :aria-label="themeStore.themeName === 'dark' ? '切换浅色模式' : '切换深色模式'" @click="themeStore.toggleDarkMode()">
-          <component :is="themeStore.themeName === 'dark' ? Sun : Moon" :size="17" />
-          <span v-if="!collapsed" class="footer-theme__label">{{ themeStore.themeName === 'dark' ? '浅色模式' : '深色模式' }}</span>
-        </button>
+        <div class="footer-theme">
+          <ThemeSwitcher />
+          <span v-if="!collapsed" class="footer-theme__label">主题设置</span>
+        </div>
         <NDropdown :options="userOptions" placement="top-start" @select="handleUserAction">
           <button class="footer-user" :class="{ 'footer-user--collapsed': collapsed }" type="button">
             <div style="width:30px;height:30px;border-radius:50%;overflow:hidden;background:#eee;flex-shrink:0;">
@@ -344,11 +347,11 @@ defineExpose({ refreshInboxCount })
         <QuickAddTask @created="refreshInboxCount" />
         <NTooltip v-if="!isMobile" placement="bottom">
           <template #trigger>
-            <button class="topbar-icon-btn" type="button" :aria-label="themeStore.themeName === 'dark' ? '切换浅色模式' : '切换深色模式'" @click="themeStore.toggleDarkMode()">
-              <component :is="themeStore.themeName === 'dark' ? Sun : Moon" :size="18" />
-            </button>
+            <div class="topbar-theme">
+              <ThemeSwitcher />
+            </div>
           </template>
-          {{ themeStore.themeName === 'dark' ? '切换浅色模式' : '切换深色模式' }}
+          主题设置
         </NTooltip>
         <NDropdown :options="userOptions" placement="bottom-end" @select="handleUserAction">
           <button class="topbar-avatar" type="button" aria-label="用户菜单">
@@ -386,10 +389,10 @@ defineExpose({ refreshInboxCount })
           </RouterLink>
         </nav>
         <template #footer>
-          <button class="icon-btn footer-theme" type="button" @click="themeStore.toggleDarkMode()">
-            <component :is="themeStore.themeName === 'dark' ? Sun : Moon" :size="17" />
-            <span class="footer-theme__label">{{ themeStore.themeName === 'dark' ? '浅色模式' : '深色模式' }}</span>
-          </button>
+          <div class="footer-theme">
+            <ThemeSwitcher />
+            <span class="footer-theme__label">主题设置</span>
+          </div>
         </template>
       </NDrawerContent>
     </NDrawer>
@@ -504,8 +507,24 @@ defineExpose({ refreshInboxCount })
 .nav-empty { font-size: var(--text-xs); color: var(--text-color-muted); padding: var(--sp-1) var(--sp-2); }
 
 .sidebar__footer { border-top: 1px solid var(--separator); padding: var(--sp-2); display: flex; flex-direction: column; gap: var(--sp-1); flex-shrink: 0; }
-.footer-theme { width: 100%; justify-content: flex-start; height: 34px; }
-.sidebar--collapsed .footer-theme { justify-content: center; }
+.footer-theme {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  height: 34px;
+}
+.sidebar--collapsed .footer-theme {
+  justify-content: center;
+}
+
+.sidebar--collapsed .footer-theme .theme-switcher {
+  display: none;
+}
+
+.sidebar--collapsed .footer-theme .footer-theme__label {
+  display: none;
+}
 .footer-theme__label { font-size: var(--text-sm); }
 .footer-user {
   display: flex; align-items: center; gap: var(--sp-2); width: 100%;
@@ -562,4 +581,12 @@ defineExpose({ refreshInboxCount })
 .bottom-nav__label { font-size: 10px; font-weight: var(--weight-medium); }
 
 .drawer-nav { display: flex; flex-direction: column; gap: 1px; }
+
+.topbar-theme {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+}
 </style>

@@ -101,7 +101,7 @@ function handleSavePrivacy() {
                 <template #description>
                   选择应用的外观主题
                 </template>
-                <template #suffix>
+                <template #header-extra>
                   <ThemeSwitcher />
                 </template>
               </n-thing>
@@ -112,7 +112,7 @@ function handleSavePrivacy() {
                 <template #description>
                   选择应用界面语言
                 </template>
-                <template #suffix>
+                <template #header-extra>
                   <n-select
                     v-model:value="selectedLanguage"
                     :options="languageOptions"
@@ -142,7 +142,7 @@ function handleSavePrivacy() {
               <n-switch v-model:value="notifications.dailyReminder" />
             </n-form-item>
             <n-form-item v-if="notifications.dailyReminder" label="提醒时间">
-              <n-input v-model:value="notifications.reminderTime" type="time" style="width: 120px" />
+              <n-input v-model:value="notifications.reminderTime" placeholder="09:00" style="width: 120px" />
             </n-form-item>
           </n-form>
           <template #footer>
@@ -189,7 +189,7 @@ function handleSavePrivacy() {
                 <template #description>
                   定期修改密码可以提高账户安全性
                 </template>
-                <template #suffix>
+                <template #header-extra>
                   <n-button>修改密码</n-button>
                 </template>
               </n-thing>
@@ -200,7 +200,7 @@ function handleSavePrivacy() {
                 <template #description>
                   启用两步验证可以进一步提高账户安全性
                 </template>
-                <template #suffix>
+                <template #header-extra>
                   <n-tag type="warning">未启用</n-tag>
                 </template>
               </n-thing>
@@ -211,7 +211,7 @@ function handleSavePrivacy() {
                 <template #description>
                   查看最近的登录活动
                 </template>
-                <template #suffix>
+                <template #header-extra>
                   <n-button quaternary>查看</n-button>
                 </template>
               </n-thing>

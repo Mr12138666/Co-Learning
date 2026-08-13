@@ -1,43 +1,25 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, h } from 'vue'
 import { NDropdown, NButton, NIcon } from 'naive-ui'
 import { SunnyOutline, MoonOutline, ColorPaletteOutline } from '@vicons/ionicons5'
 import { useThemeStore } from '@/stores/themeStore'
+import { getThemeList } from '@/config/theme'
 import type { ThemeName } from '@/config/theme'
 
 const themeStore = useThemeStore()
 
-const themeOptions: any[] = [
-  {
-    label: '浅色模式',
-    key: 'light',
-    icon: SunnyOutline,
-  },
-  {
-    label: '深色模式',
-    key: 'dark',
-    icon: MoonOutline,
-  },
-  {
-    type: 'divider',
-    key: 'd1',
-  },
-  {
-    label: '蓝色主题',
-    key: 'blue',
-  },
-  {
-    label: '绿色主题',
-    key: 'green',
-  },
-  {
-    label: '紫色主题',
-    key: 'purple',
-  },
-]
+// 获取主题列表并转换为下拉选项
+const themeOptions = computed(() => {
+  const themes = getThemeList()
+  return themes.map(theme => ({
+    label: theme.label,
+    key: theme.name,
+    icon: () => h(theme.isDark ? MoonOutline : SunnyOutline),
+  }))
+})
 
 const currentIcon = computed(() => {
-  return themeStore.isDark ? MoonOutline : SunnyOutline
+  return themeStore.isDark ? MoonOutline : ColorPaletteOutline
 })
 
 function handleSelect(key: string) {
@@ -53,7 +35,7 @@ function handleSelect(key: string) {
   >
     <n-button quaternary circle size="small">
       <template #icon>
-        <n-icon :component="ColorPaletteOutline" />
+        <n-icon :component="currentIcon" />
       </template>
     </n-button>
   </n-dropdown>
